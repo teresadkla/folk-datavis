@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Network Diagram - Temas e Regiões</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 5px 10px;
+      border-radius: 5px;
+      pointer-events: none;
+      font-size: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      display: none;
+    }
+
+    .link {
+      stroke-opacity: 0.6;
+    }
+
+    .node text {
+      pointer-events: none;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <svg width="960" height="600"></svg>
+  <script src="ramification.js"></script>
+</body>
+</html>
