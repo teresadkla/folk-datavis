@@ -1,8 +1,20 @@
-const width = 960;
-const height = 600;
+const width = window.innerWidth;
+const height = window.innerHeight;
 const svg = d3.select("svg")
               .attr("width", width)
               .attr("height", height);
+
+// Grupo para aplicar zoom e pan
+const container = svg.append("g");
+
+// Zoom & Pan
+svg.call(
+  d3.zoom()
+    .scaleExtent([0.2, 5])
+    .on("zoom", (event) => {
+      container.attr("transform", event.transform);
+    })
+);
 
 // Tooltip
 const tooltip = d3.select("body")
@@ -85,12 +97,12 @@ d3.csv("VIMEO_V5.csv").then(data => {
 
   // Força
   const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.6))
+    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.3))
     .force("charge", d3.forceManyBody().strength(-300))
     .force("center", d3.forceCenter(width / 2, height / 2));
 
   // Links
-  const link = svg.append("g")
+  const link = container.append("g")
     .attr("class", "links")
     .selectAll("line")
     .data(links)
@@ -100,7 +112,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .attr("stroke-opacity", 0.6);
 
   // Nós
-  const node = svg.append("g")
+  const node = container.append("g")
     .attr("class", "nodes")
     .selectAll("circle")
     .data(nodes)
@@ -125,7 +137,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .call(drag(simulation));
 
   // Labels
-  const label = svg.append("g")
+  const label = container.append("g")
     .selectAll("text")
     .data(nodes)
     .join("text")
