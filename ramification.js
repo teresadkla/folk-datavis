@@ -100,7 +100,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
 
   // Criar simulação física da rede
   const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(100).strength(0.6))
+    .force("link", d3.forceLink(links).id(d => d.id).distance(90).strength(1))
     .force("charge", d3.forceManyBody().strength(-1000)) // repulsão entre nós
     .force("center", d3.forceCenter(width / 2, height / 2)); // centralizar rede
 
