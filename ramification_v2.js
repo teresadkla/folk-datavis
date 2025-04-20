@@ -7,6 +7,33 @@ const svg = d3.select("svg")
               .attr("width", width)
               .attr("height", height);
 
+// Adicionar definições para filtros
+const defs = svg.append("defs");
+
+// Criar filtro de turbulência
+const turbulenceFilter = defs.append("filter")
+    .attr("id", "linkTurbulence")
+    .attr("x", "-50%")
+    .attr("y", "-50%")
+    .attr("width", "200%")
+    .attr("height", "200%");
+
+// Adicionar o elemento feTurbulence
+turbulenceFilter.append("feTurbulence")
+    .attr("type", "turbulence")
+    .attr("baseFrequency", "0.01 0.02")  // controla a "ondulação"
+    .attr("numOctaves", "20")             // controla a complexidade
+    .attr("seed", "15")                  // valor semente para o padrão
+    .attr("result", "turbulence");
+
+// Adicionar deslocamento baseado na turbulência
+turbulenceFilter.append("feDisplacementMap")
+    .attr("in", "SourceGraphic")
+    .attr("in2", "turbulence")
+    .attr("scale", "10")                // intensidade do efeito
+    .attr("xChannelSelector", "R")
+    .attr("yChannelSelector", "G");
+
 // Criar um grupo 'g' dentro do SVG para aplicar zoom e pan
 const container = svg.append("g");
 
@@ -28,7 +55,7 @@ const tooltip = d3.select("body")
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Escala de tamanho dos nós (temas), baseada no número de ocorrências
-const sizeScale = d3.scaleLinear().range([6, 20]);
+const sizeScale = d3.scaleLinear().range([5, 25]);
 
 // Carregar os dados do CSV
 d3.csv("VIMEO_V5.csv").then(data => {
@@ -54,7 +81,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
   });
 
   // Filtrar temas que aparecem mais de DEZ vezes (modificado)
-  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 10);
+  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 13);
 
   const nodes = [];        // lista de nós (temas e regiões)
   const links = [];        // lista de ligações entre temas e regiões
@@ -104,16 +131,17 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .force("charge", d3.forceManyBody().strength(-1000)) // repulsão entre nós
     .force("center", d3.forceCenter(width / 2, height / 2)); // centralizar rede
 
-  // Criar elementos de ligação (curvas)
+  // Criar elementos de ligação (curvas) com efeito de turbulência
   const link = container.append("g")
     .attr("class", "links")
     .selectAll("path")
     .data(links)
     .join("path")
-    .attr("stroke", "#999")
+    .attr("stroke", "brown")
     .attr("stroke-width", d => Math.sqrt(d.value))
     .attr("stroke-opacity", 0.6)
-    .attr("fill", "none");
+    .attr("fill", "none")
+    .attr("filter", "url(#linkTurbulence)"); // Aplicar o filtro de turbulência
 
   // Criar nós como círculos
   const node = container.append("g")
@@ -157,7 +185,6 @@ d3.csv("VIMEO_V5.csv").then(data => {
   .attr("dx", 10)
   .attr("dy", "0.35em")
   .style("opacity", 0); // começa escondido
-
 
   // Atualizar posições a cada tick da simulação
   simulation.on("tick", () => {
