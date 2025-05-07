@@ -1,57 +1,49 @@
 const width = 800;
-const height = 600;
+const height = 900;
 
 const svg = d3.select("#map")
-  .append("svg")
   .attr("width", width)
   .attr("height", height);
 
-Promise.all([
-  d3.json("portugal.json"), // topojson com os distritos
-  d3.csv("VIMEO_V5.csv", d3.autoType)
-]).then(([mapData, musicData]) => {
-  const districts = topojson.feature(mapData, mapData.objects.distritos);
+const projection = d3.geoMercator()
+  .center([-8, 39.5]) // centro de Portugal
+  .scale(5000)
+  .translate([width / 2, height / 2]);
 
-  // Agrupar músicas por distrito
-  const musicCount = d3.rollup(
-    musicData,
-    v => v.length,
-    d => d["Distrito/Ilha"]
-  );
+const path = d3.geoPath().projection(projection);
 
-  // Escala para os círculos
-  const radiusScale = d3.scaleSqrt()
-    .domain([0, d3.max(musicCount.values())])
-    .range([0, 30]);
+// Grupo para aplicar o zoom
+const g = svg.append("g");
 
-  // Projeção e path
-  const projection = d3.geoMercator()
-    .fitSize([width, height], districts);
-  const path = d3.geoPath().projection(projection);
-
-  // Desenhar o mapa
-  svg.selectAll("path")
-    .data(districts.features)
+d3.json("Portugal.json").then(geojson => {
+  g.selectAll("path")
+    .data(geojson.features)
     .enter()
     .append("path")
+    .attr("class", "distrito")
     .attr("d", path)
-    .attr("fill", "#ccc")
-    .attr("stroke", "#333");
-
-  // Adicionar círculos
-  svg.selectAll("circle")
-    .data(districts.features)
-    .enter()
-    .append("circle")
-    .attr("cx", d => projection(d3.geoCentroid(d))[0])
-    .attr("cy", d => projection(d3.geoCentroid(d))[1])
-    .attr("r", d => {
-      const count = musicCount.get(d.properties.name) || 0;
-      return radiusScale(count);
-    })
-    .append("title")
-    .text(d => {
-      const count = musicCount.get(d.properties.name) || 0;
-      return `${d.properties.name}: ${count} músicas`;
+    .each(function(d) {
+      console.log("Desenhando distrito:", d.properties.name);
     });
+
+  g.selectAll("text")
+    .data(geojson.features)
+    .enter()
+    .append("text")
+    .attr("class", "label")
+    .attr("transform", d => {
+      const centroid = path.centroid(d);
+      return `translate(${centroid})`;
+    })
+    .text(d => d.properties.name);
 });
+
+// Função de zoom
+const zoom = d3.zoom()
+  .scaleExtent([1, 8]) // limites de zoom
+  .on("zoom", (event) => {
+    g.attr("transform", event.transform);
+  });
+
+svg.call(zoom);
+
