@@ -27,6 +27,73 @@ const tooltip = d3.select("body")
   .style("pointer-events", "none")
   .style("opacity", 0);
 
+// Função para extrair o ano da data no formato "16 de Janeiro de 2011"
+function extractYear(dateString) {
+  const match = dateString.match(/(\d{1,2})\s+de\s+([a-zA-Z]+)\s+de\s+(\d{4})/);
+  return match ? match[3] : null; // Retorna o ano (parte [3] da regex)
+}
+
+// Função para atualizar os círculos com base no filtro de ano
+function updateCircles(filteredData, geojson, selectedYear) {
+  console.log("Atualizando círculos...");
+
+  // Agrupar os temas por distrito e por ano
+  const temasPorDistritoAno = d3.rollup(
+    filteredData,
+    v => v.length,
+    d => d["Distrito/Ilha"],
+    d => extractYear(d["Data"])
+  );
+
+  g.selectAll("circle")
+    .data(geojson.features)
+    .join("circle")
+    .attr("cx", d => path.centroid(d)[0])
+    .attr("cy", d => path.centroid(d)[1])
+    .attr("r", d => {
+      const temasPorAno = temasPorDistritoAno.get(d.properties.name) || new Map();
+      if (selectedYear) {
+        // Se houver ano selecionado, mostra só desse ano
+        return Math.sqrt(temasPorAno.get(selectedYear) || 0) * 2;
+      } else {
+        // Se não houver ano selecionado, soma todos os anos
+        const total = Array.from(temasPorAno.values()).reduce((a, b) => a + b, 0);
+        return Math.sqrt(total) * 2;
+      }
+    })
+    .attr("fill", "rgba(255, 0, 68, 0.6)")
+    .on("mouseover", function(event, d) {
+      const temasPorAno = temasPorDistritoAno.get(d.properties.name) || new Map();
+      let temasNoAno, label, temasLista;
+      if (selectedYear) {
+        temasNoAno = temasPorAno.get(selectedYear) || 0;
+        // Filtra os temas desse distrito e ano
+        temasLista = filteredData
+          .filter(item => item["Distrito/Ilha"] === d.properties.name && extractYear(item["Data"]) === selectedYear)
+          .map(item => item["Tema"]);
+        label = `${temasNoAno} temas em ${selectedYear}`;
+      } else {
+        temasNoAno = Array.from(temasPorAno.values()).reduce((a, b) => a + b, 0);
+        // Filtra todos os temas desse distrito
+        temasLista = filteredData
+          .filter(item => item["Distrito/Ilha"] === d.properties.name)
+          .map(item => item["Tema"]);
+        label = `${temasNoAno} temas no total`;
+      }
+      tooltip.transition().duration(200).style("opacity", 1);
+      tooltip.html(
+        `<strong>${d.properties.name}</strong><br>${label}<br><br><strong>Temas:</strong><br>${temasLista.length > 0 ? temasLista.join("<br>") : "Nenhum"}`
+      );
+    })
+    .on("mousemove", event => {
+      tooltip.style("left", (event.pageX + 15) + "px")
+             .style("top", (event.pageY - 28) + "px");
+    })
+    .on("mouseout", () => {
+      tooltip.transition().duration(300).style("opacity", 0);
+    });
+}
+
 d3.json("Portugal.json").then(geojson => {
   // Desenhar os distritos
   g.selectAll("path")
@@ -53,45 +120,24 @@ d3.json("Portugal.json").then(geojson => {
 
   // Carregar os dados do CSV
   d3.csv("VIMEO_V5.csv").then(data => {
-    // Agrupar os temas por distrito
-    const temasPorDistrito = d3.rollup(
-      data,
-      v => v.map(d => d["Tema"]),
-      d => d["Distrito/Ilha"]
-    );
+    console.log("Dados carregados:", data);
 
-    // Adicionar círculos no centro dos distritos
-    g.selectAll("circle")
-      .data(geojson.features)
-      .enter()
-      .append("circle")
-      .attr("cx", d => path.centroid(d)[0])
-      .attr("cy", d => path.centroid(d)[1])
-      .attr("r", d => {
-        const temas = temasPorDistrito.get(d.properties.name) || [];
-        return Math.sqrt(temas.length) * 2; // escala ajustável
-      })
+    // Filtro de ano
+    const yearFilter = document.getElementById("yearFilter");
+    yearFilter.addEventListener("change", (event) => {
+      const selectedYear = event.target.value;
+      console.log("Ano selecionado:", selectedYear);
 
-      .attr("fill", "rgba(255, 0, 68, 0.6)")
-      /* .attr("stroke", "#900")
-      .attr("stroke-width", 1)*/
-      .on("mouseover", function(event, d) {
-        const temas = temasPorDistrito.get(d.properties.name) || [];
-        tooltip.transition().duration(200).style("opacity", 1);
-        tooltip.html(
-          `<strong>${d.properties.name}</strong><br>${temas.length} temas:<br><ul>` +
-          temas.slice(0, 10).map(t => `<li>${t}</li>`).join("") + 
-          (temas.length > 10 ? "<li>...</li>" : "") +
-          "</ul>"
-        );
-      })
-      .on("mousemove", event => {
-        tooltip.style("left", (event.pageX + 15) + "px")
-               .style("top", (event.pageY - 28) + "px");
-      })
-      .on("mouseout", () => {
-        tooltip.transition().duration(300).style("opacity", 0);
-      });
+      // Filtrar os dados pelo ano
+      const filteredData = selectedYear 
+        ? data.filter(d => extractYear(d["Data"]) === selectedYear) // Filtrar pelo ano extraído
+        : data; // Caso não tenha ano selecionado, mostra todos
+
+      updateCircles(filteredData, geojson, selectedYear);
+    });
+
+    // Inicializar a visualização com todos os dados
+    updateCircles(data, geojson); // Não passa "2021"
   });
 });
 

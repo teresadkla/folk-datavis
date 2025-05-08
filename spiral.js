@@ -77,7 +77,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .append("circle")
     .attr("cx", d => d.x)
     .attr("cy", d => d.y)
-    .attr("r", 6)
+    .attr("r", 7)
     .attr("fill", d => color(d.Tema))
     .attr("opacity", 1)
     .on("mouseover", (event, d) => {
