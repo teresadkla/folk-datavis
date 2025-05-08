@@ -22,15 +22,15 @@ const turbulenceFilter = defs.append("filter")
 turbulenceFilter.append("feTurbulence")
     .attr("type", "turbulence")
     .attr("baseFrequency", "0.01 0.02")  // controla a "ondulação"
-    .attr("numOctaves", "20")             // controla a complexidade
-    .attr("seed", "15")                  // valor semente para o padrão
+    .attr("numOctaves", "10")             // controla a complexidade
+    .attr("seed", "8")                  // valor semente para o padrão
     .attr("result", "turbulence");
 
 // Adicionar deslocamento baseado na turbulência
 turbulenceFilter.append("feDisplacementMap")
     .attr("in", "SourceGraphic")
     .attr("in2", "turbulence")
-    .attr("scale", "10")                // intensidade do efeito
+    .attr("scale", "15")                // intensidade do efeito
     .attr("xChannelSelector", "R")
     .attr("yChannelSelector", "G");
 
@@ -81,7 +81,7 @@ d3.csv("sets.csv").then(data => {
   });
 
   // Filtrar names que aparecem mais de DEZ vezes (modificado)
-  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 400);
+  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 600);
 
   const nodes = [];        // lista de nós (names e regiões)
   const links = [];        // lista de ligações entre names e regiões
@@ -127,8 +127,8 @@ d3.csv("sets.csv").then(data => {
 
   // Criar simulação física da rede
   const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(90).strength(1))
-    .force("charge", d3.forceManyBody().strength(-1000)) // repulsão entre nós
+    .force("link", d3.forceLink(links).id(d => d.id).distance(150).strength(1))
+    .force("charge", d3.forceManyBody().strength(-1500)) // repulsão entre nós
     .force("center", d3.forceCenter(width / 2, height / 2)); // centralizar rede
 
   // Criar elementos de ligação (curvas) com efeito de turbulência
