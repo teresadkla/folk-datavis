@@ -37,6 +37,12 @@ d3.csv("VIMEO_V5.csv").then(data => {
   // Ordena os dados pela data (mais antiga primeiro)
   data.sort((a, b) => d3.ascending(a.date, b.date));
 
+  // Conta quantas vezes cada Tema aparece
+  const temaCounts = d3.rollup(data, v => v.length, d => d.Tema);
+
+  // Filtra os dados para manter apenas os temas que se repetem
+  const filteredData = data.filter(d => temaCounts.get(d.Tema) > 1);
+
   // Parâmetros da espiral (a = distância inicial do centro, b = espaçamento entre voltas)
   const a = 5;
   const b = 10;
@@ -47,13 +53,13 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .y(d => d.y)
     .curve(d3.curveCardinal);
 
-  // Calcula os pontos da espiral para cada item dos dados
-  const spiralPoints = data.map((d, i) => {
-    const angle = i * 0.3; // ângulo aumenta com o índice (define rotação da espiral)
-    const radius = a + b * angle; // raio aumenta gradualmente com o ângulo
-    d.x = radius * Math.cos(angle); // coordenada x em base polar -> cartesiana
-    d.y = radius * Math.sin(angle); // coordenada y em base polar -> cartesiana
-    return { x: d.x, y: d.y }; // retorna ponto para desenhar a linha
+  // Calcula os pontos da espiral para os dados filtrados
+  const spiralPoints = filteredData.map((d, i) => {
+    const angle = i * 0.3;
+    const radius = a + b * angle;
+    d.x = radius * Math.cos(angle);
+    d.y = radius * Math.sin(angle);
+    return { x: d.x, y: d.y };
   });
 
   // Desenha a linha da espiral conectando todos os pontos
@@ -64,24 +70,31 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .attr("stroke", "#999")
     .attr("stroke-width", 1);
 
-  // Desenha um círculo para cada dado no ponto correspondente da espiral
+  // Desenha os círculos apenas para os dados filtrados
   g.selectAll("circle")
-    .data(data)
+    .data(filteredData)
     .enter()
     .append("circle")
     .attr("cx", d => d.x)
     .attr("cy", d => d.y)
     .attr("r", 6)
-    .attr("fill", d => color(d.Tema)) // cor baseada no tema
+    .attr("fill", d => color(d.Tema))
+    .attr("opacity", 1)
     .on("mouseover", (event, d) => {
-      // Ao passar o mouse, mostra tooltip com informações
       tooltip.style("opacity", 1)
         .html(`<strong>${d.Tema}</strong><br>${d.Data}`)
         .style("left", (event.pageX + 10) + "px")
         .style("top", (event.pageY - 20) + "px");
     })
     .on("mouseout", () => {
-      // Ao sair do mouse, esconde o tooltip
       tooltip.style("opacity", 0);
+    })
+    .on("click", function(event, clickedDatum) {
+      const selectedTheme = clickedDatum.Tema;
+
+      g.selectAll("circle")
+        .transition()
+        .duration(300)
+        .attr("opacity", d => d.Tema === selectedTheme ? 1 : 0.1);
     });
 });
