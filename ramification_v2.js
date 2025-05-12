@@ -23,7 +23,7 @@ turbulenceFilter.append("feTurbulence")
     .attr("type", "turbulence")
     .attr("baseFrequency", "0.01 0.02")  // controla a "ondulação"
     .attr("numOctaves", "20")             // controla a complexidade
-    .attr("seed", "15")                  // valor semente para o padrão
+    .attr("seed", "15")                  // valor seed para o padrão
     .attr("result", "turbulence");
 
 // Adicionar deslocamento baseado na turbulência
