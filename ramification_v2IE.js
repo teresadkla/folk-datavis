@@ -137,7 +137,7 @@ d3.csv("sets.csv").then(data => {
     .selectAll("path")
     .data(links)
     .join("path")
-    .attr("stroke", "brown")
+    .attr("stroke", "#6B3F21")
     .attr("stroke-width", d => Math.sqrt(d.value))
     .attr("stroke-opacity", 0.6)
     .attr("fill", "none")
