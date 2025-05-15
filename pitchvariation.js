@@ -1,62 +1,116 @@
-//codigo 2
 let abcData = [];
 let nameData = [];
 let currentIndex = 0;
 let synthControl = null;
 let visualObj = null;
-let jsonMidiData = [];
 
-// Carregar CSV com partituras ABC
+const uniqueNames = new Set();
+const songMap = new Map();
+
+// Carrega o CSV com as músicas e popula os arrays e mapas
 fetch('sets.csv')
   .then(response => response.text())
   .then(csvText => {
     const results = Papa.parse(csvText, { header: true });
     results.data.forEach(row => {
       if (row.abc) {
+        const name = row.name || "Sem nome";
         abcData.push(row.abc);
-        nameData.push(row.name || "Sem nome");
+        nameData.push(name);
+
+        // Agrupa variações pelo nome da música
+        if (!songMap.has(name)) songMap.set(name, []);
+        songMap.get(name).push(row.abc);
+        uniqueNames.add(name);
       }
     });
+
+    // Preenche o dropdown com os nomes únicos das músicas
+    const select = document.getElementById("musicSelect");
+    uniqueNames.forEach(name => {
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+
+    // Atualiza visualização ao trocar seleção
+    select.addEventListener("change", () => {
+      const selected = select.value;
+      renderByName(selected);
+    });
+
+    // Renderiza a primeira música ao carregar
     if (abcData.length > 0) {
-      renderABC(currentIndex);
+      renderByName([...uniqueNames][0]);
     }
   });
 
-// Carregar JSON com valores MIDI
-fetch('pitch_compressed.json')
-  .then(response => response.json())
-  .then(data => {
-    jsonMidiData = data;
-    drawFromJSON(currentIndex);
-  });
+// Renderiza música ou suas variações agrupadas por nome
+function renderByName(name) {
+  const variations = songMap.get(name);
+  if (variations.length === 1) {
+    renderABC(variations[0], name);
+  } else {
+    // Extrai histogramas de pitch para cada variação
+    const histograms = variations.map(abc => {
+      const visual = ABCJS.renderAbc("notation", abc)[0];
+      return extractPitchValues(visual);
+    });
 
-function renderABC(index) {
-  const abc = abcData[index];
-  const name = nameData[index];
-  if (!abc) return;
+    // Constrói histogramas de contagem de pitch (0-127)
+    const pitchHistograms = histograms.map(pitchArray => {
+      const counts = new Array(128).fill(0);
+      pitchArray.forEach(val => counts[val]++);
+      return counts;
+    });
 
-  // Mostrar nome da música
-  document.getElementById("musicName").textContent = name;
+    // Ajuste eps/minPts para tentar obter 3 clusters
+    const clusters = dbscan(pitchHistograms, 0.5, 1);
 
-  // Criar um elemento temporário oculto para renderizar a partitura
-  const tempDiv = document.createElement('div');
-  tempDiv.style.display = 'none';
-  document.body.appendChild(tempDiv);
+    // Agrupa histogramas por cluster
+    const clusterMap = {};
+    pitchHistograms.forEach((hist, i) => {
+      const clusterId = clusters[i];
+      if (!clusterMap[clusterId]) clusterMap[clusterId] = [];
+      clusterMap[clusterId].push(hist);
+    });
 
-  // Desenhar partitura no elemento temporário
-  visualObj = ABCJS.renderAbc(tempDiv, abc)[0];
+    // Seleciona os três clusters mais numerosos
+    const sortedClusters = Object.entries(clusterMap)
+      .filter(([id]) => id !== "-1") // ignora ruído
+      .sort((a, b) => b[1].length - a[1].length)
+      .slice(0, 3);
 
-  // Extrair valores de pitch MIDI
+    // Mostra no console as três tendências principais
+    sortedClusters.forEach(([clusterId, hists], idx) => {
+      console.log(`Tendência ${idx + 1} (Cluster ${clusterId}):`, hists);
+    });
+
+    // Visualiza os clusters normalmente
+    drawClusteredDots(pitchHistograms, clusters);
+    document.getElementById("musicName").textContent = `${name} (${variations.length}x)`;
+  }
+}
+
+// Renderiza uma música individual, visualização e áudio
+function renderABC(abc, name) {
+  // Garante que o instrumento MIDI está definido
+  if (!abc.startsWith("%%MIDI program 49")) {
+    abc = "%%MIDI program 49\n" + abc;
+  }
+
+  visualObj = ABCJS.renderAbc("notation", abc)[0];
+
+  // Extrai valores de pitch MIDI
   const midiValues = extractPitchValues(visualObj);
-  
-  // Remover elemento temporário
-  document.body.removeChild(tempDiv);
+  document.getElementById("musicName").textContent = `${name}`;
 
-  // Imprimir no console
-  console.log(`Valores MIDI para "${name}":`);
-  console.log(midiValues);
+  // Desenha visualizações
+  drawRadialDotPlot(midiValues);
+  drawHistogram(midiValues);
 
-  // Criar novo controlo de áudio
+  // Controla reprodução de áudio
   if (synthControl) synthControl.pause();
   synthControl = new ABCJS.synth.SynthController();
   synthControl.load("#audio-controls", null, { displayLoop: false });
@@ -64,225 +118,153 @@ function renderABC(index) {
   const synth = new ABCJS.synth.CreateSynth();
   synth.init({ visualObj }).then(() => {
     synthControl.setTune(visualObj, false).then(() => {
-      console.log("Pronto para tocar.");
-
-      // Gerar o áudio (prime) e desenhar a waveform
       synth.prime().then(() => {
-        const audioBuffer = synth.audioBuffer;
-        if (audioBuffer) {
-          drawWaveform(audioBuffer);
-        }
+        if (synth.audioBuffer) drawWaveform(synth.audioBuffer);
       });
     });
   });
 }
 
+// Extrai valores de pitch MIDI de um objeto visual ABCJS
 function extractPitchValues(visualObj) {
   const midiValues = [];
-  
   if (!visualObj || !visualObj.lines) return midiValues;
-  
+
   visualObj.lines.forEach(line => {
-    if (!line.staff) return;
-    
-    line.staff.forEach(staff => {
-      if (!staff.voices) return;
-      
-      staff.voices.forEach(voice => {
+    line.staff?.forEach(staff => {
+      staff.voices?.forEach(voice => {
         voice.forEach(element => {
           if (element.el_type === "note" && element.pitches) {
             element.pitches.forEach(pitch => {
-              const midiValue = calculateMIDIValue(pitch);
-              midiValues.push(midiValue);
+              midiValues.push(60 + pitch.pitch); // 60 é o C central
             });
           }
         });
       });
     });
   });
-  
+
   return midiValues;
 }
 
-function calculateMIDIValue(pitch) {
-  const C4 = 60; // nota para o dó central Maiuculas são mais graves minusculas são mais agudas
-  return C4 + pitch.pitch;
+// ---------- DBSCAN ------------
+// Calcula a distância Euclidiana entre dois vetores
+function euclideanDist(a, b) {
+  return Math.sqrt(a.reduce((sum, val, i) => sum + (val - b[i]) ** 2, 0));
 }
 
+// Algoritmo DBSCAN para clusterização de histogramas de pitch
+function dbscan(data, eps, minPts) {
+  const labels = new Array(data.length).fill(undefined);
+  let clusterId = 0;
 
-function drawFromJSON(index) {
-  const song = jsonMidiData[index];
-  if (!song || !song.midiValues) return;
+  // Encontra vizinhos dentro do raio eps
+  function regionQuery(point) {
+    return data.map((other, i) => (euclideanDist(point, other) < eps ? i : -1)).filter(i => i >= 0);
+  }
 
-  drawRadialDotPlot(song.midiValues);
-}
-//-------------------------------desehar o gráfico radial com d3.js-------------------
-function drawRadialDotPlot(midiValues) {
-    const svg = d3.select("#radialPlot");
-    svg.selectAll("*").remove();
-  
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
-    const centerX = width / 2;
-    const centerY = height / 2;
-  
-    const g = svg.append("g").attr("transform", `translate(${centerX},${centerY})`);
-  
-    const angleStep = (2 * Math.PI) / midiValues.length;
-    const radiusScale = d3.scaleLinear().domain([-24, 24]).range([40, 250]);
-    const colorScale = d3.scaleSequential(d3.interpolatePlasma).domain([0, midiValues.length]);
-  
-    // Eixos circulares (pitch)
-    const pitchLevels = [-24, -12, 0, 12, 24];
-    g.selectAll("circle.axis")
-      .data(pitchLevels)
-      .enter()
-      .append("circle")
-      .attr("r", d => radiusScale(d))
-      .attr("fill", "none")
-      .attr("stroke", "#ccc")
-      .attr("stroke-dasharray", "2,2");
-  
-    // Labels de pitch
-    g.selectAll("text.pitch-label")
-      .data(pitchLevels)
-      .enter()
-      .append("text")
-      .attr("y", d => -radiusScale(d))
-      .attr("dy", "-0.35em")
-      .attr("text-anchor", "middle")
-      .text(d => `MIDI ${60 + d}`)
-      .attr("font-size", "10px")
-      .attr("fill", "#666");
-  
-    // Notas musicais
-    g.selectAll("circle.note")
-      .data(midiValues)
-      .enter()
-      .append("circle")
-      .attr("cx", (d, i) => {
-        const angle = i * angleStep;
-        const r = radiusScale(d - 60);
-        return Math.cos(angle) * r;
-      })
-      .attr("cy", (d, i) => {
-        const angle = i * angleStep;
-        const r = radiusScale(d - 60);
-        return Math.sin(angle) * r;
-      })
-      .attr("r", 4)
-      .attr("fill", (d, i) => colorScale(i))
-      .attr("opacity", 0.8);
-  
-    // Gradiente de cor (legenda tempo)
-    const legendWidth = 220;
-    const legendHeight = 10;
-    const legendX = width / 2 - legendWidth / 2;
-    const legendY = height - 40;
-  
-    const defs = svg.append("defs");
-    const gradient = defs.append("linearGradient")
-      .attr("id", "color-gradient")
-      .attr("x1", "0%").attr("y1", "0%")
-      .attr("x2", "100%").attr("y2", "0%");
-  
-    for (let i = 0; i <= 100; i++) {
-      gradient.append("stop")
-        .attr("offset", `${i}%`)
-        .attr("stop-color", colorScale(i / 100 * midiValues.length));
+  // Expande o cluster a partir de um ponto
+  function expandCluster(pointIdx, neighbors) {
+    labels[pointIdx] = clusterId;
+
+    let i = 0;
+    while (i < neighbors.length) {
+      const neighborIdx = neighbors[i];
+      if (labels[neighborIdx] === undefined) {
+        labels[neighborIdx] = clusterId;
+        const moreNeighbors = regionQuery(data[neighborIdx]);
+        if (moreNeighbors.length >= minPts) {
+          neighbors = neighbors.concat(moreNeighbors);
+        }
+      }
+      i++;
     }
-  
-    svg.append("rect")
-      .attr("x", legendX)
-      .attr("y", legendY)
-      .attr("width", legendWidth)
-      .attr("height", legendHeight)
-      .style("fill", "url(#color-gradient)");
-  
-    // Texto explicativo da legenda
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", legendY - 10)
-      .attr("text-anchor", "middle")
-      .text("Início → Fim")
-      .attr("font-size", "10px")
-      .attr("fill", "#444");
-  
-    // Ticks de tempo
-    const tickLabels = ["Início", "Meio", "Fim"];
-    const tickPositions = [0, legendWidth / 2, legendWidth];
-  
-    svg.selectAll("text.legend-ticks")
-      .data(tickLabels)
-      .enter()
-      .append("text")
-      .attr("x", (d, i) => legendX + tickPositions[i])
-      .attr("y", legendY + 20)
-      .attr("text-anchor", (d, i) => i === 0 ? "start" : i === 2 ? "end" : "middle")
-      .text(d => d)
-      .attr("font-size", "9px")
-      .attr("fill", "#555");
-  }
-  
-
-
-//----------------Interação com os botões-------------------
-
-document.getElementById("playBtn").onclick = () => {
-  if (synthControl && synthControl.synth && synthControl.synth.audioBuffer) {
-    drawWaveform(synthControl.synth.audioBuffer);
-    synthControl.play();
-  } else if (synthControl) {
-    synthControl.play();
-  }
-};
-
-document.getElementById("pauseBtn").onclick = () => {
-  if (synthControl) synthControl.pause();
-};
-
-document.getElementById("prevBtn").onclick = () => {
-  currentIndex = (currentIndex - 1 + abcData.length) % abcData.length;
-  renderABC(currentIndex);
-  drawFromJSON(currentIndex);
-};
-
-document.getElementById("nextBtn").onclick = () => {
-  currentIndex = (currentIndex + 1) % abcData.length;
-  renderABC(currentIndex);
-  drawFromJSON(currentIndex);
-};
-
-document.getElementById("exportPitchBtn").onclick = () => {
-  if (abcData.length === 0) {
-    alert("Nenhuma música carregada!");
-    return;
   }
 
-  const allPitches = [];
+  // Percorre todos os pontos e aplica DBSCAN
+  for (let i = 0; i < data.length; i++) {
+    if (labels[i] !== undefined) continue;
+    const neighbors = regionQuery(data[i]);
+    if (neighbors.length < minPts) {
+      labels[i] = -1; // marca como ruído
+    } else {
+      expandCluster(i, neighbors);
+      clusterId++;
+    }
+  }
 
-  abcData.forEach((abc, idx) => {
-    const tempVisualObj = ABCJS.renderAbc("notation", abc)[0];
-    const midiValues = extractPitchValues(tempVisualObj);
-    allPitches.push({
-      name: nameData[idx] || `Sem_nome_${idx + 1}`,
-      midiValues: midiValues
+  return labels;
+}
+
+// ---------- Visualização Clusters ------------
+// Desenha os histogramas de pitch agrupados por cluster em um gráfico radial
+function drawClusteredDots(data, clusters) {
+  const svg = d3.select("#radialPlot");
+  svg.selectAll("*").remove();
+
+  const width = +svg.attr("width");
+  const height = +svg.attr("height");
+  const g = svg.append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+  const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+  // Agrupa histogramas por cluster
+  const clusterMap = {};
+  data.forEach((hist, i) => {
+    const clusterId = clusters[i];
+    if (!clusterMap[clusterId]) clusterMap[clusterId] = [];
+    clusterMap[clusterId].push(hist);
+  });
+
+  data.forEach((hist, i) => {
+    const angleStep = (2 * Math.PI) / hist.length;
+    const radiusScale = d3.scaleLinear().domain([0, d3.max(hist)]).range([20, 200]);
+
+    hist.forEach((count, pitch) => {
+      if (count > 0) {
+        const angle = pitch * angleStep;
+        const r = radiusScale(count);
+        g.append("circle")
+          .attr("cx", Math.cos(angle) * r)
+          .attr("cy", Math.sin(angle) * r)
+          .attr("r", 3)
+          .attr("fill", color(clusters[i]))
+          .attr("opacity", 0.8);
+      }
     });
   });
 
-  const json = JSON.stringify(allPitches, null, 2);
-  const blob = new Blob([json], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
+  // Adiciona legenda dos clusters com os pitches mais frequentes
+  const uniqueClusters = [...new Set(clusters)].filter(id => id !== -1);
+  const legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("transform", `translate(20, 20)`);
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `todas_musicas_pitch.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-};
+  uniqueClusters.forEach((clusterId, i) => {
+    // Soma os histogramas do cluster
+    const hists = clusterMap[clusterId];
+    const summed = hists.reduce((acc, hist) => acc.map((v, i) => v + hist[i]), new Array(128).fill(0));
+    // Seleciona os 3 pitches mais frequentes
+    const topPitches = summed
+      .map((count, midi) => ({ midi, count }))
+      .filter(d => d.count > 0)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+      .map(d => d.midi)
+      .join(", ");
 
-function drawWaveform(audioBuffer) {
-  console.log("Waveform gerada para o buffer de áudio", audioBuffer);
+    legend.append("rect")
+      .attr("x", 0)
+      .attr("y", i * 22)
+      .attr("width", 18)
+      .attr("height", 18)
+      .attr("fill", color(clusterId));
+
+    legend.append("text")
+      .attr("x", 26)
+      .attr("y", i * 22 + 13)
+      .text(`Cluster ${clusterId} (MIDI: ${topPitches})`)
+      .attr("font-size", "13px")
+      .attr("fill", "#333");
+  });
 }

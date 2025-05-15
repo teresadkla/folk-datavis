@@ -21,9 +21,14 @@ fetch('sets.csv')
   });
 
 function renderABC(index) {
-  const abc = abcData[index];
+  let abc = abcData[index]; // Troque 'const' por 'let' para permitir alteração
   const name = nameData[index];
   if (!abc) return;
+
+  // Garante que o instrumento seja sempre o 49 (Strings)
+  if (!abc.startsWith("%%MIDI program 49")) {
+    abc = "%%MIDI program 49\n" + abc;
+  }
 
   // Mostrar nome da música
   document.getElementById("musicName").textContent = name;
