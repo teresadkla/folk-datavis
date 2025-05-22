@@ -5,7 +5,7 @@ let synthControl = null;
 let visualObj = null;
 
 // Carregar CSV
-fetch('sets.csv')
+fetch('tunes.csv')
   .then(response => response.text())
   .then(csvText => {
     const results = Papa.parse(csvText, { header: true });

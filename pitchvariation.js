@@ -60,13 +60,30 @@ function renderByName(name) {
 
     // Constrói histogramas de contagem de pitch (0-127)
     const pitchHistograms = histograms.map(pitchArray => {
+      console.log("histograma", pitchArray);
+      const pitchCounts = {};
+      pitchArray.forEach(val => {
+        pitchCounts[val] = (pitchCounts[val] || 0) + 1;
+      });
+      console.log({
+        name,
+        pitchCounts
+      });
       const counts = new Array(128).fill(0);
       pitchArray.forEach(val => counts[val]++);
       return counts;
     });
 
+
+
+    /* eps: controla o quão "próximos" os histogramas precisam ser para formar um cluster.
+       minPTS: controla o tamanho mínimo de um grupo para ser considerado um cluster.*/
+
+    /*Dois histogramas são agrupados no mesmo cluster se a distância entre 
+    eles for menor que eps (1) e tiverem pelo menos minPts vizinhos (2)*/
+
     // Ajuste eps/minPts para tentar obter 3 clusters
-    const clusters = dbscan(pitchHistograms, 0.5, 1);
+    const clusters = dbscan(pitchHistograms, 1, 2);
 
     // Agrupa histogramas por cluster
     const clusterMap = {};
@@ -199,52 +216,73 @@ function dbscan(data, eps, minPts) {
 // ---------- Visualização Clusters ------------
 // Desenha os histogramas de pitch agrupados por cluster em um gráfico radial
 function drawClusteredDots(data, clusters) {
+  // Seleciona o SVG e limpa qualquer visualização anterior
   const svg = d3.select("#radialPlot");
   svg.selectAll("*").remove();
 
+  // Obtém dimensões do SVG
   const width = +svg.attr("width");
   const height = +svg.attr("height");
+
+  // Cria um grupo centralizado no meio do SVG
   const g = svg.append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
 
+  // Escala de cores para clusters
   const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-  // Agrupa histogramas por cluster
+  // Agrupa índices dos histogramas por cluster
   const clusterMap = {};
   data.forEach((hist, i) => {
     const clusterId = clusters[i];
+    // Inicializa array para cada cluster, se necessário
     if (!clusterMap[clusterId]) clusterMap[clusterId] = [];
-    clusterMap[clusterId].push(hist);
+    clusterMap[clusterId].push(i); // Guarda o índice do histograma
   });
 
-  data.forEach((hist, i) => {
-    const angleStep = (2 * Math.PI) / hist.length;
-    const radiusScale = d3.scaleLinear().domain([0, d3.max(hist)]).range([20, 200]);
+  // Obtém apenas clusters válidos (ignora ruído, "-1")
+  const uniqueClusters = Object.keys(clusterMap).filter(id => id !== "-1");
 
-    hist.forEach((count, pitch) => {
-      if (count > 0) {
-        const angle = pitch * angleStep;
-        const r = radiusScale(count);
-        g.append("circle")
-          .attr("cx", Math.cos(angle) * r)
-          .attr("cy", Math.sin(angle) * r)
-          .attr("r", 3)
-          .attr("fill", color(clusters[i]))
-          .attr("opacity", 0.8);
-      }
+  // Parâmetros para os anéis radiais
+  const baseRadius = 20; // Raio do primeiro anel
+  const ringGap = 20;    // Distância entre anéis
+  const pointRadius = 6; // Raio de cada ponto
+
+  // Para cada cluster, desenha um anel de pontos
+  uniqueClusters.forEach((clusterId, ringIdx) => {
+    const indices = clusterMap[clusterId]; // Índices dos pontos deste cluster
+    const n = indices.length;              // Quantidade de pontos no cluster
+    const ringRadius = baseRadius + ringIdx * ringGap; // Raio do anel para este cluster
+
+    // Distribui os pontos uniformemente ao longo do círculo do anel
+    indices.forEach((dataIdx, i) => {
+      const angle = (2 * Math.PI * i) / n; // Ângulo para cada ponto
+      const x = Math.cos(angle) * ringRadius; // Coordenada X
+      const y = Math.sin(angle) * ringRadius; // Coordenada Y
+
+      // Desenha o círculo para cada ponto
+      g.append("circle")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", pointRadius)
+        .attr("fill", color(clusterId))
+        .attr("opacity", 0.85)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1.5);
     });
   });
 
-  // Adiciona legenda dos clusters com os pitches mais frequentes
-  const uniqueClusters = [...new Set(clusters)].filter(id => id !== -1);
+  // ---------- Legenda dos clusters ----------
+  // Cria um grupo para a legenda no canto superior esquerdo do SVG
   const legend = svg.append("g")
     .attr("class", "legend")
     .attr("transform", `translate(20, 20)`);
 
+  // Para cada cluster, mostra uma cor e os 3 pitches mais frequentes
   uniqueClusters.forEach((clusterId, i) => {
-    // Soma os histogramas do cluster
-    const hists = clusterMap[clusterId];
+    // Soma os histogramas do cluster para encontrar os pitches mais comuns
+    const hists = clusterMap[clusterId].map(idx => data[idx]);
     const summed = hists.reduce((acc, hist) => acc.map((v, i) => v + hist[i]), new Array(128).fill(0));
-    // Seleciona os 3 pitches mais frequentes
+    // Seleciona os 3 pitches mais frequentes neste cluster
     const topPitches = summed
       .map((count, midi) => ({ midi, count }))
       .filter(d => d.count > 0)
@@ -253,6 +291,7 @@ function drawClusteredDots(data, clusters) {
       .map(d => d.midi)
       .join(", ");
 
+    // Retângulo colorido da legenda
     legend.append("rect")
       .attr("x", 0)
       .attr("y", i * 22)
@@ -260,6 +299,7 @@ function drawClusteredDots(data, clusters) {
       .attr("height", 18)
       .attr("fill", color(clusterId));
 
+    // Texto da legenda com o número do cluster e os pitches principais
     legend.append("text")
       .attr("x", 26)
       .attr("y", i * 22 + 13)
