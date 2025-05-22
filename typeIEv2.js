@@ -43,7 +43,7 @@ d3.csv("sets.csv").then(data => {
     const svg = d3.select("svg");
     const width = +svg.attr("width");
     const height = +svg.attr("height");
-    const padding = { top: 60, right: 100, bottom: 60, left: 100 };
+    const padding = { top: 0, right: 100, bottom: 60, left: 100 };
   
     // Escala horizontal para os types
     const xScale = d3.scalePoint()
