@@ -47,13 +47,13 @@ d3.csv("VIMEO_V5.csv").then(data => {
   const g = svg.append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
 
-  // Eixo X fixo
-  g.append("g")
-    .attr("transform", `translate(0,${innerHeight})`)
-    .call(d3.axisBottom(xScale))
-    .selectAll("text")
-    .attr("transform", "rotate(-45)")
-    .style("text-anchor", "end");
+  // Remova/comente o eixo X fixo antigo
+  // g.append("g")
+  //   .attr("transform", `translate(0,0)`)
+  //   .call(d3.axisBottom(xScale))
+  //   .selectAll("text")
+  //   .attr("transform", "rotate(-45)")
+  //   .style("text-anchor", "end");
 
   const eixoYGroup = g.append("g");
 
@@ -115,13 +115,42 @@ d3.csv("VIMEO_V5.csv").then(data => {
 
         d3.select("#categoria-info")
           .html(
-            `<strong>Categoria:</strong> ${d.categoria}<br>
+        
+            `
+             <strong>Tema:</strong> ${d.tema} (${d.regiao})<br>
+            <strong>Categoria:</strong> ${d.categoria}<br>
              <strong>Artistas:</strong> ${artistas.join(", ")}<br>
              <strong>Instrumentos:</strong> ${instrumentos.join(", ")}`
           );
       })
       .append("title")
       .text(d => `${d.tema} (${d.regiao}): ${d.count}`);
+
+    // Remove linhas verticais antigas
+    g.selectAll(".x-grid").remove();
+
+    // Adiciona linhas verticais para cada região visível
+    g.selectAll(".x-grid")
+      .data(regioes)
+      .enter()
+      .append("line")
+      .attr("class", "x-grid")
+      .attr("x1", d => xScale(d))
+      .attr("x2", d => xScale(d))
+      .attr("y1", 0)
+      .attr("y2", innerHeight)
+      .attr("stroke", "#ccc")
+      .attr("stroke-dasharray", "2,2");
+
+    // Atualiza eixo X
+    g.selectAll(".x-axis").remove();
+    g.append("g")
+      .attr("class", "x-axis")
+      .attr("transform", "translate(0,0)")
+      .call(d3.axisTop(xScale))
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "start");
   }
 
   // Botões de navegação
