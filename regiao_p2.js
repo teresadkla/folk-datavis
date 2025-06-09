@@ -100,8 +100,25 @@ d3.csv("VIMEO_V5.csv").then(data => {
       .attr("r", d => rScale(d.count))
       .attr("fill", "#4682B4")
       .on("click", function(event, d) {
+        // Busca todos os artistas para o tema e região
+        const artistas = filteredData
+          .filter(item => item.Tema === d.tema && item.Região === d.regiao)
+          .map(item => item.Nome)
+          .filter((v, i, a) => a.indexOf(v) === i); // remove duplicados
+
+        // Busca todos os instrumentos para o tema e região
+        const instrumentos = filteredData
+          .filter(item => item.Tema === d.tema && item.Região === d.regiao)
+          .map(item => item.Instrumento)
+          .flatMap(instr => instr ? instr.split(",").map(i => i.trim()) : []) // separa por vírgula se houver vários
+          .filter((v, i, a) => v && a.indexOf(v) === i); // remove duplicados e vazios
+
         d3.select("#categoria-info")
-          .text(`Categoria de "${d.tema}" em ${d.regiao}: ${d.categoria}`);
+          .html(
+            `<strong>Categoria:</strong> ${d.categoria}<br>
+             <strong>Artistas:</strong> ${artistas.join(", ")}<br>
+             <strong>Instrumentos:</strong> ${instrumentos.join(", ")}`
+          );
       })
       .append("title")
       .text(d => `${d.tema} (${d.regiao}): ${d.count}`);
