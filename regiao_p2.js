@@ -42,7 +42,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
 
   const rScale = d3.scaleSqrt()
     .domain([1, d3.max(processed, d => d.count)])
-    .range([4, 20]);
+    .range([4, 30]);
 
   const g = svg.append("g")
     .attr("transform", `translate(${margin.left},${margin.top})`);
