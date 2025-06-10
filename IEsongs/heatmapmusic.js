@@ -95,6 +95,14 @@ function renderHeatmap(data, names, types, countMap) {
   }
 }
 
+// Adiciona botão de filtro acima do gráfico
+d3.select("body")
+  .insert("button", ":first-child")
+  .attr("id", "filter-multi-type")
+  .text("Mostrar apenas músicas com mais de um tipo");
+
+let filterActive = false;
+
 // Carregar dados e inicializar
 d3.csv("/sets.csv").then(data => {
   const countMap = d3.rollup(
@@ -106,21 +114,54 @@ d3.csv("/sets.csv").then(data => {
   const names = Array.from(new Set(data.map(d => d.name))).sort();
   const types = Array.from(new Set(data.map(d => d.type))).sort();
 
- 
+  // Função para filtrar nomes com mais de um tipo
+  function getFilteredNames() {
+    return Array.from(countMap.entries())
+      .filter(([name, typeMap]) => typeMap.size > 1)
+      .map(([name]) => name)
+      .sort();
+  }
 
   // Eventos dos botões
   d3.select("#nav-up").on("click", () => {
     if (startIndex > 0) {
       startIndex -= pageSize;
-      renderHeatmap(data, names, types, countMap);
+      renderHeatmap(
+        data,
+        filterActive ? getFilteredNames() : names,
+        types,
+        countMap
+      );
     }
   });
 
   d3.select("#nav-down").on("click", () => {
-    if (startIndex + pageSize < names.length) {
+    const currentNames = filterActive ? getFilteredNames() : names;
+    if (startIndex + pageSize < currentNames.length) {
       startIndex += pageSize;
-      renderHeatmap(data, names, types, countMap);
+      renderHeatmap(
+        data,
+        currentNames,
+        types,
+        countMap
+      );
     }
+  });
+
+  d3.select("#filter-multi-type").on("click", function () {
+    filterActive = !filterActive;
+    startIndex = 0;
+    d3.select(this).text(
+      filterActive
+        ? "Mostrar todas as músicas"
+        : "Mostrar apenas músicas com mais de um tipo"
+    );
+    renderHeatmap(
+      data,
+      filterActive ? getFilteredNames() : names,
+      types,
+      countMap
+    );
   });
 
   renderHeatmap(data, names, types, countMap);
