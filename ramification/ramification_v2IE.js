@@ -7,6 +7,33 @@ const svg = d3.select("svg")
               .attr("width", width)
               .attr("height", height);
 
+// Adicionar definições para filtros
+const defs = svg.append("defs");
+
+// Criar filtro de turbulência
+const turbulenceFilter = defs.append("filter")
+    .attr("id", "linkTurbulence")
+    .attr("x", "-50%")
+    .attr("y", "-50%")
+    .attr("width", "200%")
+    .attr("height", "200%");
+
+// Adicionar o elemento feTurbulence
+turbulenceFilter.append("feTurbulence")
+    .attr("type", "turbulence")
+    .attr("baseFrequency", "0.01 0.02")  // controla a "ondulação"
+    .attr("numOctaves", "10")             // controla a complexidade
+    .attr("seed", "8")                  // valor semente para o padrão
+    .attr("result", "turbulence");
+
+// Adicionar deslocamento baseado na turbulência
+turbulenceFilter.append("feDisplacementMap")
+    .attr("in", "SourceGraphic")
+    .attr("in2", "turbulence")
+    .attr("scale", "15")                // intensidade do efeito
+    .attr("xChannelSelector", "R")
+    .attr("yChannelSelector", "G");
+
 // Criar um grupo 'g' dentro do SVG para aplicar zoom e pan
 const container = svg.append("g");
 
@@ -27,48 +54,48 @@ const tooltip = d3.select("body")
 // Escala de cores para regiões (categorias distintas)
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-// Escala de tamanho dos nós (temas), baseada no número de ocorrências
-const sizeScale = d3.scaleLinear().range([6, 20]);
+// Escala de tamanho dos nós (names), baseada no número de ocorrências
+const sizeScale = d3.scaleLinear().range([5, 25]);
 
 // Carregar os dados do CSV
-d3.csv("VIMEO_V5.csv").then(data => {
-  const themeCounts = {};          // contador de temas
-  const themeRegionCounts = {};   // contador de ligações tema-região
+d3.csv("/sets.csv").then(data => {
+  const themeCounts = {};          // contador de names
+  const themeRegionCounts = {};   // contador de ligações name-mode
   const regionSet = new Set();    // conjunto de regiões únicas
 
   // Processar os dados para contar ocorrências
   data.forEach(d => {
-    const tema = d.Tema;
-    const regiao = d.Região;
+    const name = d.name;
+    const mode = d.mode;
 
-    regionSet.add(regiao); // adicionar região ao conjunto
+    regionSet.add(mode); // adicionar mode ao conjunto
 
-    // Contar quantas vezes cada tema aparece
-    if (!themeCounts[tema]) themeCounts[tema] = 0;
-    themeCounts[tema]++;
+    // Contar quantas vezes cada name aparece
+    if (!themeCounts[name]) themeCounts[name] = 0;
+    themeCounts[name]++;
 
-    // Contar quantas vezes cada par tema-região aparece
-    const key = `${tema}||${regiao}`;
+    // Contar quantas vezes cada par name-mode aparece
+    const key = `${name}||${mode}`;
     if (!themeRegionCounts[key]) themeRegionCounts[key] = 0;
     themeRegionCounts[key]++;
   });
 
-  // Filtrar temas que aparecem mais de uma vez
-  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 1);
+  // Filtrar names que aparecem mais de DEZ vezes (modificado)
+  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 600);
 
-  const nodes = [];        // lista de nós (temas e regiões)
-  const links = [];        // lista de ligações entre temas e regiões
+  const nodes = [];        // lista de nós (names e regiões)
+  const links = [];        // lista de ligações entre names e regiões
   const nodeByName = {};   // mapa de nome -> nó (para acesso rápido)
 
-  // Definir domínio da escala de tamanho dos temas
+  // Definir domínio da escala de tamanho dos names
   const maxThemeCount = d3.max(Object.values(themeCounts));
   sizeScale.domain([1, maxThemeCount]);
 
-  // Criar nós para temas repetidos
+  // Criar nós para names repetidos
   repeatedThemes.forEach(theme => {
     const node = {
       id: theme,
-      type: "tema",
+      type: "name",
       count: themeCounts[theme]
     };
     nodes.push(node);
@@ -79,20 +106,20 @@ d3.csv("VIMEO_V5.csv").then(data => {
   regionSet.forEach(region => {
     const node = {
       id: region,
-      type: "regiao"
+      type: "mode"
     };
     nodes.push(node);
     nodeByName[region] = node;
   });
 
-  // Criar ligações entre temas repetidos e suas respetivas regiões
+  // Criar ligações entre names repetidos e suas respetivas regiões
   Object.entries(themeRegionCounts).forEach(([key, count]) => {
-    const [tema, regiao] = key.split("||");
+    const [name, mode] = key.split("||");
 
-    if (repeatedThemes.includes(tema)) {
+    if (repeatedThemes.includes(name)) {
       links.push({
-        source: tema,
-        target: regiao,
+        source: name,
+        target: mode,
         value: count
       });
     }
@@ -100,20 +127,21 @@ d3.csv("VIMEO_V5.csv").then(data => {
 
   // Criar simulação física da rede
   const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(90).strength(1))
-    .force("charge", d3.forceManyBody().strength(-1000)) // repulsão entre nós
+    .force("link", d3.forceLink(links).id(d => d.id).distance(150).strength(1))
+    .force("charge", d3.forceManyBody().strength(-1500)) // repulsão entre nós
     .force("center", d3.forceCenter(width / 2, height / 2)); // centralizar rede
 
-  // Criar elementos de ligação (curvas)
+  // Criar elementos de ligação (curvas) com efeito de turbulência
   const link = container.append("g")
     .attr("class", "links")
     .selectAll("path")
     .data(links)
     .join("path")
-    .attr("stroke", "#999")
+    .attr("stroke", "#6B3F21")
     .attr("stroke-width", d => Math.sqrt(d.value))
     .attr("stroke-opacity", 0.6)
-    .attr("fill", "none");
+    .attr("fill", "none")
+    .attr("filter", "url(#linkTurbulence)"); // Aplicar o filtro de turbulência
 
   // Criar nós como círculos
   const node = container.append("g")
@@ -121,11 +149,11 @@ d3.csv("VIMEO_V5.csv").then(data => {
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-    .attr("r", d => d.type === "tema" ? sizeScale(d.count) : 10)
-    .attr("fill", d => d.type === "regiao" ? color(d.id) : "#69b3a2")
+    .attr("r", d => d.type === "name" ? sizeScale(d.count) : 10)
+    .attr("fill", d => d.type === "mode" ? color(d.id) : "#69b3a2")
     .attr("fill-opacity", 0.9)
     .on("mouseover", (event, d) => {
-      if (d.type === "tema") {
+      if (d.type === "name") {
         tooltip
           .style("display", "block")
           .html(`<strong>${d.id}</strong><br/>Ocorrências: ${d.count}`);
@@ -140,8 +168,8 @@ d3.csv("VIMEO_V5.csv").then(data => {
       tooltip.style("display", "none");
     })
     .on("click", (event, d) => {
-      if (d.type === "tema") {
-        highlightConnections(d.id); // destacar ligações desse tema
+      if (d.type === "name") {
+        highlightConnections(d.id); // destacar ligações desse name
       }
       event.stopPropagation(); // impedir propagação do clique
     })
@@ -152,12 +180,11 @@ d3.csv("VIMEO_V5.csv").then(data => {
   .selectAll("text")
   .data(nodes)
   .join("text")
-  .text(d => d.type === "regiao" ? d.id : "") // só regiões têm texto
+  .text(d => d.type === "mode" ? d.id : "") // só regiões têm texto
   .attr("font-size", "10px")
   .attr("dx", 10)
   .attr("dy", "0.35em")
   .style("opacity", 0); // começa escondido
-
 
   // Atualizar posições a cada tick da simulação
   simulation.on("tick", () => {
@@ -205,7 +232,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
       .on("end", dragended);
   }
 
-  // Destacar as ligações e nós associados a um tema selecionado
+  // Destacar as ligações e nós associados a um name selecionado
   function highlightConnections(selectedId) {
     node.style("opacity", n =>
       n.id === selectedId || links.some(l =>
@@ -219,7 +246,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
     );
 
     label.style("opacity", n =>
-      n.type === "regiao" && links.some(l =>
+      n.type === "mode" && links.some(l =>
         (l.source.id === selectedId && l.target.id === n.id) ||
         (l.target.id === selectedId && l.source.id === n.id)
       ) ? 1 : 0

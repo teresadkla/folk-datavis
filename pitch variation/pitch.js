@@ -7,7 +7,7 @@ let visualObj = null;
 let jsonMidiData = [];
 
 // Carregar CSV com partituras ABC
-fetch('sets.csv')
+fetch('/sets.csv')
   .then(response => response.text())
   .then(csvText => {
     const results = Papa.parse(csvText, { header: true });

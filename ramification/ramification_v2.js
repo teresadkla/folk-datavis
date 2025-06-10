@@ -58,7 +58,7 @@ const color = d3.scaleOrdinal(d3.schemeCategory10);
 const sizeScale = d3.scaleLinear().range([5, 25]);
 
 // Carregar os dados do CSV
-d3.csv("VIMEO_V5.csv").then(data => {
+d3.csv("/VIMEO_V5.csv").then(data => {
   const themeCounts = {};          // contador de temas
   const themeRegionCounts = {};   // contador de ligações tema-região
   const regionSet = new Set();    // conjunto de regiões únicas

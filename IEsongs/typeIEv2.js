@@ -39,7 +39,7 @@ const sliderValue = sliderContainer.append("span")
   .style("margin-left", "10px")
   .text("1");
 
-d3.csv("sets.csv").then(data => {
+d3.csv("/sets.csv").then(data => {
     const svg = d3.select("svg");
     const width = +svg.attr("width");
     const height = +svg.attr("height");

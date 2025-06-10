@@ -28,10 +28,10 @@ const tooltip = d3.select("body")
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
 // Escala de tamanho dos nós (temas), baseada no número de ocorrências
-const sizeScale = d3.scaleLinear().range([5, 25]);
+const sizeScale = d3.scaleLinear().range([6, 20]);
 
 // Carregar os dados do CSV
-d3.csv("VIMEO_V5.csv").then(data => {
+d3.csv("/VIMEO_V5.csv").then(data => {
   const themeCounts = {};          // contador de temas
   const themeRegionCounts = {};   // contador de ligações tema-região
   const regionSet = new Set();    // conjunto de regiões únicas
@@ -53,8 +53,8 @@ d3.csv("VIMEO_V5.csv").then(data => {
     themeRegionCounts[key]++;
   });
 
-  // Filtrar temas que aparecem mais de DEZ vezes (modificado)
-  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 13);
+  // Filtrar temas que aparecem mais de uma vez
+  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 1);
 
   const nodes = [];        // lista de nós (temas e regiões)
   const links = [];        // lista de ligações entre temas e regiões
@@ -101,51 +101,19 @@ d3.csv("VIMEO_V5.csv").then(data => {
   // Criar simulação física da rede
   const simulation = d3.forceSimulation(nodes)
     .force("link", d3.forceLink(links).id(d => d.id).distance(90).strength(1))
-    .force("charge", d3.forceManyBody().strength(-1500)) // repulsão entre nós
+    .force("charge", d3.forceManyBody().strength(-1000)) // repulsão entre nós
     .force("center", d3.forceCenter(width / 2, height / 2)); // centralizar rede
 
-  let tickCount = 0;
-  const maxTicks = 100; // número de ticks antes de parar
-
-  // Criar um grupo separado para os links esboçados
-  const roughLayer = container.append("g").attr("class", "rough-links");
-  const rc = rough.svg(roughLayer.node()); // inicializar Rough para SVG
-
-  // Criar ligações com Rough.js (curvas esboçadas)
-  simulation.on("tick", () => {
-    tickCount++;
-    roughLayer.selectAll("*").remove(); // limpar links antigos a cada tick
-
-    links.forEach(d => {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
-      const path = `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
-
-      const sketch = rc.path(path, {
-        stroke: 'brown',
-        strokeWidth: Math.sqrt(d.value),
-        roughness: 2.5, // controla o quão “esboçado” fica
-        fillStyle: 'none'
-      });
-
-      roughLayer.node().appendChild(sketch);
-    });
-
-    // Atualizar posição dos nós
-    node
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y);
-
-    // Atualizar posição dos rótulos
-    label
-      .attr("x", d => d.x)
-      .attr("y", d => d.y);
-
-    if (tickCount > maxTicks) {
-      simulation.stop();
-    }
-  });
+  // Criar elementos de ligação (curvas)
+  const link = container.append("g")
+    .attr("class", "links")
+    .selectAll("path")
+    .data(links)
+    .join("path")
+    .attr("stroke", "#999")
+    .attr("stroke-width", d => Math.sqrt(d.value))
+    .attr("stroke-opacity", 0.6)
+    .attr("fill", "none");
 
   // Criar nós como círculos
   const node = container.append("g")
@@ -181,19 +149,41 @@ d3.csv("VIMEO_V5.csv").then(data => {
 
   // Criar rótulos com nomes dos nós
   const label = container.append("g")
-    .selectAll("text")
-    .data(nodes)
-    .join("text")
-    .text(d => d.type === "regiao" ? d.id : "") // só regiões têm texto
-    .attr("font-size", "10px")
-    .attr("dx", 10)
-    .attr("dy", "0.35em")
-    .style("opacity", 0); // começa escondido
+  .selectAll("text")
+  .data(nodes)
+  .join("text")
+  .text(d => d.type === "regiao" ? d.id : "") // só regiões têm texto
+  .attr("font-size", "10px")
+  .attr("dx", 10)
+  .attr("dy", "0.35em")
+  .style("opacity", 0); // começa escondido
+
+
+  // Atualizar posições a cada tick da simulação
+  simulation.on("tick", () => {
+    // Desenhar ligações como arcos curvos
+    link.attr("d", d => {
+      const dx = d.target.x - d.source.x;
+      const dy = d.target.y - d.source.y;
+      const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
+      return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+    });
+
+    // Atualizar posição dos nós
+    node
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y);
+
+    // Atualizar posição dos rótulos
+    label
+      .attr("x", d => d.x)
+      .attr("y", d => d.y);
+  });
 
   // Função para permitir arrastar os nós
   function drag(simulation) {
     function dragstarted(event, d) {
-      simulation.alphaTarget(0.3).restart();
+      if (!event.active) simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
@@ -204,10 +194,9 @@ d3.csv("VIMEO_V5.csv").then(data => {
     }
 
     function dragended(event, d) {
-      simulation.alphaTarget(0);
+      if (!event.active) simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
-      setTimeout(() => simulation.stop(), 300); // para garantir que para após o drag
     }
 
     return d3.drag()
@@ -236,6 +225,7 @@ d3.csv("VIMEO_V5.csv").then(data => {
       ) ? 1 : 0
     );
   }
+
   // Reset ao clicar fora de qualquer nó
   svg.on("click", () => {
     resetHighlight();

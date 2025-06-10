@@ -8,7 +8,7 @@ const uniqueNames = new Set();
 const songMap = new Map();
 
 // Carrega o CSV com as músicas e popula os arrays e mapas
-fetch('sets.csv')
+fetch('/sets.csv')
   .then(response => response.text())
   .then(csvText => {
     const results = Papa.parse(csvText, { header: true });

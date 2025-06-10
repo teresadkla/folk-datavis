@@ -1,4 +1,4 @@
-d3.csv("sets.csv").then(data => {
+d3.csv("/sets.csv").then(data => {
   // Remove duplicados por settingOrder + settingId
   const uniqueData = Array.from(
     d3.group(data, d => `${d.settingOrder}-${d.settingId}`),

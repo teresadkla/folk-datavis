@@ -25,7 +25,7 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 // Carrega os dados do CSV
-d3.csv("VIMEO_V5.csv").then(data => {
+d3.csv("/VIMEO_V5.csv").then(data => {
   // Converte a string da data para objeto Date
   data.forEach(d => {
     d.date = parseDate(d.Data);

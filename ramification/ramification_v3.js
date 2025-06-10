@@ -7,33 +7,6 @@ const svg = d3.select("svg")
               .attr("width", width)
               .attr("height", height);
 
-// Adicionar definições para filtros
-const defs = svg.append("defs");
-
-// Criar filtro de turbulência
-const turbulenceFilter = defs.append("filter")
-    .attr("id", "linkTurbulence")
-    .attr("x", "-50%")
-    .attr("y", "-50%")
-    .attr("width", "200%")
-    .attr("height", "200%");
-
-// Adicionar o elemento feTurbulence
-turbulenceFilter.append("feTurbulence")
-    .attr("type", "turbulence")
-    .attr("baseFrequency", "0.01 0.02")  // controla a "ondulação"
-    .attr("numOctaves", "10")             // controla a complexidade
-    .attr("seed", "8")                  // valor semente para o padrão
-    .attr("result", "turbulence");
-
-// Adicionar deslocamento baseado na turbulência
-turbulenceFilter.append("feDisplacementMap")
-    .attr("in", "SourceGraphic")
-    .attr("in2", "turbulence")
-    .attr("scale", "15")                // intensidade do efeito
-    .attr("xChannelSelector", "R")
-    .attr("yChannelSelector", "G");
-
 // Criar um grupo 'g' dentro do SVG para aplicar zoom e pan
 const container = svg.append("g");
 
@@ -54,48 +27,48 @@ const tooltip = d3.select("body")
 // Escala de cores para regiões (categorias distintas)
 const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-// Escala de tamanho dos nós (names), baseada no número de ocorrências
+// Escala de tamanho dos nós (temas), baseada no número de ocorrências
 const sizeScale = d3.scaleLinear().range([5, 25]);
 
 // Carregar os dados do CSV
-d3.csv("sets.csv").then(data => {
-  const themeCounts = {};          // contador de names
-  const themeRegionCounts = {};   // contador de ligações name-mode
+d3.csv("/VIMEO_V5.csv").then(data => {
+  const themeCounts = {};          // contador de temas
+  const themeRegionCounts = {};   // contador de ligações tema-região
   const regionSet = new Set();    // conjunto de regiões únicas
 
   // Processar os dados para contar ocorrências
   data.forEach(d => {
-    const name = d.name;
-    const mode = d.mode;
+    const tema = d.Tema;
+    const regiao = d.Região;
 
-    regionSet.add(mode); // adicionar mode ao conjunto
+    regionSet.add(regiao); // adicionar região ao conjunto
 
-    // Contar quantas vezes cada name aparece
-    if (!themeCounts[name]) themeCounts[name] = 0;
-    themeCounts[name]++;
+    // Contar quantas vezes cada tema aparece
+    if (!themeCounts[tema]) themeCounts[tema] = 0;
+    themeCounts[tema]++;
 
-    // Contar quantas vezes cada par name-mode aparece
-    const key = `${name}||${mode}`;
+    // Contar quantas vezes cada par tema-região aparece
+    const key = `${tema}||${regiao}`;
     if (!themeRegionCounts[key]) themeRegionCounts[key] = 0;
     themeRegionCounts[key]++;
   });
 
-  // Filtrar names que aparecem mais de DEZ vezes (modificado)
-  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 600);
+  // Filtrar temas que aparecem mais de DEZ vezes (modificado)
+  const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 13);
 
-  const nodes = [];        // lista de nós (names e regiões)
-  const links = [];        // lista de ligações entre names e regiões
+  const nodes = [];        // lista de nós (temas e regiões)
+  const links = [];        // lista de ligações entre temas e regiões
   const nodeByName = {};   // mapa de nome -> nó (para acesso rápido)
 
-  // Definir domínio da escala de tamanho dos names
+  // Definir domínio da escala de tamanho dos temas
   const maxThemeCount = d3.max(Object.values(themeCounts));
   sizeScale.domain([1, maxThemeCount]);
 
-  // Criar nós para names repetidos
+  // Criar nós para temas repetidos
   repeatedThemes.forEach(theme => {
     const node = {
       id: theme,
-      type: "name",
+      type: "tema",
       count: themeCounts[theme]
     };
     nodes.push(node);
@@ -106,20 +79,20 @@ d3.csv("sets.csv").then(data => {
   regionSet.forEach(region => {
     const node = {
       id: region,
-      type: "mode"
+      type: "regiao"
     };
     nodes.push(node);
     nodeByName[region] = node;
   });
 
-  // Criar ligações entre names repetidos e suas respetivas regiões
+  // Criar ligações entre temas repetidos e suas respetivas regiões
   Object.entries(themeRegionCounts).forEach(([key, count]) => {
-    const [name, mode] = key.split("||");
+    const [tema, regiao] = key.split("||");
 
-    if (repeatedThemes.includes(name)) {
+    if (repeatedThemes.includes(tema)) {
       links.push({
-        source: name,
-        target: mode,
+        source: tema,
+        target: regiao,
         value: count
       });
     }
@@ -127,21 +100,52 @@ d3.csv("sets.csv").then(data => {
 
   // Criar simulação física da rede
   const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id).distance(150).strength(1))
+    .force("link", d3.forceLink(links).id(d => d.id).distance(90).strength(1))
     .force("charge", d3.forceManyBody().strength(-1500)) // repulsão entre nós
     .force("center", d3.forceCenter(width / 2, height / 2)); // centralizar rede
 
-  // Criar elementos de ligação (curvas) com efeito de turbulência
-  const link = container.append("g")
-    .attr("class", "links")
-    .selectAll("path")
-    .data(links)
-    .join("path")
-    .attr("stroke", "#6B3F21")
-    .attr("stroke-width", d => Math.sqrt(d.value))
-    .attr("stroke-opacity", 0.6)
-    .attr("fill", "none")
-    .attr("filter", "url(#linkTurbulence)"); // Aplicar o filtro de turbulência
+  let tickCount = 0;
+  const maxTicks = 100; // número de ticks antes de parar
+
+  // Criar um grupo separado para os links esboçados
+  const roughLayer = container.append("g").attr("class", "rough-links");
+  const rc = rough.svg(roughLayer.node()); // inicializar Rough para SVG
+
+  // Criar ligações com Rough.js (curvas esboçadas)
+  simulation.on("tick", () => {
+    tickCount++;
+    roughLayer.selectAll("*").remove(); // limpar links antigos a cada tick
+
+    links.forEach(d => {
+      const dx = d.target.x - d.source.x;
+      const dy = d.target.y - d.source.y;
+      const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
+      const path = `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+
+      const sketch = rc.path(path, {
+        stroke: 'brown',
+        strokeWidth: Math.sqrt(d.value),
+        roughness: 2.5, // controla o quão “esboçado” fica
+        fillStyle: 'none'
+      });
+
+      roughLayer.node().appendChild(sketch);
+    });
+
+    // Atualizar posição dos nós
+    node
+      .attr("cx", d => d.x)
+      .attr("cy", d => d.y);
+
+    // Atualizar posição dos rótulos
+    label
+      .attr("x", d => d.x)
+      .attr("y", d => d.y);
+
+    if (tickCount > maxTicks) {
+      simulation.stop();
+    }
+  });
 
   // Criar nós como círculos
   const node = container.append("g")
@@ -149,11 +153,11 @@ d3.csv("sets.csv").then(data => {
     .selectAll("circle")
     .data(nodes)
     .join("circle")
-    .attr("r", d => d.type === "name" ? sizeScale(d.count) : 10)
-    .attr("fill", d => d.type === "mode" ? color(d.id) : "#69b3a2")
+    .attr("r", d => d.type === "tema" ? sizeScale(d.count) : 10)
+    .attr("fill", d => d.type === "regiao" ? color(d.id) : "#69b3a2")
     .attr("fill-opacity", 0.9)
     .on("mouseover", (event, d) => {
-      if (d.type === "name") {
+      if (d.type === "tema") {
         tooltip
           .style("display", "block")
           .html(`<strong>${d.id}</strong><br/>Ocorrências: ${d.count}`);
@@ -168,8 +172,8 @@ d3.csv("sets.csv").then(data => {
       tooltip.style("display", "none");
     })
     .on("click", (event, d) => {
-      if (d.type === "name") {
-        highlightConnections(d.id); // destacar ligações desse name
+      if (d.type === "tema") {
+        highlightConnections(d.id); // destacar ligações desse tema
       }
       event.stopPropagation(); // impedir propagação do clique
     })
@@ -177,40 +181,19 @@ d3.csv("sets.csv").then(data => {
 
   // Criar rótulos com nomes dos nós
   const label = container.append("g")
-  .selectAll("text")
-  .data(nodes)
-  .join("text")
-  .text(d => d.type === "mode" ? d.id : "") // só regiões têm texto
-  .attr("font-size", "10px")
-  .attr("dx", 10)
-  .attr("dy", "0.35em")
-  .style("opacity", 0); // começa escondido
-
-  // Atualizar posições a cada tick da simulação
-  simulation.on("tick", () => {
-    // Desenhar ligações como arcos curvos
-    link.attr("d", d => {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
-      return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
-    });
-
-    // Atualizar posição dos nós
-    node
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y);
-
-    // Atualizar posição dos rótulos
-    label
-      .attr("x", d => d.x)
-      .attr("y", d => d.y);
-  });
+    .selectAll("text")
+    .data(nodes)
+    .join("text")
+    .text(d => d.type === "regiao" ? d.id : "") // só regiões têm texto
+    .attr("font-size", "10px")
+    .attr("dx", 10)
+    .attr("dy", "0.35em")
+    .style("opacity", 0); // começa escondido
 
   // Função para permitir arrastar os nós
   function drag(simulation) {
     function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
+      simulation.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
@@ -221,9 +204,10 @@ d3.csv("sets.csv").then(data => {
     }
 
     function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
+      simulation.alphaTarget(0);
       d.fx = null;
       d.fy = null;
+      setTimeout(() => simulation.stop(), 300); // para garantir que para após o drag
     }
 
     return d3.drag()
@@ -232,7 +216,7 @@ d3.csv("sets.csv").then(data => {
       .on("end", dragended);
   }
 
-  // Destacar as ligações e nós associados a um name selecionado
+  // Destacar as ligações e nós associados a um tema selecionado
   function highlightConnections(selectedId) {
     node.style("opacity", n =>
       n.id === selectedId || links.some(l =>
@@ -246,13 +230,12 @@ d3.csv("sets.csv").then(data => {
     );
 
     label.style("opacity", n =>
-      n.type === "mode" && links.some(l =>
+      n.type === "regiao" && links.some(l =>
         (l.source.id === selectedId && l.target.id === n.id) ||
         (l.target.id === selectedId && l.source.id === n.id)
       ) ? 1 : 0
     );
   }
-
   // Reset ao clicar fora de qualquer nó
   svg.on("click", () => {
     resetHighlight();

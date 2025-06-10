@@ -119,7 +119,7 @@ d3.json("Portugal.json").then(geojson => {
     .text(d => d.properties.name);
 
   // Carregar os dados do CSV
-  d3.csv("VIMEO_V5.csv").then(data => {
+  d3.csv("/VIMEO_V5.csv").then(data => {
     console.log("Dados carregados:", data);
 
     // Filtro de ano
