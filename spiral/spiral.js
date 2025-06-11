@@ -3,8 +3,9 @@ const svg = d3.select("svg");
 const width = +svg.attr("width");
 const height = +svg.attr("height");
 
-// Cria um grupo centralizado no meio do SVG
-const g = svg.append("g").attr("transform", `translate(${width / 2}, ${height / 2})`);
+// Cria um grupo centralizado no meio do SVG, já com escala reduzida
+const g = svg.append("g")
+  .attr("transform", `translate(${width / 2}, ${height / 2})`);// esta scale pode ser ajustada conforme necessário para aumentar ou diminuir o tamanho da espiral
 
 // Seleciona o elemento de tooltip (deve existir no HTML)
 const tooltip = d3.select(".tooltip");
@@ -100,13 +101,64 @@ d3.csv("/VIMEO_V5.csv").then(data => {
     .on("mouseout", () => {
       tooltip.style("opacity", 0);
     })
-    // Ao clicar, destaca apenas os círculos do mesmo tema
+    // Ao clicar, destaca apenas os círculos do mesmo tema e desenha a linha
     .on("click", function(event, clickedDatum) {
       const selectedTheme = clickedDatum.Tema;
 
+      // Destaca círculos
       g.selectAll("circle")
         .transition()
         .duration(300)
         .attr("opacity", d => d.Tema === selectedTheme ? 1 : 0.1);
+
+      // Remove linha anterior, se existir
+      g.selectAll(".highlight-line").remove();
+
+      // Filtra e ordena os pontos do tema selecionado
+      const themePoints = filteredData
+        .filter(d => d.Tema === selectedTheme)
+        .sort((a, b) => d3.ascending(a.date, b.date));
+
+      // Desenha a linha ligando os pontos
+      if (themePoints.length > 1) {
+        const line = d3.line()
+          .x(d => d.x)
+          .y(d => d.y);
+
+        g.append("path")
+          .datum(themePoints)
+          .attr("class", "highlight-line")
+          .attr("d", line)
+          .attr("fill", "none")
+          .attr("stroke", "#222")
+          .attr("stroke-width", 2)
+          .attr("stroke-dasharray", "4 2");
+      }
+
+      // Impede propagação para não disparar o clique do SVG
+      event.stopPropagation();
     });
+    // Depois do g.selectAll("circle")...
+// g.selectAll("text")
+// .data(filteredData)
+// .enter()
+// .append("text")
+// .attr("x", d => d.x + 10)  // desloca o texto um pouco pra direita da bolinha
+// .attr("y", d => d.y + 5)   // ajusta o texto pra ficar centralizado verticalmente
+// .text(d => d.Data)          // mostra a data original como string
+// .attr("font-size", "10px")
+// .attr("fill", "#333"); 
+
+});
+
+// Permite restaurar a opacidade ao clicar fora das bolinhas
+svg.on("click", function(event) {
+  // Só executa se o clique não for em um círculo
+  if (event.target.tagName !== "circle") {
+    g.selectAll("circle")
+      .transition()
+      .duration(300)
+      .attr("opacity", 1);
+    g.selectAll(".highlight-line").remove();
+  }
 });

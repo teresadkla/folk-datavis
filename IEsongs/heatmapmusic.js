@@ -38,8 +38,8 @@ function renderHeatmap(data, names, types, countMap) {
     .attr("transform", `translate(0,-10)`)
     .call(d3.axisTop(xScale))
     .selectAll("text")
-    .attr("transform", "rotate(-45)")
-    .style("text-anchor", "start");
+    .attr("transform", "rotate(0)")
+    .style("text-anchor", "center");
 
   // Gridlines horizontais (para cada música)
   g.selectAll(".y-grid")
@@ -79,6 +79,7 @@ function renderHeatmap(data, names, types, countMap) {
         .attr("r", 5)
         .attr("fill", colorScale(count))
         .attr("class", "dot")
+        .attr("stroke", "none") 
         .on("mouseover", function(event) {
           tooltip.transition().duration(100).style("opacity", 1);
           tooltip.html(`<strong>${name}</strong><br>${type}: <b>${count}</b> variações`);
