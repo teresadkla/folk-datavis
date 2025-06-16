@@ -9,7 +9,7 @@ const innerHeight = height - margin.top - margin.bottom;
 const temasPorPagina = 10;
 let paginaAtual = 0;
 
-d3.csv("VIMEO_V5.csv").then(data => {
+d3.csv("/VIMEO_V5.csv").then(data => {
   // Conta e filtra temas repetidos
   const temaCount = d3.rollup(data, v => v.length, d => d.Tema);
   const temasRepetidos = new Set([...temaCount.entries()].filter(d => d[1] > 1).map(d => d[0]));

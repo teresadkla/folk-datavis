@@ -28,7 +28,7 @@ function renderHeatmap(data, names, types, countMap) {
   // Escalas
   const xScale = d3.scaleBand().domain(types).range([0, width]).padding(0.1);
   const yScale = d3.scaleBand().domain(visibleNames).range([0, height]).padding(0.1);
-  const colorScale = d3.scaleSequential(d3.interpolateOrRd)
+  const colorScale = d3.scaleSequential(d3.interpolatePlasma)
     .domain([1, d3.max(Array.from(countMap.values(), m => d3.max(m.values())))]);
 
   // Eixos
@@ -78,7 +78,7 @@ function renderHeatmap(data, names, types, countMap) {
         .attr("cy", yScale(name) + yScale.bandwidth() / 2)
         .attr("r", 5)
         .attr("fill", colorScale(count))
-        .attr("class", "dot")
+        // .attr("class", "dot")
         .attr("stroke", "none") 
         .on("mouseover", function(event) {
           tooltip.transition().duration(100).style("opacity", 1);
