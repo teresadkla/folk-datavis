@@ -72,7 +72,7 @@ Promise.all([
       .attr("cy", d => yScale(d.Pitch_MIDI))
       .attr("r", 4)
       .attr("fill", d => color(d.variation_id))
-      .attr("opacity", 0.5)  // Add opacity here
+      .attr("opacity", 0.5) 
       .append("title").text(d => `Pitch: ${d.Pitch_MIDI}`);
 
     allDots
@@ -80,7 +80,7 @@ Promise.all([
       .attr("cx", d => xScale(d.NoteIndex))
       .attr("cy", d => yScale(d.Pitch_MIDI))
       .attr("fill", d => color(d.variation_id))
-      .attr("opacity", 0.5);  // Add opacity here
+      .attr("opacity", 0.5);  
 
     console.log("Variações encontradas para", selectedName, variations.length);
   }
