@@ -3,10 +3,14 @@ import * as d3 from "d3";
 
 const NetworkDiagram = () => {
   const svgRef = useRef();
+  const tooltipRef = useRef();
 
   useEffect(() => {
     const width = window.innerWidth;
     const height = window.innerHeight;
+
+    // Limpa o SVG antes de desenhar novamente
+    d3.select(svgRef.current).selectAll("*").remove();
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -45,16 +49,11 @@ const NetworkDiagram = () => {
         })
     );
 
-    const tooltip = d3.select("body")
-      .append("div")
-      .attr("class", "tooltip")
-      .style("display", "none")
-      .style("position", "absolute");
-
+    const tooltip = d3.select(tooltipRef.current);
     const color = d3.scaleOrdinal(d3.schemeCategory10);
     const sizeScale = d3.scaleLinear().range([5, 25]);
 
-    d3.csv("/VIMEO_V5.csv").then(data => {
+    d3.csv("VIMEO_V5.csv").then(data => {
       const themeCounts = {};
       const themeRegionCounts = {};
       const regionSet = new Set();
@@ -62,18 +61,15 @@ const NetworkDiagram = () => {
       data.forEach(d => {
         const tema = d.Tema;
         const regiao = d.Região;
-
         regionSet.add(regiao);
         if (!themeCounts[tema]) themeCounts[tema] = 0;
         themeCounts[tema]++;
-
         const key = `${tema}||${regiao}`;
         if (!themeRegionCounts[key]) themeRegionCounts[key] = 0;
         themeRegionCounts[key]++;
       });
 
       const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 13);
-
       const nodes = [];
       const links = [];
       const nodeByName = {};
@@ -82,20 +78,13 @@ const NetworkDiagram = () => {
       sizeScale.domain([1, maxThemeCount]);
 
       repeatedThemes.forEach(theme => {
-        const node = {
-          id: theme,
-          type: "tema",
-          count: themeCounts[theme]
-        };
+        const node = { id: theme, type: "tema", count: themeCounts[theme] };
         nodes.push(node);
         nodeByName[theme] = node;
       });
 
       regionSet.forEach(region => {
-        const node = {
-          id: region,
-          type: "regiao"
-        };
+        const node = { id: region, type: "regiao" };
         nodes.push(node);
         nodeByName[region] = node;
       });
@@ -133,13 +122,15 @@ const NetworkDiagram = () => {
         .attr("fill-opacity", 0.9)
         .on("mouseover", (event, d) => {
           if (d.type === "tema") {
-            tooltip.style("display", "block")
+            tooltip
+              .style("display", "block")
               .html(`<strong>${d.id}</strong><br/>Ocorrências: ${d.count}`);
           }
         })
         .on("mousemove", event => {
-          tooltip.style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 20) + "px");
+          tooltip
+            .style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY - 20}px`);
         })
         .on("mouseout", () => {
           tooltip.style("display", "none");
@@ -167,7 +158,6 @@ const NetworkDiagram = () => {
           const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
           return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
         });
-
         node.attr("cx", d => d.x).attr("cy", d => d.y);
         label.attr("x", d => d.x).attr("y", d => d.y);
       });
@@ -194,31 +184,38 @@ const NetworkDiagram = () => {
         node.style("opacity", n =>
           n.id === selectedId || links.some(l =>
             (l.source.id === selectedId && l.target.id === n.id) ||
-            (l.target.id === selectedId && l.source.id === n.id)
-          ) ? 1 : 0.1
+            (l.target.id === selectedId && l.source.id === n.id)) ? 1 : 0.1
         );
-
         link.style("opacity", l =>
           l.source.id === selectedId || l.target.id === selectedId ? 1 : 0.1
         );
-
         label.style("opacity", n =>
           n.type === "regiao" && links.some(l =>
             (l.source.id === selectedId && l.target.id === n.id) ||
-            (l.target.id === selectedId && l.source.id === n.id)
-          ) ? 1 : 0
+            (l.target.id === selectedId && l.source.id === n.id)) ? 1 : 0
         );
       }
 
-      svg.on("click", () => {
+      svg.on("click", () => resetHighlight());
+
+      function resetHighlight() {
         node.style("opacity", 1);
         link.style("opacity", 0.6);
         label.style("opacity", 0);
-      });
+      }
     });
   }, []);
 
-  return <svg ref={svgRef}></svg>;
+  return (
+    <div>
+      <svg ref={svgRef}></svg>
+      <div ref={tooltipRef} className="tooltip" style={{
+        position: 'absolute', background: '#fff', border: '1px solid #ccc',
+        padding: '5px 10px', borderRadius: '5px', pointerEvents: 'none',
+        fontSize: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', display: 'none'
+      }} />
+    </div>
+  );
 };
 
 export default NetworkDiagram;
