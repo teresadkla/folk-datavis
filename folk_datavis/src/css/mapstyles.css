@@ -1,0 +1,23 @@
+.tooltip {
+    position: absolute;
+    background-color: white;
+    padding: 10px;
+    border: 1px solid #999;
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .distrito {
+    fill: #ddd;
+    stroke: #333;
+  }
+  
+  .label {
+    font-size: 10px;
+    fill: #444;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+  

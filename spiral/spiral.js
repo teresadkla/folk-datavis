@@ -26,7 +26,7 @@ const zoom = d3.zoom()
 svg.call(zoom);
 
 // Carrega os dados do CSV
-d3.csv("/VIMEO_V5.csv").then(data => {
+d3.csv("/VIMEO_V6.csv").then(data => {
   // Converte a string da data para objeto Date
   data.forEach(d => {
     d.date = parseDate(d.Data);
@@ -138,16 +138,28 @@ d3.csv("/VIMEO_V5.csv").then(data => {
       // Impede propagação para não disparar o clique do SVG
       event.stopPropagation();
     });
-    // Depois do g.selectAll("circle")...
-// g.selectAll("text")
-// .data(filteredData)
-// .enter()
-// .append("text")
-// .attr("x", d => d.x + 10)  // desloca o texto um pouco pra direita da bolinha
-// .attr("y", d => d.y + 5)   // ajusta o texto pra ficar centralizado verticalmente
-// .text(d => d.Data)          // mostra a data original como string
-// .attr("font-size", "10px")
-// .attr("fill", "#333"); 
+
+  // Adiciona labels de ano quando há mudança de ano
+  let lastYear = null;
+  g.selectAll("year-label")
+    .data(filteredData)
+    .enter()
+    .filter(d => {
+      const year = d.Ano;
+      if (year !== lastYear) {
+        lastYear = year;
+        return true;
+      }
+      return false;
+    })
+    .append("text")
+    .attr("x", d => d.x + 15) // desloca o texto um pouco para fora da espiral
+    .attr("y", d => d.y)
+    .text(d => d.Ano)
+    .attr("font-size", "14px")
+    .attr("font-weight", "bold")
+    .attr("fill", "#444")
+    .attr("alignment-baseline", "middle");
 
 });
 

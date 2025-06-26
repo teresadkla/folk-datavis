@@ -6,7 +6,7 @@ import './App.css'
 function App() {
   return (
     <div className="app-container">
-      <h1>Folk Data Visualization</h1>
+      {/* <h1>Folk Data Visualization</h1> */}
       <div className="visualizations">
         {/* <NetworkDiagram /> */}
         <Vis1PT />
