@@ -1,16 +1,46 @@
-.vis1pt-container {
+.visPT-container {
     width: 100vw;
     overflow: hidden;
     min-height: 100vh;
     background: #e4e4e4;
-    display: flex;
+    /* display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: center; */
+    display: grid;
+    /* grid-template-rows: (12, 1fr); */
+   grid-template-rows: 100px 1fr max-content;
+    grid-template-columns: repeat(12, 1fr);
     font-family: sans-serif;
+    padding: 2%;
   }
   
-  .vis1pt-header {
+  .vispt-roots{
+    grid-column: 1 / span 2;
+    grid-row: 1 / span 2;
+  }
+.roots-description{
+    grid-column: 8 / span 3;
+    grid-row: 1 / span 2;
+    margin-left: 10%;
+    text-align: left;
+  
+}
+.visPT-map{
+  grid-column: 1 / span 2;
+  grid-row: 5 / span 2;
+}
+.visPT-dotplot{
+  grid-column: 1 / span 2;
+  grid-row: 7 / span 2;
+}
+.visPT-spiral{
+  grid-column: 1 / span 2;
+  grid-row: 9 / span 2;
+}
+
+  
+  .visPT-header {
     position: fixed;
     width: 100%;
    margin: 2rem;
@@ -21,21 +51,21 @@
     /* margin-bottom: 2.5rem;*/
   }
   
-  .vis1pt-title {
+  .visPT-title {
     margin-left: 2rem;
     font-size: 1rem;
     font-weight: 500;
     color: #000;
   }
   
-  .vis1pt-subtitle {
+  .visPT-subtitle {
     margin-right: 2rem;
     color: #929292;
     font-size: 1rem;
     font-weight: 500;
   }
   
-  .vis1pt-main {
+  .visPT-main {
     width: 100%;
     max-width: 72rem;
     display: grid;
@@ -44,27 +74,27 @@
     align-items: flex-start;
   }
   
-  .vis1pt-graph {
+  .visPT-graph {
     width: 100%;
   }
   
-  .vis1pt-description {
+  .visPT-description {
     width: 100%;
   }
   
-  .vis1pt-section-title {
+  .visPT-section-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: #000;
     margin-bottom: 1rem;
   }
   
-  .vis1pt-text {
+  .visPT-text {
     color: #374151;
     margin-bottom: 1rem;
   }
   
-  .vis1pt-arrow {
+  .arrow {
     margin-top: 5rem;
     font-size: 2rem;
     animation: bounce 1s infinite;

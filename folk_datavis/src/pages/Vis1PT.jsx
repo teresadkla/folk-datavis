@@ -3,71 +3,67 @@ import NetworkDiagram from "../components/PT_VIS/network_rootsPT";
 import PortugalMap from "../components/PT_VIS/map";
 import TemaRegiaoVis from "../components/PT_VIS/dotplotPT";
 import SpiralVis from "../components/PT_VIS/spiral";
-
 import "../css/PTpages.css";
 
-export default function Vis1PT() {
+export default function visPT() {
   return (
-    <div className="vis1pt-container">
-      <div className="vis1pt-header">
-        <h5 className="vis1pt-title"> Portuguese Geographical FolkData</h5>
-        <h5 className="vis1pt-subtitle">Irish Musical FolkData</h5>
+    <div className="visPT-container">
+      <div className="visPT-header">
+        <h5 className="visPT-title"> Portuguese Geographical FolkData</h5>
+        <h5 className="visPT-subtitle">Irish Musical FolkData</h5>
       </div>
 
       {/* Conteúdo principal */}
-      <div className="vis1pt-main">
+      
         {/* Gráfico */}
-        <div className="vis1pt-graph">
+        <div className="vispt-roots">
           <NetworkDiagram />
         </div>
         {/* Texto descritivo */}
-        <div className="vis1pt-description">
-          <h2 className="vis1pt-section-title">
+        <div className="roots-description">
+          <h2 className="visPT-section-title">
             Song variation and propagation through Portuguese territory
           </h2>
-          <p className="vis1pt-text">
+          <p className="visPT-text">
+            Lorem ipsum dolor sit amet consectetur. Pulvinar faucibus non
+            pellentesque hac nisl. Potenti vel sit neque nunc sed fames urna.
+            Tristique risus volutpat viverra nibh phasellus massa magna urna.
+            Non mauris enim mus egestas.
+            Lorem ipsum dolor sit amet consectetur. Pulvinar faucibus non
+            pellentesque hac nisl. Potenti vel sit neque nunc sed fames urna.
+            Tristique risus volutpat viverra nibh phasellus massa magna urna.
+            Non mauris enim mus egestas.
+            <br></br>
             Lorem ipsum dolor sit amet consectetur. Pulvinar faucibus non
             pellentesque hac nisl. Potenti vel sit neque nunc sed fames urna.
             Tristique risus volutpat viverra nibh phasellus massa magna urna.
             Non mauris enim mus egestas.
           </p>
         </div>
-      </div>
+     
       {/* Setinha para scroll */}
-      <div className="vis1pt-arrow">
+      <div className="arrow">
         <span>↓</span>
 
 
       </div>
       {/* Mapa de Portugal */}
-      <div className="vis1pt-map">
+      <div className="visPT-map">
         <PortugalMap />
       </div>
-        {/* Setinha para scroll */}
-        <div className="vis1pt-arrow">
-        <span>↓</span>
+        
 
-
-      </div>
         {/* Informação especifica sobre a tema em região */}
-        <div className="vis1pt-dotplot">
+        <div className="visPT-dotplot">
         <TemaRegiaoVis />
       </div>
-        {/* Setinha para scroll */}
-        <div className="vis1pt-arrow">
-        <span>↓</span>
-      </div>
-
-
+        
       
         {/* Informação especifica sobre a tema em região */}
-        <div className="vis1pt-spiral">
+        <div className="visPT-spiral">
         <SpiralVis />
       </div>
-        {/* Setinha para scroll */}
-        <div className="vis1pt-arrow">
-        <span>↓</span>
-      </div>
+       
       
     </div>
   );

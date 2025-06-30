@@ -123,13 +123,13 @@ const PortugalMap = () => {
       updateCircles(csvData, geojsonData, year);
     });
 
-    const zoom = d3.zoom()
-      .scaleExtent([1, 8])
-      .on("zoom", (event) => {
-        g.attr("transform", event.transform);
-      });
+    // const zoom = d3.zoom()
+    //   .scaleExtent([1, 8])
+    //   .on("zoom", (event) => {
+    //     g.attr("transform", event.transform);
+    //   });
 
-    svg.call(zoom);
+    // svg.call(zoom);
 
     return () => {
       svg.selectAll("*").remove(); // cleanup
