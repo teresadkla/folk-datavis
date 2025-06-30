@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(13, 13, 13, 0.87);
-  background-color: #f4f4f4;
+  background-color: #d7b425;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -29,7 +29,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
-
+svg {
+background-color: peru;
+margin-top: 5%;
+}
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

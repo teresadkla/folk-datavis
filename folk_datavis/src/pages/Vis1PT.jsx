@@ -1,6 +1,8 @@
 import React from "react";
 import NetworkDiagram from "../components/PT_VIS/network_rootsPT";
 import PortugalMap from "../components/PT_VIS/map";
+import TemaRegiaoVis from "../components/PT_VIS/dotplotPT";
+import SpiralVis from "../components/PT_VIS/spiral";
 
 import "../css/PTpages.css";
 
@@ -34,6 +36,8 @@ export default function Vis1PT() {
       {/* Setinha para scroll */}
       <div className="vis1pt-arrow">
         <span>↓</span>
+
+
       </div>
       {/* Mapa de Portugal */}
       <div className="vis1pt-map">
@@ -42,7 +46,29 @@ export default function Vis1PT() {
         {/* Setinha para scroll */}
         <div className="vis1pt-arrow">
         <span>↓</span>
+
+
       </div>
+        {/* Informação especifica sobre a tema em região */}
+        <div className="vis1pt-dotplot">
+        <TemaRegiaoVis />
+      </div>
+        {/* Setinha para scroll */}
+        <div className="vis1pt-arrow">
+        <span>↓</span>
+      </div>
+
+
+      
+        {/* Informação especifica sobre a tema em região */}
+        <div className="vis1pt-spiral">
+        <SpiralVis />
+      </div>
+        {/* Setinha para scroll */}
+        <div className="vis1pt-arrow">
+        <span>↓</span>
+      </div>
+      
     </div>
   );
 }

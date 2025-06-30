@@ -1,23 +1,28 @@
 import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
+import "../../css/ramification.css";
 
 const NetworkDiagram = () => {
   const svgRef = useRef();
   const tooltipRef = useRef();
 
   useEffect(() => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    // Define dimensões fixas para o container do SVG
+    const width = 1000;
+    const height = 800;
 
     // Limpa o SVG antes de desenhar novamente
     d3.select(svgRef.current).selectAll("*").remove();
 
+    // Cria o SVG, define dimensões e viewBox para responsividade
     const svg = d3.select(svgRef.current)
       .attr("width", width)
-      .attr("height", height);
+      .attr("height", height)
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("preserveAspectRatio", "xMidYMid meet");
 
+    // Adiciona filtros SVG para efeito visual nas linhas
     const defs = svg.append("defs");
-
     const turbulenceFilter = defs.append("filter")
       .attr("id", "linkTurbulence")
       .attr("x", "-50%")
@@ -39,25 +44,32 @@ const NetworkDiagram = () => {
       .attr("xChannelSelector", "R")
       .attr("yChannelSelector", "G");
 
-    const container = svg.append("g");
+    // Grupo principal para aplicar zoom/pan
+    const container = svg.append("g")
+      .attr("transform", `scale(0.8) translate(${width * 0.10}, ${height * 0.10})`); // Aplica escala e centra
 
-    svg.call(
-      d3.zoom()
-        .scaleExtent([0.2, 5])
-        .on("zoom", (event) => {
-          container.attr("transform", event.transform);
-        })
-    );
+    // // Permite zoom e pan no SVG
+    // svg.call(
+    //   d3.zoom()
+    //     .scaleExtent([0.5, 5])
+    //     .on("zoom", (event) => {
+    //       container.attr("transform", event.transform);
+    //     })
+    // );
 
+    // Seletores e escalas
     const tooltip = d3.select(tooltipRef.current);
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
-    const sizeScale = d3.scaleLinear().range([5, 25]);
+    const color = d3.scaleOrdinal(d3.schemeCategory10); // Cores para regiões
+    const sizeScale = d3.scaleLinear().range([5, 25]); // Escala para tamanho dos nós
 
-    d3.csv("VIMEO_V5.csv").then(data => {
-      const themeCounts = {};
-      const themeRegionCounts = {};
-      const regionSet = new Set();
+    // Carrega dados CSV
+    d3.csv("VIMEO_V6.csv").then(data => {
+      // Contadores auxiliares
+      const themeCounts = {}; // Ocorrências por tema
+      const themeRegionCounts = {}; // Ocorrências por tema+região
+      const regionSet = new Set(); // Conjunto de regiões
 
+      // Processa cada linha do CSV
       data.forEach(d => {
         const tema = d.Tema;
         const regiao = d.Região;
@@ -69,26 +81,31 @@ const NetworkDiagram = () => {
         themeRegionCounts[key]++;
       });
 
+      // Filtra temas com mais de 13 ocorrências
       const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 13);
       const nodes = [];
       const links = [];
       const nodeByName = {};
 
+      // Define domínio da escala de tamanho
       const maxThemeCount = d3.max(Object.values(themeCounts));
       sizeScale.domain([1, maxThemeCount]);
 
+      // Cria nós para temas
       repeatedThemes.forEach(theme => {
         const node = { id: theme, type: "tema", count: themeCounts[theme] };
         nodes.push(node);
         nodeByName[theme] = node;
       });
 
+      // Cria nós para regiões
       regionSet.forEach(region => {
         const node = { id: region, type: "regiao" };
         nodes.push(node);
         nodeByName[region] = node;
       });
 
+      // Cria ligações entre temas e regiões
       Object.entries(themeRegionCounts).forEach(([key, count]) => {
         const [tema, regiao] = key.split("||");
         if (repeatedThemes.includes(tema)) {
@@ -96,11 +113,13 @@ const NetworkDiagram = () => {
         }
       });
 
+      // Inicializa simulação de forças
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(90).strength(1))
         .force("charge", d3.forceManyBody().strength(-1500))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("center", d3.forceCenter(width / 2, height / 2)); // Centro do SVG
 
+      // Desenha as ligações (links)
       const link = container.append("g")
         .attr("class", "links")
         .selectAll("path")
@@ -112,14 +131,16 @@ const NetworkDiagram = () => {
         .attr("fill", "none")
         .attr("filter", "url(#linkTurbulence)");
 
+      // Desenha os nós (temas e regiões)
       const node = container.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
         .data(nodes)
         .join("circle")
-        .attr("r", d => d.type === "tema" ? sizeScale(d.count) : 10)
+        .attr("r", d => d.type === "tema" ? sizeScale(d.count) : 10) // Tamanho depende do tipo
         .attr("fill", d => d.type === "regiao" ? color(d.id) : "#69b3a2")
         .attr("fill-opacity", 0.9)
+        // Tooltip ao passar por cima de temas
         .on("mouseover", (event, d) => {
           if (d.type === "tema") {
             tooltip
@@ -127,20 +148,25 @@ const NetworkDiagram = () => {
               .html(`<strong>${d.id}</strong><br/>Ocorrências: ${d.count}`);
           }
         })
+        // Move tooltip com o rato
         .on("mousemove", event => {
           tooltip
             .style("left", `${event.pageX + 10}px`)
             .style("top", `${event.pageY - 20}px`);
         })
+        // Esconde tooltip ao sair
         .on("mouseout", () => {
           tooltip.style("display", "none");
         })
+        // Destaca conexões ao clicar num tema
         .on("click", (event, d) => {
           if (d.type === "tema") highlightConnections(d.id);
           event.stopPropagation();
         })
+        // Permite arrastar os nós
         .call(drag(simulation));
 
+      // Adiciona rótulos apenas às regiões
       const label = container.append("g")
         .selectAll("text")
         .data(nodes)
@@ -151,6 +177,7 @@ const NetworkDiagram = () => {
         .attr("dy", "0.35em")
         .style("opacity", 0);
 
+      // Atualiza posições a cada tick da simulação
       simulation.on("tick", () => {
         link.attr("d", d => {
           const dx = d.target.x - d.source.x;
@@ -162,6 +189,7 @@ const NetworkDiagram = () => {
         label.attr("x", d => d.x).attr("y", d => d.y);
       });
 
+      // Função para permitir arrastar nós
       function drag(simulation) {
         return d3.drag()
           .on("start", (event, d) => {
@@ -180,6 +208,7 @@ const NetworkDiagram = () => {
           });
       }
 
+      // Destaca conexões de um tema selecionado
       function highlightConnections(selectedId) {
         node.style("opacity", n =>
           n.id === selectedId || links.some(l =>
@@ -196,8 +225,10 @@ const NetworkDiagram = () => {
         );
       }
 
+      // Ao clicar fora, remove o destaque
       svg.on("click", () => resetHighlight());
 
+      // Restaura opacidades originais
       function resetHighlight() {
         node.style("opacity", 1);
         link.style("opacity", 0.6);
@@ -209,11 +240,8 @@ const NetworkDiagram = () => {
   return (
     <div>
       <svg ref={svgRef}></svg>
-      <div ref={tooltipRef} className="tooltip" style={{
-        position: 'absolute', background: '#fff', border: '1px solid #ccc',
-        padding: '5px 10px', borderRadius: '5px', pointerEvents: 'none',
-        fontSize: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', display: 'none'
-      }} />
+      {/* Tooltip customizado */}
+      <div ref={tooltipRef} className="tooltip_roots" />
     </div>
   );
 };

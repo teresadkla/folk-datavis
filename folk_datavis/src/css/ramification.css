@@ -1,0 +1,21 @@
+body {
+    font-family: sans-serif;
+  }
+
+  .tooltip_roots {
+    z-index: 1000;
+    position: absolute;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 5px 10px;
+    border-radius: 5px;
+    pointer-events: none;
+    font-size: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    display: none;
+  }
+
+  .node text {
+    pointer-events: none;
+    font-size: 12px;
+  }
