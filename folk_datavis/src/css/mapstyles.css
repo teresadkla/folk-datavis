@@ -25,11 +25,12 @@
   /* Novo container para alinhar o gráfico e a timeline em coluna */
   .map-timeline-container {
     display: flex;
+    overflow: hidden;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 900px;
+    width: fit-content;
     margin: 0 auto;
+
   }
   
   /* Ajuste: timeline agora fica abaixo do gráfico */
@@ -38,6 +39,8 @@
     justify-content: center;
     gap: 1%;
     width: 100%;
+    position: relative;
+    bottom: 5vh;
     
   }
   
