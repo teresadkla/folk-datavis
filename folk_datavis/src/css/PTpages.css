@@ -15,7 +15,7 @@
     padding: 2%;
   }
   
-  .vispt-roots{
+  .vispt-roots{ 
     grid-column: 1 / span 2;
     grid-row: 1 / span 2;
   }
@@ -24,76 +24,49 @@
     grid-row: 1 / span 2;
     margin-left: 10%;
     text-align: left;
-  
+    width: fit-content;
+    height: fit-content;
 }
+
 .visPT-map{
-  grid-column: 1 / span 2;
-  grid-row: 5 / span 2;
+  grid-column:3 / span 7;
+  grid-row: 6 / span 2;
+}
+.map-description{
+  background-color: chocolate;
+ z-index: 1000;
+ height: fit-content;
+  grid-column: 8 / span 8;
+  grid-row: 6 / span 2;
+  margin-left: 10%;
+  width: fit-content;
+  text-align: left;
+
 }
 .visPT-dotplot{
   grid-column: 1 / span 2;
-  grid-row: 7 / span 2;
+  grid-row: 8 / span 2;
 }
 .visPT-spiral{
   grid-column: 1 / span 2;
-  grid-row: 9 / span 2;
+  grid-row: 12 / span 2;
 }
 
   
-  .visPT-header {
-    position: fixed;
-    width: 100%;
-   margin: 2rem;
-    /* max-width: 72rem; */
-    display: flex;
-    justify-content: space-between;
-    /* align-items: flex-start; */
-    /* margin-bottom: 2.5rem;*/
-  }
-  
-  .visPT-title {
-    margin-left: 2rem;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #000;
-  }
-  
-  .visPT-subtitle {
-    margin-right: 2rem;
-    color: #929292;
-    font-size: 1rem;
-    font-weight: 500;
-  }
-  
-  .visPT-main {
-    width: 100%;
-    max-width: 72rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: flex-start;
-  }
-  
-  .visPT-graph {
-    width: 100%;
-  }
-  
-  .visPT-description {
-    width: 100%;
-  }
-  
-  .visPT-section-title {
+  .roots-title, .map-title, .dotplot-title, .spiral-title {
     font-size: 1.25rem;
     font-weight: 600;
     color: #000;
     margin-bottom: 1rem;
+    z-index: 1000;
   }
-  
-  .visPT-text {
+  .roots-text {
     color: #374151;
     margin-bottom: 1rem;
   }
   
+
+
   .arrow {
     margin-top: 5rem;
     font-size: 2rem;

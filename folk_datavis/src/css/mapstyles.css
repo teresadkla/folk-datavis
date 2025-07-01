@@ -1,4 +1,5 @@
 .tooltip {
+  z-index: 1000;
     position: absolute;
     background-color: white;
     padding: 10px;
@@ -21,3 +22,44 @@
     pointer-events: none;
   }
   
+  /* Novo container para alinhar o gráfico e a timeline em coluna */
+  .map-timeline-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  
+  /* Ajuste: timeline agora fica abaixo do gráfico */
+  .timeline-container {
+    display: flex;
+    justify-content: center;
+    gap: 1%;
+    width: 100%;
+    
+  }
+  
+  .timeline-button {
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .timeline-button.active {
+    background-color: #765d63;
+    color: #fff;
+  }
+  
+  /* Opcional: centralizar o SVG */
+  .map-timeline-container svg {
+    display: block;
+    margin: 0 auto;
+  }
+
