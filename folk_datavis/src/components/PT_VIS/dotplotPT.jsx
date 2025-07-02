@@ -2,23 +2,30 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
 const TemaRegiaoVis = () => {
+  // Referência para o elemento SVG
   const svgRef = useRef();
+  // Estado para controlar a paginação dos temas
   const [paginaAtual, setPaginaAtual] = useState(0);
+  // Número de temas mostrados por página
   const temasPorPagina = 10;
 
   useEffect(() => {
+    // Seleciona e configura o SVG principal
     const svg = d3.select(svgRef.current);
     const width = +svg.attr("width");
     const height = +svg.attr("height");
+    // Define margens para o gráfico
     const margin = { top: 60, right: 20, bottom: 120, left: 200 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
-    let processed = [];
-    let filteredData = [];
-    let todosTemas = [];
-    let regioes = [];
+    // Arrays para armazenar dados processados
+    let processed = [];     // Dados processados para visualização
+    let filteredData = []; // Dados filtrados do CSV
+    let todosTemas = [];   // Lista de todos os temas únicos
+    let regioes = [];     // Lista de todas as regiões únicas
 
+    // Cria grupo principal para conter os elementos do gráfico
     const g = svg
       .selectAll("g.container")
       .data([null])
@@ -26,14 +33,19 @@ const TemaRegiaoVis = () => {
       .attr("class", "container")
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // Grupos para eixos Y e círculos
     const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
     const circlesGroup = g.selectAll("g.circles").data([null]).join("g").attr("class", "circles");
 
+    // Carrega e processa os dados do CSV
     d3.csv("/VIMEO_V5.csv").then((data) => {
+      // Conta ocorrências de cada tema
       const temaCount = d3.rollup(data, (v) => v.length, (d) => d.Tema);
+      // Filtra apenas temas que aparecem mais de uma vez
       const temasRepetidos = new Set([...temaCount.entries()].filter(([_, c]) => c > 1).map(([t]) => t));
       filteredData = data.filter((d) => temasRepetidos.has(d.Tema));
 
+      // Agrupa dados por tema e região
       const counts = d3.rollups(
         filteredData,
         (v) => v.length,
@@ -135,10 +147,11 @@ const TemaRegiaoVis = () => {
 
   return (
     <div>
-      <svg ref={svgRef} width={1000} height={600} />
+      <svg ref={svgRef} width={1100} height={600} />
       <div>
-        <button onClick={() => setPaginaAtual((p) => Math.max(0, p - 1))}>Anterior</button>
-        <button onClick={() => setPaginaAtual((p) => p + 1)}>Próxima</button>
+        <button onClick={() => setPaginaAtual((p) => p + 1)}>←</button>
+        <button onClick={() => setPaginaAtual((p) => Math.max(0, p - 1))}>➝</button>
+
       </div>
       <div id="categoria-info" />
     </div>

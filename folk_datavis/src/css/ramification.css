@@ -19,3 +19,14 @@ body {
     pointer-events: none;
     font-size: 12px;
   }
+
+  /*Ireland Vis*/
+  .tooltipIE {
+    position: absolute;
+    background: white;
+    padding: 5px;
+    border: 1px solid #ccc;
+    pointer-events: none;
+    font-size: 12px;
+  }
+  
