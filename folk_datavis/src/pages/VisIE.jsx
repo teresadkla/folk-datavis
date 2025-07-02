@@ -30,7 +30,7 @@ export default function visPT() {
                     </p>
                 </div>
                 {/* Network Diagram */}
-                <div id="network-section" className="vispt-roots">
+                <div id="network-IE-section" className="visIE-roots">
                     <NetworkDiagramIE />
                 </div>
 

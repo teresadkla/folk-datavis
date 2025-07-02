@@ -7,12 +7,15 @@ const NetworkDiagramIE = () => {
   const tooltipRef = useRef();
 
   useEffect(() => {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width = 1000;
+    const height = 800;
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
       .attr("height", height);
+
+    // Adicione esta linha para limpar o SVG antes de desenhar
+    svg.selectAll("*").remove();
 
     const defs = svg.append("defs");
     const turbulenceFilter = defs.append("filter")
@@ -36,15 +39,16 @@ const NetworkDiagramIE = () => {
       .attr("xChannelSelector", "R")
       .attr("yChannelSelector", "G");
 
-    const container = svg.append("g");
+    const container = svg.append("g")
+      .attr("transform", `scale(0.7) translate(${width * 0.10}, ${height * 0.10})`);
 
-    svg.call(
-      d3.zoom()
-        .scaleExtent([0.2, 5])
-        .on("zoom", (event) => {
-          container.attr("transform", event.transform);
-        })
-    );
+    // svg.call(
+    //   d3.zoom()
+    //     .scaleExtent([0.2, 5])
+    //     .on("zoom", (event) => {
+    //       container.attr("transform", event.transform);
+    //     })
+    // );
 
     const tooltip = d3.select(tooltipRef.current);
     const color = d3.scaleOrdinal(d3.schemeCategory10);

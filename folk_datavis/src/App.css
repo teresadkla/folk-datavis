@@ -47,7 +47,6 @@
 /*Nav superior*/ 
 .nav-container {
   background-color: #e6f3ff;
-  border: 4px solid #2196f3;
   padding: 1rem;
   display: flex;
   gap: 2rem;
@@ -65,7 +64,6 @@
 
 .nav-button.active {
   color: black;
-  border-bottom: 2px solid black;
 }
 
 .nav-button.inactive {
