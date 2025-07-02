@@ -105,7 +105,7 @@ d3.select("body")
 let filterActive = false;
 
 // Carregar dados e inicializar
-d3.csv("/sets.csv").then(data => {
+d3.csv("sets.csv").then(data => {
   const countMap = d3.rollup(
     data,
     v => v.length,

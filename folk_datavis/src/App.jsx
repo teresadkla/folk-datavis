@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import NavigationBar from './components/nav'
 import Vis1PT from './pages/Vis1PT'
 import VisIE from './pages/VisIE' // importa a página irlandesa
@@ -9,6 +9,7 @@ function App() {
     <div className="app-container">
       <div className="visualizations">
         <Routes>
+          <Route path="/" element={<Navigate to="/portuguese" replace />} />
           <Route path="/portuguese" element={<Vis1PT />} />
           <Route path="/irish" element={<VisIE />} />
         </Routes>

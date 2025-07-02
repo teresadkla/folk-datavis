@@ -1,5 +1,8 @@
 import React from "react";
 import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE";
+import DotHeatmap from "../components/IE_VIS/dotheatmap";
+import MidiCoparisonDotPlot from "../components/IE_VIS/dotplotcomparison";
+import ABCVisualizer from "../components/IE_VIS/pitchabc";
 import NavigationBar from "../components/nav";
 import VerticalNav from "../components/verticalnav";
 import "../css/IEpages.css";
@@ -41,17 +44,17 @@ export default function visPT() {
                     </h2>
                 </div>
                 <div id="heatmap-section" className="heatmap-types">
-                  
+                    <DotHeatmap />
                 </div>
 
                 {/* Comparison */}
                 <div id="dotplot-comparison-section" className="dotplot-comparison">
-                 
+                    <MidiCoparisonDotPlot />
                 </div>
 
                 {/* Pitch */}
                 <div id="picth-section" className="pitch-abc">
-                    
+                    <ABCVisualizer />  
                 </div>
             </div>
         </>

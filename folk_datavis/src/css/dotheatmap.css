@@ -1,0 +1,48 @@
+.heatmap-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+  
+  .controls {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .controls button {
+    padding: 6px 12px;
+    font-size: 14px;
+    background-color: #5a189a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+  }
+  
+  .controls button:hover {
+    background-color: #7b2cbf;
+  }
+  
+  .tooltip {
+    position: absolute;
+    background-color: #ffffffdd;
+    padding: 8px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    pointer-events: none;
+    font-size: 13px;
+    font-family: sans-serif;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .y-grid, .x-grid {
+    stroke: #ccc;
+    stroke-width: 1px;
+    shape-rendering: crispEdges;
+  }
+  
