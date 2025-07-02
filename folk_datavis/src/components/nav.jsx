@@ -1,29 +1,31 @@
-import React, { useState } from 'react';
-import '../App.css';
+import React from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import '../App.css'
 
 const NavigationBar = () => {
-  const [selected, setSelected] = useState('portuguese');
+  const navigate = useNavigate()
+  const location = useLocation()
 
   return (
     <div className="nav-container">
       <button
-        onClick={() => setSelected('portuguese')}
+        onClick={() => navigate('/portuguese')}
         className={`nav-button ${
-          selected === 'portuguese' ? 'active' : 'inactive'
+          location.pathname === '/portuguese' ? 'active' : 'inactive'
         }`}
       >
         Portuguese Geographical FolkData
       </button>
       <button
-        onClick={() => setSelected('irish')}
+        onClick={() => navigate('/irish')}
         className={`nav-button ${
-          selected === 'irish' ? 'active' : 'inactive'
+          location.pathname === '/irish' ? 'active' : 'inactive'
         }`}
       >
         Irish Musical FolkData
       </button>
     </div>
-  );
-};
+  )
+}
 
-export default NavigationBar;
+export default NavigationBar
