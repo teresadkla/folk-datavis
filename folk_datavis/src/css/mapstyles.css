@@ -25,7 +25,6 @@
   /* Novo container para alinhar o gráfico e a timeline em coluna */
   .map-timeline-container {
     display: flex;
-    overflow: hidden;
     flex-direction: column;
     align-items: center;
     width: fit-content;

@@ -14,8 +14,8 @@ const MidiCoparisonDotPlot = () => {
 
   useEffect(() => {
     Promise.all([
-      d3.csv("/sets.csv"),
-      d3.json("/pitch_compressed.json"),
+      d3.csv("sets.csv"),
+      d3.json("pitch_compressed.json"),
     ]).then(([csvData, jsonData]) => {
       const names = [...new Set(csvData.map(d => d.name))];
       setAllNames(names);
@@ -75,13 +75,20 @@ const MidiCoparisonDotPlot = () => {
       .append("circle")
       .attr("cx", d => xScale(d.NoteIndex))
       .attr("cy", d => yScale(d.Pitch_MIDI))
-      .attr("r", 6)
+      .attr("r", 4)
       .attr("fill", d => color(d.variation_id))
       .attr("opacity", 0.5)
       .attr("class", d => `variation-${d.variation_id}`)
       .on("click", handleClick);
 
     circles.append("title").text(d => `Pitch: ${d.Pitch_MIDI}`);
+
+    const linePath = g.append("path")
+      .attr("class", "variation-line")
+      .attr("fill", "none")
+      .attr("stroke", "#222")
+      .attr("stroke-width", 2)
+      .attr("opacity", 0);
 
     function handleClick(event, d) {
       const selectedVariation = d.variation_id;
@@ -101,14 +108,30 @@ const MidiCoparisonDotPlot = () => {
       g.selectAll(`.variation-${selectedVariation}`)
         .transition().duration(200)
         .attr("opacity", 0.5)
-        .attr("r", 7);
+        .attr("r", 6);
+
+      // Desenhar linha conectando as bolinhas da variação selecionada
+      const notes = allNotes
+        .filter(note => note.variation_id === selectedVariation)
+        .sort((a, b) => a.NoteIndex - b.NoteIndex);
+
+      const lineGenerator = d3.line()
+        .x(d => xScale(d.NoteIndex))
+        .y(d => yScale(d.Pitch_MIDI));
+
+      linePath
+        .attr("d", lineGenerator(notes))
+        .attr("stroke", color(selectedVariation))
+        .attr("opacity", 1);
     }
 
     function resetView() {
       g.selectAll("circle")
         .transition().duration(200)
         .attr("opacity", 0.5)
-        .attr("r", 6);
+        .attr("r", 4);
+
+      linePath.attr("opacity", 0);
     }
 
     svg.on("click", function (event) {
@@ -132,6 +155,14 @@ const MidiCoparisonDotPlot = () => {
           <option key={idx} value={name}>{name}</option>
         ))}
       </select>
+      <div style={{ float: "right", marginLeft: "20px", fontWeight: "bold" }}>
+        {selectedName && pitchData.length > 0 && (
+          (() => {
+            const variations = pitchData.filter(d => d.name === selectedName);
+            return `Nº de variações: ${variations.length}`;
+          })()
+        )}
+      </div>
       <svg ref={svgRef}></svg>
     </div>
   );

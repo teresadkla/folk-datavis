@@ -35,7 +35,7 @@
 }
 
 .map-description {
-  background-color: chocolate;
+  /* background-color: chocolate; */
   z-index: 1000;
   height: fit-content;
   grid-column: 8 / span 8;

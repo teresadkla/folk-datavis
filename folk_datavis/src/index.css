@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(13, 13, 13, 0.87);
-  background-color: #d7b425;
+  /* background-color: #d7b425; */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -31,7 +31,7 @@ body {
   min-height: 100vh;
 }
 svg {
-background-color: peru;
+/* background-color: peru; */
 margin-top: 5%;
 }
 h1 {
