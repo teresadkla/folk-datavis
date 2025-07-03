@@ -13,7 +13,7 @@ export default function visPT() {
             <NavigationBar />
 
             <div className="visIE-container">
-                <VerticalNav />
+                {/* <VerticalNav /> */}
 
                 {/* Descriptive Text */}
                 <div className="roots-description-IE">
@@ -42,6 +42,17 @@ export default function visPT() {
                     <h2 className="Types-title">
                     Types of Irish folk 
                     </h2>
+                    <p className="Types-text-IE">
+                        Lorem ipsum dolor sit amet consectetur. Pulvinar faucibus non
+                        pellentesque hac nisl. Potenti vel sit neque nunc sed fames urna.
+                        Tristique risus volutpat viverra nibh phasellus massa magna urna.
+                        Non mauris enim mus egestas.
+                        <br /><br />
+                        Lorem ipsum dolor sit amet consectetur. Pulvinar faucibus non
+                        pellentesque hac nisl. Potenti vel sit neque nunc sed fames urna.
+                        Tristique risus volutpat viverra nibh phasellus massa magna urna.
+                        Non mauris enim mus egestas.
+                    </p>
                 </div>
                 <div id="heatmap-section" className="heatmap-types">
                     <DotHeatmap />

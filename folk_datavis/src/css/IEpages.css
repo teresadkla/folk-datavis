@@ -16,17 +16,29 @@
   }
   
   .roots-description-IE {
-    grid-column: 2 / span 3;
+    grid-column: 1 / span 3;
     grid-row: 1 / span 2;
-    margin-left: 10%;
+    /* margin-left: 10%; */
     text-align: left;
     width: fit-content;
     height: fit-content;
   }
   
   .heatmap-types {
-    grid-column: 1/ span 7;
+    width: fit-content;
+    margin-top: 10%;
+    grid-column: 1 / span 7;
     grid-row: 6 / span 2;
+  }
+  .Types-description {
+    z-index: 1000;
+    margin-top: 20%;
+    grid-column: 1 / span 6;
+    grid-row: 5 / span 2;
+    /* margin-left: 10%; */
+    text-align: left;
+    width: fit-content;
+    height: fit-content;
   }
 
   .dotplot-comparison {

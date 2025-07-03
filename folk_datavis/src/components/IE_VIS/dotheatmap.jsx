@@ -2,26 +2,32 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "../../css/dotheatmap.css";
 
-const margin = { top: 100, right: 50, bottom: 20, left: 150 };
-const pageSize = 40;
+// Margens do gráfico
+const margin = { top: 100, right: 50, bottom: 20, left: 400 };
+// Número de linhas exibidas por página
+const pageSize = 30;
 
 const DotHeatmap = () => {
   const svgRef = useRef();
+  // Estados para armazenar dados e configurações
   const [data, setData] = useState([]);
   const [names, setNames] = useState([]);
   const [types, setTypes] = useState([]);
   const [countMap, setCountMap] = useState(new Map());
-  const [startIndex, setStartIndex] = useState(0);
-  const [filterActive, setFilterActive] = useState(false);
+  const [startIndex, setStartIndex] = useState(0); // Índice inicial para paginação
+  const [filterActive, setFilterActive] = useState(false); // Filtro de músicas com mais de um tipo
 
+  // Carrega e processa os dados CSV ao montar o componente
   useEffect(() => {
-    d3.csv("/sets.csv").then((rawData) => {
+    d3.csv("sets.csv").then((rawData) => {
+      // Agrupa os dados por nome e tipo, contando ocorrências
       const count = d3.rollup(
         rawData,
         (v) => v.length,
         (d) => d.name,
         (d) => d.type
       );
+      // Lista única de nomes e tipos, ordenados
       const nameList = Array.from(new Set(rawData.map((d) => d.name))).sort();
       const typeList = Array.from(new Set(rawData.map((d) => d.type))).sort();
       setData(rawData);
@@ -31,12 +37,14 @@ const DotHeatmap = () => {
     });
   }, []);
 
+  // Re-renderiza o heatmap quando os dados ou controles mudam
   useEffect(() => {
     if (data.length && names.length && types.length && countMap.size) {
       renderDotHeatmap();
     }
   }, [data, names, types, countMap, startIndex, filterActive]);
 
+  // Retorna apenas nomes que possuem mais de um tipo associado
   const getFilteredNames = () => {
     return Array.from(countMap.entries())
       .filter(([_, typeMap]) => typeMap.size > 1)
@@ -44,20 +52,29 @@ const DotHeatmap = () => {
       .sort();
   };
 
+  // Função principal de renderização do heatmap
   const renderDotHeatmap = () => {
     const svg = d3.select(svgRef.current);
-    svg.selectAll("g").remove();
+    svg.selectAll("g").remove(); // Limpa renderizações anteriores
 
+    // Calcula largura e altura internas do gráfico
     const width = +svg.attr("width") - margin.left - margin.right;
     const height = +svg.attr("height") - margin.top - margin.bottom;
 
+    // Centraliza o grupo principal horizontalmente no SVG
+    const svgWidth = +svg.attr("width");
+    const gTranslateX = margin.left + (svgWidth - margin.left - margin.right - width) / 2;
+
+    // Grupo principal do gráfico
     const g = svg
       .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
+      .attr("transform", `translate(${gTranslateX},${margin.top})`);
 
+    // Define nomes visíveis de acordo com filtro e paginação
     const currentNames = filterActive ? getFilteredNames() : names;
     const visibleNames = currentNames.slice(startIndex, startIndex + pageSize);
 
+    // Escalas para os eixos X (tipos) e Y (nomes)
     const xScale = d3.scaleBand().domain(types).range([0, width]).padding(0.1);
     const yScale = d3
       .scaleBand()
@@ -65,11 +82,14 @@ const DotHeatmap = () => {
       .range([0, height])
       .padding(0.1);
 
+    // Escala de cor baseada na contagem
     const colorScale = d3
       .scaleSequential(d3.interpolatePlasma)
       .domain([1, d3.max(Array.from(countMap.values(), (m) => d3.max(m.values())))]);
 
+    // Eixo Y (nomes)
     g.append("g").call(d3.axisLeft(yScale));
+    // Eixo X (tipos)
     g.append("g")
       .attr("transform", `translate(0,-10)`)
       .call(d3.axisTop(xScale))
@@ -77,6 +97,7 @@ const DotHeatmap = () => {
       .attr("transform", "rotate(0)")
       .style("text-anchor", "center");
 
+    // Linhas de grade horizontais
     g.selectAll(".y-grid")
       .data(visibleNames)
       .enter()
@@ -87,6 +108,7 @@ const DotHeatmap = () => {
       .attr("y1", (d) => yScale(d) + yScale.bandwidth() / 2)
       .attr("y2", (d) => yScale(d) + yScale.bandwidth() / 2);
 
+    // Linhas de grade verticais
     g.selectAll(".x-grid")
       .data(types)
       .enter()
@@ -97,12 +119,14 @@ const DotHeatmap = () => {
       .attr("x1", (d) => xScale(d) + xScale.bandwidth() / 2)
       .attr("x2", (d) => xScale(d) + xScale.bandwidth() / 2);
 
+    // Tooltip para mostrar detalhes ao passar o mouse
     const tooltip = d3
       .select("body")
       .append("div")
       .attr("class", "tooltip")
       .style("opacity", 0);
 
+    // Renderiza os círculos do heatmap
     for (const [name, typeMap] of countMap) {
       if (!visibleNames.includes(name)) continue;
       for (const [type, count] of typeMap) {
@@ -131,31 +155,27 @@ const DotHeatmap = () => {
   return (
     <div className="DotHeatmap-container">
       <div className="controls">
-        <button
-          onClick={() => setFilterActive((prev) => !prev)}
-          id="filter-multi-type"
-        >
+        {/* Botão para ativar/desativar filtro de músicas com mais de um tipo */}
+        <button onClick={() => setFilterActive((prev) => !prev)}  id="filter-multi-type" >
           {filterActive ? "Mostrar todas as músicas" : "Mostrar apenas músicas com mais de um tipo"}
         </button>
-        <button
-          id="nav-up"
-          onClick={() => setStartIndex((prev) => Math.max(prev - pageSize, 0))}
-        >
+        {/* Botão para navegar para cima na paginação */}
+        <button id="nav-up" onClick={() => setStartIndex((prev) => Math.max(prev - pageSize, 0))} >
           ▲
         </button>
-        <button
-          id="nav-down"
+        {/* Botão para navegar para baixo na paginação */}
+        <button id="nav-down"
           onClick={() => {
             const currentNames = filterActive ? getFilteredNames() : names;
             if (startIndex + pageSize < currentNames.length) {
               setStartIndex((prev) => prev + pageSize);
             }
-          }}
-        >
+          }}>
           ▼
         </button>
       </div>
-      <svg ref={svgRef} width={1000} height={900} />
+      {/* SVG onde o heatmap é desenhado */}
+      <svg className="dotheatmapsvg" ref={svgRef} width={1500} height={900} />
     </div>
   );
 };
