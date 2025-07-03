@@ -15,7 +15,6 @@ const SpiralVis = () => {
       .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
     const tooltip = d3.select(tooltipRef.current);
-    const parseDate = d3.timeParse("%Y-%m-%d");
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     const zoom = d3.zoom()
@@ -26,16 +25,25 @@ const SpiralVis = () => {
 
     svg.call(zoom);
 
-    d3.csv("/VIMEO_V6.csv").then(data => {
-      data.forEach(d => {
-        d.date = parseDate(d.Data);
+    d3.csv("VIMEO_V6.csv").then(data => {
+      // Filtra e prepara dados com Ano e Tema válidos
+      const filteredRaw = data.filter(d => {
+        const year = parseInt(d.Ano);
+        return !isNaN(year) && d.Tema && d.Tema !== "#VALUE!";
       });
 
-      data.sort((a, b) => d3.ascending(a.date, b.date));
+      // Converte Ano para número e ordena cronologicamente
+      filteredRaw.forEach(d => {
+        d.ano = parseInt(d.Ano);
+      });
 
-      const temaCounts = d3.rollup(data, v => v.length, d => d.Tema);
-      const filteredData = data.filter(d => temaCounts.get(d.Tema) > 1);
+      filteredRaw.sort((a, b) => d3.ascending(a.ano, b.ano));
 
+      // Apenas mantém temas com mais de 1 ocorrência
+      const temaCounts = d3.rollup(filteredRaw, v => v.length, d => d.Tema);
+      const filteredData = filteredRaw.filter(d => temaCounts.get(d.Tema) > 1);
+
+      // Parâmetros da espiral
       const a = 5;
       const b = 10;
       const spacing = 15;
@@ -79,10 +87,11 @@ const SpiralVis = () => {
         .attr("fill", d => color(d.Tema))
         .attr("opacity", 1)
         .on("mouseover", (event, d) => {
+          const containerRect = svgRef.current.parentNode.getBoundingClientRect();
           tooltip.style("opacity", 1)
-            .html(`<strong>${d.Tema}</strong><br>${d.Data}`)
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 20) + "px");
+            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}`)
+            .style("left", (event.clientX - containerRect.left + 10) + "px")
+            .style("top", (event.clientY - containerRect.top - 20) + "px");
         })
         .on("mouseout", () => {
           tooltip.style("opacity", 0);
@@ -99,7 +108,7 @@ const SpiralVis = () => {
 
           const themePoints = filteredData
             .filter(d => d.Tema === selectedTheme)
-            .sort((a, b) => d3.ascending(a.date, b.date));
+            .sort((a, b) => d3.ascending(a.ano, b.ano));
 
           if (themePoints.length > 1) {
             const line = d3.line()
@@ -119,12 +128,13 @@ const SpiralVis = () => {
           event.stopPropagation();
         });
 
+      // Adiciona rótulos de ano (uma vez por ano)
       let lastYear = null;
       g.selectAll(".year-label")
         .data(filteredData)
         .enter()
         .filter(d => {
-          const year = d.Ano;
+          const year = d.ano;
           if (year !== lastYear) {
             lastYear = year;
             return true;
@@ -134,7 +144,7 @@ const SpiralVis = () => {
         .append("text")
         .attr("x", d => d.x + 15)
         .attr("y", d => d.y)
-        .text(d => d.Ano)
+        .text(d => d.ano)
         .attr("font-size", "14px")
         .attr("font-weight", "bold")
         .attr("fill", "#444")
@@ -152,25 +162,17 @@ const SpiralVis = () => {
     });
 
     return () => {
-      svg.selectAll("*").remove(); // cleanup
+      svg.selectAll("*").remove();
     };
   }, []);
 
   return (
     <div style={{ position: "relative" }}>
-      <svg ref={svgRef} width={800} height={800}></svg>
+      <svg ref={svgRef} width={1500} height={1000}></svg>
       <div
         ref={tooltipRef}
-        className="tooltip"
-        style={{
-          position: "absolute",
-          backgroundColor: "#fff",
-          border: "1px solid #ccc",
-          padding: "8px",
-          borderRadius: "4px",
-          pointerEvents: "none",
-          opacity: 0,
-        }}
+        className="tooltip-spiral"
+        
       />
     </div>
   );
