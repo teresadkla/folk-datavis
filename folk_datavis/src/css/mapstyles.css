@@ -1,67 +1,77 @@
 .tooltip {
   z-index: 1000;
-    position: absolute;
-    background-color: white;
-    padding: 10px;
-    border: 1px solid #999;
-    border-radius: 8px;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  .distrito {
-    fill: #ddd;
-    stroke: #333;
-  }
-  
-  .label {
-    font-size: 10px;
-    fill: #444;
-    text-anchor: middle;
-    pointer-events: none;
-  }
-  
-  /* Novo container para alinhar o gráfico e a timeline em coluna */
-  .map-timeline-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: fit-content;
-    margin: 0 auto;
+  position: absolute;
+  background-color: white;
+  padding: 10px;
+  border: 1px solid #999;
+  border-radius: 8px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
 
-  }
-  
-  /* Ajuste: timeline agora fica abaixo do gráfico */
-  .timeline-container {
-    display: flex;
-    justify-content: center;
-    gap: 1%;
-    width: 100%;
-    position: relative;
-    bottom: 5vh;
-    
-  }
-  
-  .timeline-button {
-    background-color: #f0f0f0;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  
-  .timeline-button.active {
-    background-color: #765d63;
-    color: #fff;
-  }
-  
-  /* Opcional: centralizar o SVG */
-  .map-timeline-container svg {
-    display: block;
-    margin: 0 auto;
-  }
+.distrito {
+  fill: #ddd;
+  stroke: #333;
+}
 
+.label {
+  font-size: 10px;
+  fill: #444;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* Novo container para alinhar o gráfico e a timeline em coluna */
+.map-timeline-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: fit-content;
+  margin: 0 auto;
+
+}
+
+/* Ajuste: timeline agora fica abaixo do gráfico */
+.timeline-container {
+  display: flex;
+  justify-content: center;
+  gap: 1%;
+  width: 100%;
+  position: relative;
+  bottom: 5vh;
+
+}
+
+.timeline-button {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeline-button.active {
+  background-color: #765d63;
+  color: #fff;
+}
+
+/* Opcional: centralizar o SVG */
+.map-timeline-container svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/*estilos do dotplot das regiões e musicas*/
+.visualization-controls {
+  display: flex;
+  position: relative;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 20px;
+  top: 15vh;
+  left: 60vw;
+}

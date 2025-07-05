@@ -48,6 +48,11 @@ export default function visPT() {
           <PortugalMap />
         </div>
 
+        <div className="dotplot-PT-description">
+          <h2 className="dotplot-PT-title">
+         Frequency of songs throught the Portuguese Territory
+          </h2>
+        </div>
         {/* Dotplot */}
         <div id="dotplot-section" className="visPT-dotplot">
           <TemaRegiaoVis />

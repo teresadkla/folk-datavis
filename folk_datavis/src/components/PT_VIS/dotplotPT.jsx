@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import "../../css/mapstyles.css";
 
 const TemaRegiaoVis = () => {
   // Referência para o elemento SVG
@@ -147,12 +148,13 @@ const TemaRegiaoVis = () => {
 
   return (
     <div>
-      <svg ref={svgRef} width={1100} height={600} />
-      <div>
-        <button onClick={() => setPaginaAtual((p) => p + 1)}>←</button>
-        <button onClick={() => setPaginaAtual((p) => Math.max(0, p - 1))}>➝</button>
+       <div className="visualization-controls">
+        <button onClick={() => setPaginaAtual((p) => p + 1)}>➝</button>
+        <button onClick={() => setPaginaAtual((p) => Math.max(0, p - 1))}>←</button>
 
       </div>
+      <svg ref={svgRef} width={1100} height={900} />
+     
       <div id="categoria-info" />
     </div>
   );

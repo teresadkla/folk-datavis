@@ -48,18 +48,31 @@
 
 .visPT-dotplot {
   grid-column: 1 / span 2;
+  grid-row: 10 / span 2;
+}
+
+
+.dotplot-PT-description {
+  /* background-color: chocolate; */
+  z-index: 1000;
+  height: fit-content;
+  grid-column: 2 / span 8;
   grid-row: 8 / span 2;
+  margin-left: 10%;
+  width: fit-content;
+  text-align: left;
+
 }
 
 .visPT-spiral {
   grid-column: 1 / span 2;
-  grid-row: 12 / span 2;
+  grid-row: 16 / span 2;
 }
 
 
 .roots-title,
 .map-title,
-.dotplot-title,
+.dotplot-PT-title,
 .spiral-title {
   font-size: 1.25rem;
   font-weight: 600;
