@@ -5,7 +5,6 @@ import "../../css/mapstyles.css";
 const width = 1500;
 const height = 900;
 
-// Função para extrair o ano de uma string de data no formato "12 de Janeiro de 2020"
 const extractYear = (dateString) => {
   const match = dateString.match(/(\d{1,2})\s+de\s+([a-zA-Z]+)\s+de\s+(\d{4})/);
   return match ? match[3] : null;
@@ -13,24 +12,24 @@ const extractYear = (dateString) => {
 
 const PortugalMap = () => {
   const svgRef = useRef();
-  const tooltipRef = useRef();
   const [year, setYear] = useState("");
   const [data, setData] = useState([]);
   const [geojson, setGeojson] = useState(null);
+  const [selectedDistrictData, setSelectedDistrictData] = useState(null);
+  const [clickedDistrict, setClickedDistrict] = useState(null);
 
-  // Refs para os botões da timeline
-  const yearButtonRefs = useRef({});
-
-  // Efeito para inicializar o mapa e carregar dados
   useEffect(() => {
     const svg = d3.select(svgRef.current)
       .attr("width", width)
       .attr("height", height);
 
-    const g = svg.append("g"); // Grupo principal para elementos do mapa
-    g.append("g").attr("class", "lines-group"); // Grupo para as linhas
+    // Adiciona os grupos em ordem correta
+    const g = svg.append("g");
+    g.append("g").attr("class", "map-group");
+    g.append("g").attr("class", "labels-group");
+    g.append("g").attr("class", "circles-group");
+    g.append("g").attr("class", "lines-group");
 
-    // Projeção geográfica centrada em Portugal
     const projection = d3.geoMercator()
       .center([-8, 39.5])
       .scale(6000)
@@ -38,76 +37,6 @@ const PortugalMap = () => {
 
     const path = d3.geoPath().projection(projection);
 
-    // Tooltip customizado
-    const tooltip = d3.select(tooltipRef.current)
-      .style("position", "absolute")
-      .style("padding", "10px")
-      .style("background", "white")
-      .style("border", "1px solid #999")
-      .style("border-radius", "8px")
-      .style("pointer-events", "none")
-      .style("opacity", 0);
-
-    // Função para atualizar os círculos do mapa
-    const updateCircles = (filteredData, geojsonData, selectedYear) => {
-      // Agrupa os temas por distrito e ano
-      const temasPorDistritoAno = d3.rollup(
-        filteredData,
-        v => v.length,
-        d => d["Distrito/Ilha"],
-        d => extractYear(d["Data"])
-      );
-
-      g.selectAll("circle")
-        .data(geojsonData.features)
-        .join("circle")
-        .attr("cx", d => path.centroid(d)[0])
-        .attr("cy", d => path.centroid(d)[1])
-        // Raio proporcional
-        // ao número de temas
-        .attr("r", d => {
-          const temasPorAno = temasPorDistritoAno.get(d.properties.name) || new Map();
-          if (selectedYear) {
-            return Math.sqrt(temasPorAno.get(selectedYear) || 0) * 2;
-          } else {
-            const total = Array.from(temasPorAno.values()).reduce((a, b) => a + b, 0);
-            return Math.sqrt(total) * 2;
-          }
-        })
-        .attr("fill", "rgba(255, 0, 68, 0.6)")
-        // Tooltip ao passar o mouse
-        .on("mouseover", function (event, d) {
-          const temasPorAno = temasPorDistritoAno.get(d.properties.name) || new Map();
-          let temasNoAno, label, temasLista;
-          if (selectedYear) {
-            temasNoAno = temasPorAno.get(selectedYear) || 0;
-            temasLista = filteredData
-              .filter(item => item["Distrito/Ilha"] === d.properties.name && extractYear(item["Data"]) === selectedYear)
-              .map(item => item["Tema"]);
-            label = `${temasNoAno} temas em ${selectedYear}`;
-          } else {
-            temasNoAno = Array.from(temasPorAno.values()).reduce((a, b) => a + b, 0);
-            temasLista = filteredData
-              .filter(item => item["Distrito/Ilha"] === d.properties.name)
-              .map(item => item["Tema"]);
-            label = `${temasNoAno} temas no total`;
-          }
-
-          tooltip.transition().duration(200).style("opacity", 1);
-          tooltip.html(
-            `<strong>${d.properties.name}</strong><br>${label}<br><br><strong>Temas:</strong><br>${temasLista.length > 0 ? temasLista.join("<br>") : "Nenhum"}`
-          );
-        })
-        .on("mousemove", event => {
-          tooltip.style("left", (event.pageX + 15) + "px")
-                 .style("top", (event.pageY - 28) + "px");
-        })
-        .on("mouseout", () => {
-          tooltip.transition().duration(300).style("opacity", 0);
-        });
-    };
-
-    // Carrega os dados GeoJSON e CSV
     Promise.all([
       d3.json("/Portugal.json"),
       d3.csv("/VIMEO_V5.csv")
@@ -115,8 +44,8 @@ const PortugalMap = () => {
       setGeojson(geojsonData);
       setData(csvData);
 
-      // Desenha os distritos no mapa
-      g.selectAll("path")
+      g.select(".map-group")
+        .selectAll("path")
         .data(geojsonData.features)
         .enter()
         .append("path")
@@ -124,8 +53,8 @@ const PortugalMap = () => {
         .attr("opacity", 0.6)
         .attr("d", path);
 
-      // Adiciona os nomes dos distritos
-      g.selectAll("text")
+      g.select(".labels-group")
+        .selectAll("text")
         .data(geojsonData.features)
         .enter()
         .append("text")
@@ -135,141 +64,167 @@ const PortugalMap = () => {
           return `translate(${centroid})`;
         })
         .text(d => d.properties.name);
-
-      updateCircles(csvData, geojsonData, year); // Inicializa os círculos
     });
 
-    // Limpa o SVG ao desmontar o componente
     return () => {
       svg.selectAll("*").remove();
     };
   }, []);
 
-  // Efeito para atualizar círculos e linhas ao mudar o ano, geojson ou dados
   useEffect(() => {
     if (!geojson || !data.length) return;
 
-    // Filtra os dados pelo ano selecionado (ou todos)
     const filtered = year ? data.filter(d => extractYear(d["Data"]) === year) : data;
     const svg = d3.select(svgRef.current);
     const g = svg.select("g");
+
     const projection = d3.geoMercator()
       .center([-8, 39.5])
       .scale(6000)
       .translate([width / 2, height / 2]);
+
     const path = d3.geoPath().projection(projection);
 
-    // Agrupa os temas por distrito e ano
-    const temasPorDistritoAno = d3.rollup(
-      filtered,
-      v => v.length,
-      d => d["Distrito/Ilha"],
-      d => extractYear(d["Data"])
-    );
-
-    // Atualiza os círculos de cada distrito
-    g.selectAll("circle")
-      .data(geojson.features)
-      .join("circle")
-      .attr("cx", d => path.centroid(d)[0])
-      .attr("cy", d => path.centroid(d)[1])
-      .attr("r", d => {
-        const temasPorAno = temasPorDistritoAno.get(d.properties.name) || new Map();
-        if (year) {
-          return Math.sqrt(temasPorAno.get(year) || 0) * 2;
-        } else {
-          const total = Array.from(temasPorAno.values()).reduce((a, b) => a + b, 0);
-          return Math.sqrt(total) * 2;
-        }
-      })
-      .attr("fill", "rgba(255, 0, 68, 0.6)");
-
-    // Atualiza as linhas que ligam o botão do ano aos distritos
-    const linesGroup = g.select(".lines-group");
-    linesGroup.selectAll("line").remove();
-
-    // Calcula o centro do botão do ano selecionado OU do botão "Todos" se year === ""
-    let centerX = width / 2;
-    let centerY = 40; // fallback
-    const yearKey = year === "" ? "" : year;
-    if (yearButtonRefs.current[yearKey]) {
-      const btn = yearButtonRefs.current[yearKey];
-      const btnRect = btn.getBoundingClientRect();
-      const svgRect = svgRef.current.getBoundingClientRect();
-      // Corrige para coordenadas relativas ao SVG
-      centerX = btnRect.left + btnRect.width / 2 - svgRect.left;
-      centerY = btnRect.top + btnRect.height / 2 - svgRect.top + height; // +height para alinhar abaixo do SVG
-    }
-
-    geojson.features.forEach((d) => {
-      const temasPorAno = temasPorDistritoAno.get(d.properties.name) || new Map();
-
-      let shouldDraw = false;
-      if (year) {
-        shouldDraw = (temasPorAno.get(year) || 0) > 0;
-      } else {
-        const total = Array.from(temasPorAno.values()).reduce((a, b) => a + b, 0);
-        shouldDraw = total > 0;
-      }
-
-      if (shouldDraw) {
-        const [x, y] = path.centroid(d);
-
-        // Calcula as coordenadas absolutas do botão
-        const btn = yearButtonRefs.current[yearKey];
-        const btnRect = btn.getBoundingClientRect();
-        // Posição do centro do botão no viewport
-        const btnCenterX = btnRect.left + btnRect.width / 2;
-        const btnCenterY = btnRect.top + btnRect.height / 2;
-
-        // Posição do SVG no viewport
-        const svgRect = svgRef.current.getBoundingClientRect();
-
-        // Posição do centroide do distrito relativa ao SVG
-        const svgX = svgRect.left + x;
-        const svgY = svgRect.top + y;
-
-        // Cria uma linha SVG que começa fora do SVG (no botão) e termina no distrito
-        // Para isso, usa o método .attr("x1", ...) e .attr("y1", ...) com valores negativos ou fora do SVG
-        linesGroup
-          .append("line")
-          .attr("x1", btnCenterX - svgRect.left) // relativo ao SVG
-          .attr("y1", btnCenterY - svgRect.top)  // relativo ao SVG
-          .attr("x2", x)
-          .attr("y2", y)
-          .attr("stroke", "rgba(0,0,0,0.4)")
-          .attr("stroke-width", 1.2);
-      }
+    const circles = geojson.features.map(d => {
+      const [cx, cy] = path.centroid(d);
+      return {
+        distrito: d.properties.name,
+        cx,
+        cy,
+        temas: filtered
+          .filter(item => item["Distrito/Ilha"] === d.properties.name)
+          .map(item => item["Tema"])
+      };
     });
 
-  }, [year, geojson, data]);
+    g.select(".circles-group")
+      .selectAll("circle")
+      .data(circles)
+      .join("circle")
+      .attr("cx", d => d.cx)
+      .attr("cy", d => d.cy)
+      .attr("r", d => Math.sqrt(d.temas.length) * 2)
+      .attr("fill", "rgba(255, 0, 68, 0.6)")
+      .style("cursor", "pointer")
+      .on("click", (event, d) => {
+        const temasNoAno = d.temas.length;
+        setSelectedDistrictData({
+          distrito: d.distrito,
+          totalTemas: temasNoAno,
+          temas: d.temas,
+          ano: year
+        });
+        setClickedDistrict(d);
+      });
+
+    // Remove linhas anteriores
+    g.select(".lines-group").selectAll("line").remove();
+
+    if (clickedDistrict) {
+      const temasSelecionados = new Set(clickedDistrict.temas);
+
+      const relatedCoords = circles.filter(d => {
+        if (d.distrito === clickedDistrict.distrito) return false;
+        return d.temas.some(t => temasSelecionados.has(t));
+      });
+
+      const newLines = relatedCoords.map(d => ({
+        x1: clickedDistrict.cx,
+        y1: clickedDistrict.cy,
+        x2: d.cx,
+        y2: d.cy,
+        temasComuns: d.temas.filter(t => temasSelecionados.has(t)),
+      }));
+
+      const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip-line")
+        .style("position", "absolute")
+        .style("background", "#fff")
+        .style("padding", "6px 10px")
+        .style("border", "1px solid #ccc")
+        .style("border-radius", "6px")
+        .style("font-size", "14px")
+        .style("pointer-events", "none")
+        .style("opacity", 0);
+
+      g.select(".lines-group")
+        .selectAll("line")
+        .data(newLines)
+        .join("line")
+        .attr("x1", d => d.x1)
+        .attr("y1", d => d.y1)
+        .attr("x2", d => d.x2)
+        .attr("y2", d => d.y2)
+        .attr("stroke", "#555")
+        .attr("stroke-opacity", 0.5)
+        .attr("stroke-width", 1.8)
+        .on("mouseover", (event, d) => {
+          tooltip.transition().duration(200).style("opacity", 0.95);
+          const temasUnicos = [...new Set(d.temasComuns)];
+          tooltip
+            .html(`<strong>Temas comuns:</strong><br>${temasUnicos.join("<br>")}`)
+            .style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY - 28}px`);
+        })
+        .on("mousemove", (event) => {
+          tooltip
+            .style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY - 28}px`);
+        })
+        .on("mouseout", () => {
+          tooltip.transition().duration(300).style("opacity", 0);
+        });
+    }
+  }, [year, geojson, data, clickedDistrict]);
+
+  const anosUnicos = [...new Set(data.map(d => extractYear(d["Data"])))].filter(Boolean).sort();
 
   return (
-    <div className="map-timeline-container">
-      {/* SVG do mapa */}
-      <svg ref={svgRef}></svg>
-      {/* Tooltip customizado */}
-      <div ref={tooltipRef} className="tooltip" />
-      {/* Timeline (botões de ano) abaixo do mapa */}
-      <div className="timeline-container" style={{ marginTop: "24px", marginBottom: "12px" }}>
-        {Array.from({ length: 2025 - 2010 + 1 }, (_, i) => 2010 + i).map((yr) => (
+    <div className="map-info">
+      <div className="map-timeline-container">
+        <svg ref={svgRef}></svg>
+        <div className="timeline-container">
           <button
-            key={yr}
-            ref={el => yearButtonRefs.current[yr] = el}
-            onClick={() => setYear(String(yr))}
-            className={`timeline-button${year === String(yr) ? " active" : ""}`}
+            className="timeline-button"
+            onClick={() => {
+              setYear("");
+              setClickedDistrict(null);
+            }}
           >
-            {yr}
+            Mostrar todos os anos
           </button>
-        ))}
-        {/* Botão para mostrar todos os anos */}
-        <button
-          ref={el => yearButtonRefs.current[""] = el}
-          onClick={() => setYear("")}
-          className={`timeline-button${year === "" ? " active" : ""}`}
-        >
-          Todos
-        </button>
+          {anosUnicos.map((ano, index) => (
+            <button
+              className="timeline-button"
+              key={index}
+              onClick={() => {
+                setYear(ano);
+                setClickedDistrict(null);
+              }}
+            >
+              {ano}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="info-section-map">
+        {selectedDistrictData ? (
+          <div>
+            <h2>{selectedDistrictData.distrito}</h2>
+            <p>
+              <strong>{selectedDistrictData.totalTemas}</strong> temas{" "}
+              {selectedDistrictData.ano ? `em ${selectedDistrictData.ano}` : "no total"}
+            </p>
+            <h4>Temas:</h4>
+            <ul>
+              {selectedDistrictData.temas.map((tema, i) => (
+                <li key={i}>{tema}</li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p>Clica numa bolinha para ver os temas e ligações.</p>
+        )}
       </div>
     </div>
   );
