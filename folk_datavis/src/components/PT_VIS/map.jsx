@@ -23,19 +23,30 @@ const PortugalMap = () => {
       .attr("width", width)
       .attr("height", height);
 
-    // Adiciona os grupos em ordem correta
     const g = svg.append("g");
     g.append("g").attr("class", "map-group");
     g.append("g").attr("class", "labels-group");
     g.append("g").attr("class", "circles-group");
     g.append("g").attr("class", "lines-group");
 
-    const projection = d3.geoMercator()
+    const projectionMainland = d3.geoMercator()
       .center([-8, 39.5])
       .scale(6000)
       .translate([width / 2, height / 2]);
 
-    const path = d3.geoPath().projection(projection);
+    const projectionAzores = d3.geoMercator()
+      .center([-28, 38])
+      .scale(12000)
+      .translate([300, 780]);
+
+    const projectionMadeira = d3.geoMercator()
+      .center([-17, 32.6])
+      .scale(14000)
+      .translate([480, 800]);
+
+    const pathMainland = d3.geoPath().projection(projectionMainland);
+    const pathAzores = d3.geoPath().projection(projectionAzores);
+    const pathMadeira = d3.geoPath().projection(projectionMadeira);
 
     Promise.all([
       d3.json("/Portugal.json"),
@@ -51,7 +62,12 @@ const PortugalMap = () => {
         .append("path")
         .attr("class", "distrito")
         .attr("opacity", 0.6)
-        .attr("d", path);
+        .attr("d", d => {
+          const name = d.properties.name;
+          if (name === "Azores") return pathAzores(d);
+          if (name === "Madeira") return pathMadeira(d);
+          return pathMainland(d);
+        });
 
       g.select(".labels-group")
         .selectAll("text")
@@ -60,7 +76,11 @@ const PortugalMap = () => {
         .append("text")
         .attr("class", "label")
         .attr("transform", d => {
-          const centroid = path.centroid(d);
+          const name = d.properties.name;
+          const centroid =
+            name === "Azores" ? pathAzores.centroid(d) :
+            name === "Madeira" ? pathMadeira.centroid(d) :
+            pathMainland.centroid(d);
           return `translate(${centroid})`;
         })
         .text(d => d.properties.name);
@@ -78,21 +98,38 @@ const PortugalMap = () => {
     const svg = d3.select(svgRef.current);
     const g = svg.select("g");
 
-    const projection = d3.geoMercator()
+    const projectionMainland = d3.geoMercator()
       .center([-8, 39.5])
       .scale(6000)
       .translate([width / 2, height / 2]);
 
-    const path = d3.geoPath().projection(projection);
+    const projectionAzores = d3.geoMercator()
+      .center([-28, 38])
+      .scale(12000)
+      .translate([300, 780]);
+
+    const projectionMadeira = d3.geoMercator()
+      .center([-17, 32.6])
+      .scale(14000)
+      .translate([480, 800]);
+
+    const pathMainland = d3.geoPath().projection(projectionMainland);
+    const pathAzores = d3.geoPath().projection(projectionAzores);
+    const pathMadeira = d3.geoPath().projection(projectionMadeira);
 
     const circles = geojson.features.map(d => {
-      const [cx, cy] = path.centroid(d);
+      const name = d.properties.name;
+      const centroid =
+        name === "Azores" ? pathAzores.centroid(d) :
+        name === "Madeira" ? pathMadeira.centroid(d) :
+        pathMainland.centroid(d);
+
       return {
-        distrito: d.properties.name,
-        cx,
-        cy,
+        distrito: name,
+        cx: centroid[0],
+        cy: centroid[1],
         temas: filtered
-          .filter(item => item["Distrito/Ilha"] === d.properties.name)
+          .filter(item => item["Distrito/Ilha"] === name)
           .map(item => item["Tema"])
       };
     });
@@ -107,17 +144,15 @@ const PortugalMap = () => {
       .attr("fill", "rgba(255, 0, 68, 0.6)")
       .style("cursor", "pointer")
       .on("click", (event, d) => {
-        const temasNoAno = d.temas.length;
         setSelectedDistrictData({
           distrito: d.distrito,
-          totalTemas: temasNoAno,
+          totalTemas: d.temas.length,
           temas: d.temas,
           ano: year
         });
         setClickedDistrict(d);
       });
 
-    // Remove linhas anteriores
     g.select(".lines-group").selectAll("line").remove();
 
     if (clickedDistrict) {
@@ -184,13 +219,10 @@ const PortugalMap = () => {
       <div className="map-timeline-container">
         <svg ref={svgRef}></svg>
         <div className="timeline-container">
-          <button
-            className="timeline-button"
-            onClick={() => {
-              setYear("");
-              setClickedDistrict(null);
-            }}
-          >
+          <button className="timeline-button" onClick={() => {
+            setYear("");
+            setClickedDistrict(null);
+          }}>
             Mostrar todos os anos
           </button>
           {anosUnicos.map((ano, index) => (
