@@ -1,163 +1,199 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import "../../css/mapstyles.css";
+import "../../css/spiral.css";
 
-const TemaRegiaoVis = () => {
+const SpiralVis = () => {
   const svgRef = useRef();
-  const [paginaTema, setPaginaTema] = useState(0);
-  const [paginaRegiao, setPaginaRegiao] = useState(0);
-  const temasPorPagina = 10;
-  const regioesPorPagina = 6;
+  const tooltipRef = useRef();
 
   useEffect(() => {
     const svg = d3.select(svgRef.current);
     const width = +svg.attr("width");
     const height = +svg.attr("height");
 
-    const margin = { top: 60, right: 20, bottom: 120, left: 200 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
-
-    let processed = [];
-    let filteredData = [];
-    let todosTemas = [];
-    let todasRegioes = [];
-
     const g = svg
-      .selectAll("g.container")
-      .data([null])
-      .join("g")
-      .attr("class", "container")
-      .attr("transform", `translate(${margin.left}, ${(height - innerHeight) / 2})`);
+      .append("g")
+      .attr("transform", `translate(${width / 2}, ${height / 2}) scale(0.7)`);
 
-    const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
-    const circlesGroup = g.selectAll("g.circles").data([null]).join("g").attr("class", "circles");
+    const tooltip = d3.select(tooltipRef.current);
 
     d3.csv("VIMEO_V8.csv").then((data) => {
-      const temaCount = d3.rollup(data, (v) => v.length, (d) => d.Tema);
-      const temasRepetidos = new Set([...temaCount.entries()].filter(([_, c]) => c > 1).map(([t]) => t));
-      filteredData = data.filter((d) => temasRepetidos.has(d.Tema));
-
-      const counts = d3.rollups(
-        filteredData,
-        (v) => v.length,
-        (d) => d.Tema,
-        (d) => d.Região
-      );
-
-      counts.forEach(([tema, regiaoData]) => {
-        regiaoData.forEach(([regiao, count]) => {
-          const categoria = filteredData.find(
-            (d) => d.Tema === tema && d.Região === regiao
-          )?.Categorias ?? "";
-          processed.push({ tema, regiao, count, categoria });
-        });
+      const filteredRaw = data.filter((d) => {
+        const year = parseInt(d.Ano);
+        return !isNaN(year) && d.Tema && d.Tema !== "#VALUE!";
       });
 
-      todasRegioes = Array.from(new Set(processed.map((d) => d.regiao))).sort(d3.ascending);
-      todosTemas = Array.from(new Set(processed.map((d) => d.tema))).sort(d3.ascending);
+      filteredRaw.forEach((d) => {
+        d.ano = parseInt(d.Ano);
+      });
 
-      const rScale = d3.scaleSqrt().domain([1, d3.max(processed, (d) => d.count)]).range([4, 30]);
+      filteredRaw.sort((a, b) => d3.ascending(a.ano, b.ano));
 
-      function atualizarVisualizacao(paginaT, paginaR) {
-        const regioesVisiveis = todasRegioes.slice(paginaR * regioesPorPagina, (paginaR + 1) * regioesPorPagina);
-        const temasVisiveis = todosTemas.slice(paginaT * temasPorPagina, (paginaT + 1) * temasPorPagina);
+      const temaCounts = d3.rollup(filteredRaw, (v) => v.length, (d) => d.Tema);
+      const filteredData = filteredRaw.filter(
+        (d) => temaCounts.get(d.Tema) > 1
+      );
 
-        const xScale = d3.scalePoint().domain(regioesVisiveis).range([0, innerWidth]).padding(0.5);
-        const yScale = d3.scalePoint().domain(temasVisiveis).range([0, innerHeight]).padding(0.5);
+      // ESCALA DE COR: 17 CORES PARA 17 ANOS
+      const uniqueYears = Array.from(new Set(filteredData.map(d => d.ano))).sort((a, b) => a - b);
 
-        eixoYGroup.call(d3.axisLeft(yScale));
+      const colorPalette = d3.schemeTableau10.concat(d3.schemeSet3).slice(0, 17);
 
-        const visiveis = processed.filter((d) =>
-          temasVisiveis.includes(d.tema) && regioesVisiveis.includes(d.regiao)
-        );
+      const yearColor = d3.scaleOrdinal()
+        .domain(uniqueYears)
+        .range(colorPalette);
 
-        const circles = circlesGroup.selectAll("circle").data(visiveis, (d) => d.tema + d.regiao);
+      // ESPIRAL
+      const a = 5;
+      const b = 10;
+      const spacing = 15;
 
-        circles.exit().remove();
+      const spiralPoints = [];
+      let angle = 0;
 
-        circles
-          .transition()
-          .duration(500)
-          .attr("cx", (d) => xScale(d.regiao))
-          .attr("cy", (d) => yScale(d.tema))
-          .attr("r", (d) => rScale(d.count));
+      for (let i = 0; i < filteredData.length; i++) {
+        const r = a + b * angle;
+        const x = r * Math.cos(angle);
+        const y = r * Math.sin(angle);
 
-        circles
-          .enter()
-          .append("circle")
-          .attr("cx", (d) => xScale(d.regiao))
-          .attr("cy", (d) => yScale(d.tema))
-          .attr("r", (d) => rScale(d.count))
-          .attr("fill", "#4682B4")
-          .on("click", (event, d) => {
-            const artistas = filteredData
-              .filter((item) => item.Tema === d.tema && item.Região === d.regiao)
-              .map((item) => item.Nome)
-              .filter((v, i, a) => a.indexOf(v) === i);
+        filteredData[i].x = x;
+        filteredData[i].y = y;
+        spiralPoints.push({ x, y });
 
-            const instrumentos = filteredData
-              .filter((item) => item.Tema === d.tema && item.Região === d.regiao)
-              .map((item) => item.Instrumento)
-              .flatMap((instr) => (instr ? instr.split(",").map((i) => i.trim()) : []))
-              .filter((v, i, a) => v && a.indexOf(v) === i);
-
-            d3.select("#categoria-info").html(`
-              <strong>Tema:</strong> ${d.tema} (${d.regiao})<br>
-              <strong>Categoria:</strong> ${d.categoria}<br>
-              <strong>Artistas:</strong> ${artistas.join(", ")}<br>
-              <strong>Instrumentos:</strong> ${instrumentos.join(", ")}
-            `);
-          })
-          .append("title")
-          .text((d) => `${d.tema} (${d.regiao}): ${d.count}`);
-
-        g.selectAll(".x-grid").remove();
-        g.selectAll(".x-grid")
-          .data(regioesVisiveis)
-          .enter()
-          .append("line")
-          .attr("class", "x-grid")
-          .attr("x1", (d) => xScale(d))
-          .attr("x2", (d) => xScale(d))
-          .attr("y1", 0)
-          .attr("y2", innerHeight)
-          .attr("stroke", "#ccc")
-          .attr("stroke-dasharray", "2,2");
-
-        g.selectAll(".x-axis").remove();
-        g.append("g")
-          .attr("class", "x-axis")
-          .call(d3.axisTop(xScale).tickValues(regioesVisiveis))
-          .selectAll("text")
-          .attr("transform", "rotate(-45)")
-          .style("text-anchor", "start");
+        const dr = b;
+        const ds = Math.sqrt(r * r + dr * dr);
+        angle += spacing / ds;
       }
 
-      atualizarVisualizacao(paginaTema, paginaRegiao);
+      const spiralLine = d3
+        .line()
+        .x((d) => d.x)
+        .y((d) => d.y)
+        .curve(d3.curveCardinal);
 
-      window.__atualizar = atualizarVisualizacao;
+      g.append("path")
+        .datum(spiralPoints)
+        .attr("d", spiralLine)
+        .attr("fill", "none")
+        .attr("stroke", "#999")
+        .attr("stroke-width", 1);
+
+      g.selectAll("circle")
+        .data(filteredData)
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => d.x)
+        .attr("cy", (d) => d.y)
+        .attr("r", 7)
+        .attr("fill", (d) => yearColor(d.ano)) // ← COR PELO ANO (ordinal)
+        .attr("opacity", 1)
+        .on("mouseover", (event, d) => {
+          const containerRect = svgRef.current.parentNode.getBoundingClientRect();
+          tooltip
+            .style("opacity", 1)
+            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}`)
+            .style("left", event.clientX - containerRect.left + 10 + "px")
+            .style("top", event.clientY - containerRect.top - 20 + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.style("opacity", 0);
+        })
+        .on("click", function (event, clickedDatum) {
+          const selectedTheme = clickedDatum.Tema;
+
+          g.selectAll("circle")
+            .transition()
+            .duration(300)
+            .attr("opacity", (d) => (d.Tema === selectedTheme ? 1 : 0.1));
+
+          g.selectAll(".highlight-line").remove();
+
+          const themePoints = filteredData
+            .filter((d) => d.Tema === selectedTheme)
+            .sort((a, b) => d3.ascending(a.ano, b.ano));
+
+          if (themePoints.length > 1) {
+            const line = d3
+              .line()
+              .x((d) => d.x)
+              .y((d) => d.y);
+
+            g.append("path")
+              .datum(themePoints)
+              .attr("class", "highlight-line")
+              .attr("d", line)
+              .attr("fill", "none")
+              .attr("stroke", "#222")
+              .attr("stroke-width", 2)
+              .attr("stroke-dasharray", "4 2");
+          }
+
+          event.stopPropagation();
+        });
+
+      let lastYear = null;
+      g.selectAll(".year-label")
+        .data(filteredData)
+        .enter()
+        .filter((d) => {
+          const year = d.ano;
+          if (year !== lastYear) {
+            lastYear = year;
+            return true;
+          }
+          return false;
+        })
+        .append("text")
+        .attr("x", (d) => d.x + 15)
+        .attr("y", (d) => d.y)
+        .text((d) => d.ano)
+        .attr("font-size", "12px")
+        .attr("fill", "#444")
+        .attr("alignment-baseline", "middle");
+
+      // LEGENDA LATERAL
+      const legendGroup = svg.append("g")
+        .attr("transform", `translate(${width - 160}, ${height / 2 - uniqueYears.length * 10})`);
+
+      uniqueYears.forEach((year, i) => {
+        const legendRow = legendGroup.append("g")
+          .attr("transform", `translate(0, ${i * 20})`);
+
+        legendRow.append("rect")
+          .attr("width", 14)
+          .attr("height", 14)
+          .attr("fill", yearColor(year));
+
+        legendRow.append("text")
+          .attr("x", 20)
+          .attr("y", 11)
+          .text(year)
+          .style("font-size", "12px")
+          .attr("alignment-baseline", "middle");
+      });
     });
-  }, [paginaTema, paginaRegiao]);
+
+    svg.on("click", function (event) {
+      if (event.target.tagName !== "circle") {
+        g.selectAll("circle")
+          .transition()
+          .duration(300)
+          .attr("opacity", 1);
+        g.selectAll(".highlight-line").remove();
+      }
+    });
+
+    return () => {
+      svg.selectAll("*").remove();
+    };
+  }, []);
 
   return (
-    <div>
-      <div className="visualization-controls">
-        <div>
-          <strong>Temas:</strong>
-          <button onClick={() => setPaginaTema((p) => Math.max(0, p - 1))}>←</button>
-          <button onClick={() => setPaginaTema((p) => p + 1)}>➝</button>
-        </div>
-        <div>
-          <strong>Regiões:</strong>
-          <button onClick={() => setPaginaRegiao((p) => Math.max(0, p - 1))}>←</button>
-          <button onClick={() => setPaginaRegiao((p) => p + 1)}>➝</button>
-        </div>
-      </div>
-      <svg ref={svgRef} width={1500} height={1000} />
-      <div id="categoria-info" />
+    <div style={{ position: "relative" }}>
+      <svg ref={svgRef} width={1500} height={1000}></svg>
+      <div ref={tooltipRef} className="tooltip-spiral" />
     </div>
   );
 };
 
-export default TemaRegiaoVis;
+export default SpiralVis;
