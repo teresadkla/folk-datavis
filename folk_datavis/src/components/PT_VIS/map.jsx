@@ -39,7 +39,7 @@ const PortugalMap = () => {
 
     Promise.all([
       d3.json("/Portugal.json"),
-      d3.csv("/VIMEO_V5.csv")
+      d3.csv("VIMEO_V8.csv")
     ]).then(([geojsonData, csvData]) => {
       setGeojson(geojsonData);
       setData(csvData);

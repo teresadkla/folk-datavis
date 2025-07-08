@@ -63,7 +63,7 @@ const NetworkDiagram = () => {
     const sizeScale = d3.scaleLinear().range([5, 25]); // Escala para tamanho dos nós
 
     // Carrega dados CSV
-    d3.csv("VIMEO_V6.csv").then(data => {
+    d3.csv("VIMEO_V8.csv").then(data => {
       // Contadores auxiliares
       const themeCounts = {}; // Ocorrências por tema
       const themeRegionCounts = {}; // Ocorrências por tema+região

@@ -1,205 +1,163 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import "../../css/spiral.css";
+import "../../css/mapstyles.css";
 
-const SpiralVis = () => {
+const TemaRegiaoVis = () => {
   const svgRef = useRef();
-  const tooltipRef = useRef();
+  const [paginaTema, setPaginaTema] = useState(0);
+  const [paginaRegiao, setPaginaRegiao] = useState(0);
+  const temasPorPagina = 10;
+  const regioesPorPagina = 6;
 
   useEffect(() => {
-    // Seleciona o SVG e define dimensões
     const svg = d3.select(svgRef.current);
     const width = +svg.attr("width");
     const height = +svg.attr("height");
 
-    // Cria um grupo centralizado para desenhar a espiral
-    const g = svg.append("g")
-      .attr("transform", `translate(${width / 2}, ${height / 2}) scale(0.7)`);
+    const margin = { top: 60, right: 20, bottom: 120, left: 200 };
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
 
+    let processed = [];
+    let filteredData = [];
+    let todosTemas = [];
+    let todasRegioes = [];
 
-    // Seleciona o tooltip (dica de ferramenta)
-    const tooltip = d3.select(tooltipRef.current);
-    // Escala de cores para os temas
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const g = svg
+      .selectAll("g.container")
+      .data([null])
+      .join("g")
+      .attr("class", "container")
+      .attr("transform", `translate(${margin.left}, ${(height - innerHeight) / 2})`);
 
-    // Configura o zoom e pan
-    // const zoom = d3.zoom()
-    //   .scaleExtent([0.5, 10])
-    //   .on("zoom", (event) => {
-    //     g.attr("transform", event.transform);
-    //   });
+    const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
+    const circlesGroup = g.selectAll("g.circles").data([null]).join("g").attr("class", "circles");
 
-    // svg.call(zoom);
+    d3.csv("VIMEO_V8.csv").then((data) => {
+      const temaCount = d3.rollup(data, (v) => v.length, (d) => d.Tema);
+      const temasRepetidos = new Set([...temaCount.entries()].filter(([_, c]) => c > 1).map(([t]) => t));
+      filteredData = data.filter((d) => temasRepetidos.has(d.Tema));
 
-    // Carrega os dados do CSV
-    d3.csv("VIMEO_V6.csv").then(data => {
-      // Filtra dados inválidos (Ano não numérico ou Tema inválido)
-      const filteredRaw = data.filter(d => {
-        const year = parseInt(d.Ano);
-        return !isNaN(year) && d.Tema && d.Tema !== "#VALUE!";
-      });
+      const counts = d3.rollups(
+        filteredData,
+        (v) => v.length,
+        (d) => d.Tema,
+        (d) => d.Região
+      );
 
-      // Converte Ano para número
-      filteredRaw.forEach(d => {
-        d.ano = parseInt(d.Ano);
-      });
-
-      // Ordena cronologicamente
-      filteredRaw.sort((a, b) => d3.ascending(a.ano, b.ano));
-
-      // Mantém apenas temas com mais de uma ocorrência
-      const temaCounts = d3.rollup(filteredRaw, v => v.length, d => d.Tema);
-      const filteredData = filteredRaw.filter(d => temaCounts.get(d.Tema) > 1);
-
-      // Parâmetros da espiral (a = raio inicial, b = espaçamento radial, spacing = distância angular)
-      const a = 5;
-      const b = 10;
-      const spacing = 15;
-
-      const spiralPoints = [];
-      let angle = 0;
-
-      // Calcula as posições (x, y) de cada ponto na espiral
-      for (let i = 0; i < filteredData.length; i++) {
-        const r = a + b * angle;
-        const x = r * Math.cos(angle);
-        const y = r * Math.sin(angle);
-
-        filteredData[i].x = x;
-        filteredData[i].y = y;
-        spiralPoints.push({ x, y });
-
-        // Atualiza o ângulo para o próximo ponto
-        const dr = b;
-        const ds = Math.sqrt(r * r + dr * dr);
-        angle += spacing / ds;
-      }
-
-      // Cria a linha da espiral
-      const spiralLine = d3.line()
-        .x(d => d.x)
-        .y(d => d.y)
-        .curve(d3.curveCardinal);
-
-      // Desenha a espiral
-      g.append("path")
-        .datum(spiralPoints)
-        .attr("d", spiralLine)
-        .attr("fill", "none")
-        .attr("stroke", "#999")
-        .attr("stroke-width", 1);
-
-      // Desenha os círculos (pontos) para cada dado
-      g.selectAll("circle")
-        .data(filteredData)
-        .enter()
-        .append("circle")
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y)
-        .attr("r", 7)
-        .attr("fill", d => color(d.Tema))
-        .attr("opacity", 1)
-        // Mostra tooltip ao passar o mouse
-        .on("mouseover", (event, d) => {
-          const containerRect = svgRef.current.parentNode.getBoundingClientRect();
-          tooltip.style("opacity", 1)
-            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}`)
-            .style("left", (event.clientX - containerRect.left + 10) + "px")
-            .style("top", (event.clientY - containerRect.top - 20) + "px");
-        })
-        // Esconde tooltip ao sair do mouse
-        .on("mouseout", () => {
-          tooltip.style("opacity", 0);
-        })
-        // Ao clicar em um círculo, destaca o tema e liga os pontos desse tema
-        .on("click", function (event, clickedDatum) {
-          const selectedTheme = clickedDatum.Tema;
-
-          // Destaca apenas os círculos do tema selecionado
-          g.selectAll("circle")
-            .transition()
-            .duration(300)
-            .attr("opacity", d => d.Tema === selectedTheme ? 1 : 0.1);
-
-          // Remove linha de destaque anterior
-          g.selectAll(".highlight-line").remove();
-
-          // Seleciona e ordena os pontos do tema selecionado
-          const themePoints = filteredData
-            .filter(d => d.Tema === selectedTheme)
-            .sort((a, b) => d3.ascending(a.ano, b.ano));
-
-          // Se houver mais de um ponto, desenha a linha ligando-os
-          if (themePoints.length > 1) {
-            const line = d3.line()
-              .x(d => d.x)
-              .y(d => d.y);
-
-            g.append("path")
-              .datum(themePoints)
-              .attr("class", "highlight-line")
-              .attr("d", line)
-              .attr("fill", "none")
-              .attr("stroke", "#222")
-              .attr("stroke-width", 2)
-              .attr("stroke-dasharray", "4 2");
-          }
-
-          // Impede propagação do clique para o SVG
-          event.stopPropagation();
+      counts.forEach(([tema, regiaoData]) => {
+        regiaoData.forEach(([regiao, count]) => {
+          const categoria = filteredData.find(
+            (d) => d.Tema === tema && d.Região === regiao
+          )?.Categorias ?? "";
+          processed.push({ tema, regiao, count, categoria });
         });
+      });
 
-      // Adiciona rótulos de ano (um por ano)
-      let lastYear = null;
-      g.selectAll(".year-label")
-        .data(filteredData)
-        .enter()
-        .filter(d => {
-          // Só adiciona rótulo se o ano for diferente do anterior
-          const year = d.ano;
-          if (year !== lastYear) {
-            lastYear = year;
-            return true;
-          }
-          return false;
-        })
-        .append("text")
-        .attr("x", d => d.x + 15)
-        .attr("y", d => d.y)
-        .text(d => d.ano)
-        .attr("font-size", "14px")
-        .attr("font-weight", "bold")
-        .attr("fill", "#444")
-        .attr("alignment-baseline", "middle");
-    });
+      todasRegioes = Array.from(new Set(processed.map((d) => d.regiao))).sort(d3.ascending);
+      todosTemas = Array.from(new Set(processed.map((d) => d.tema))).sort(d3.ascending);
 
-    // Ao clicar fora dos círculos, remove destaque e linhas
-    svg.on("click", function (event) {
-      if (event.target.tagName !== "circle") {
-        g.selectAll("circle")
+      const rScale = d3.scaleSqrt().domain([1, d3.max(processed, (d) => d.count)]).range([4, 30]);
+
+      function atualizarVisualizacao(paginaT, paginaR) {
+        const regioesVisiveis = todasRegioes.slice(paginaR * regioesPorPagina, (paginaR + 1) * regioesPorPagina);
+        const temasVisiveis = todosTemas.slice(paginaT * temasPorPagina, (paginaT + 1) * temasPorPagina);
+
+        const xScale = d3.scalePoint().domain(regioesVisiveis).range([0, innerWidth]).padding(0.5);
+        const yScale = d3.scalePoint().domain(temasVisiveis).range([0, innerHeight]).padding(0.5);
+
+        eixoYGroup.call(d3.axisLeft(yScale));
+
+        const visiveis = processed.filter((d) =>
+          temasVisiveis.includes(d.tema) && regioesVisiveis.includes(d.regiao)
+        );
+
+        const circles = circlesGroup.selectAll("circle").data(visiveis, (d) => d.tema + d.regiao);
+
+        circles.exit().remove();
+
+        circles
           .transition()
-          .duration(300)
-          .attr("opacity", 1);
-        g.selectAll(".highlight-line").remove();
-      }
-    });
+          .duration(500)
+          .attr("cx", (d) => xScale(d.regiao))
+          .attr("cy", (d) => yScale(d.tema))
+          .attr("r", (d) => rScale(d.count));
 
-    // Limpa o SVG ao desmontar o componente
-    return () => {
-      svg.selectAll("*").remove();
-    };
-  }, []);
+        circles
+          .enter()
+          .append("circle")
+          .attr("cx", (d) => xScale(d.regiao))
+          .attr("cy", (d) => yScale(d.tema))
+          .attr("r", (d) => rScale(d.count))
+          .attr("fill", "#4682B4")
+          .on("click", (event, d) => {
+            const artistas = filteredData
+              .filter((item) => item.Tema === d.tema && item.Região === d.regiao)
+              .map((item) => item.Nome)
+              .filter((v, i, a) => a.indexOf(v) === i);
+
+            const instrumentos = filteredData
+              .filter((item) => item.Tema === d.tema && item.Região === d.regiao)
+              .map((item) => item.Instrumento)
+              .flatMap((instr) => (instr ? instr.split(",").map((i) => i.trim()) : []))
+              .filter((v, i, a) => v && a.indexOf(v) === i);
+
+            d3.select("#categoria-info").html(`
+              <strong>Tema:</strong> ${d.tema} (${d.regiao})<br>
+              <strong>Categoria:</strong> ${d.categoria}<br>
+              <strong>Artistas:</strong> ${artistas.join(", ")}<br>
+              <strong>Instrumentos:</strong> ${instrumentos.join(", ")}
+            `);
+          })
+          .append("title")
+          .text((d) => `${d.tema} (${d.regiao}): ${d.count}`);
+
+        g.selectAll(".x-grid").remove();
+        g.selectAll(".x-grid")
+          .data(regioesVisiveis)
+          .enter()
+          .append("line")
+          .attr("class", "x-grid")
+          .attr("x1", (d) => xScale(d))
+          .attr("x2", (d) => xScale(d))
+          .attr("y1", 0)
+          .attr("y2", innerHeight)
+          .attr("stroke", "#ccc")
+          .attr("stroke-dasharray", "2,2");
+
+        g.selectAll(".x-axis").remove();
+        g.append("g")
+          .attr("class", "x-axis")
+          .call(d3.axisTop(xScale).tickValues(regioesVisiveis))
+          .selectAll("text")
+          .attr("transform", "rotate(-45)")
+          .style("text-anchor", "start");
+      }
+
+      atualizarVisualizacao(paginaTema, paginaRegiao);
+
+      window.__atualizar = atualizarVisualizacao;
+    });
+  }, [paginaTema, paginaRegiao]);
 
   return (
-    <div style={{ position: "relative" }}>
-      <svg ref={svgRef} width={1500} height={1000}></svg>
-      <div
-        ref={tooltipRef}
-        className="tooltip-spiral"
-        // Tooltip para mostrar informações ao passar o mouse
-      />
+    <div>
+      <div className="visualization-controls">
+        <div>
+          <strong>Temas:</strong>
+          <button onClick={() => setPaginaTema((p) => Math.max(0, p - 1))}>←</button>
+          <button onClick={() => setPaginaTema((p) => p + 1)}>➝</button>
+        </div>
+        <div>
+          <strong>Regiões:</strong>
+          <button onClick={() => setPaginaRegiao((p) => Math.max(0, p - 1))}>←</button>
+          <button onClick={() => setPaginaRegiao((p) => p + 1)}>➝</button>
+        </div>
+      </div>
+      <svg ref={svgRef} width={1500} height={1000} />
+      <div id="categoria-info" />
     </div>
   );
 };
 
-export default SpiralVis;
+export default TemaRegiaoVis;
