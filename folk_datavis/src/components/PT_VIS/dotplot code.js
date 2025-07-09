@@ -13,9 +13,11 @@ const GraficoTemasPorRegiao = () => {
   const [paginaTema, setPaginaTema] = useState(0);
   const [paginaRegiao, setPaginaRegiao] = useState(0);
 
-  const totalPaginasTemas = Math.ceil(todosTemas.length / temasPorPagina);
-  const totalPaginasRegioes = Math.ceil(todasRegioes.length / regioesPorPagina);
+const totalPaginasTemas = Math.ceil(todosTemas.length / temasPorPagina);
+const totalPaginasRegioes = Math.ceil(todasRegioes.length / regioesPorPagina);
 
+
+  // Carrega e processa os dados CSV apenas uma vez
   useEffect(() => {
     d3.csv("VIMEO_V8.csv").then((data) => {
       const temaCount = d3.rollup(data, v => v.length, d => d.Tema);
@@ -46,6 +48,7 @@ const GraficoTemasPorRegiao = () => {
     });
   }, []);
 
+  // Atualiza o gráfico sempre que a página ou os dados mudam
   useEffect(() => {
     if (dadosProcessados.length === 0) return;
 
@@ -65,9 +68,9 @@ const GraficoTemasPorRegiao = () => {
       .attr("transform", `translate(${margin.left}, ${(height - innerHeight) / 2})`);
 
     const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
-    const imagesGroup = g.selectAll("g.images").data([null]).join("g").attr("class", "images");
+    const circlesGroup = g.selectAll("g.circles").data([null]).join("g").attr("class", "circles");
 
-    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosProcessados, d => d.count)]).range([20, 60]);
+    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosProcessados, d => d.count)]).range([4, 30]);
 
     const regioesVisiveis = todasRegioes.slice(paginaRegiao * regioesPorPagina, (paginaRegiao + 1) * regioesPorPagina);
     const temasVisiveis = todosTemas.slice(paginaTema * temasPorPagina, (paginaTema + 1) * temasPorPagina);
@@ -81,35 +84,24 @@ const GraficoTemasPorRegiao = () => {
       d => temasVisiveis.includes(d.tema) && regioesVisiveis.includes(d.regiao)
     );
 
-const paths = imagesGroup.selectAll("path.flower1").data(visiveis, d => d.tema + d.regiao);
+    const circles = circlesGroup.selectAll("circle").data(visiveis, d => d.tema + d.regiao);
 
-// Remove os paths antigos
-paths.exit().remove();
+    circles.exit().remove();
 
-// Atualiza os paths existentes (se houver)
-paths
-  .transition()
-  .duration(500)
-  .attr("transform", d => {
-    const x = xScale(d.regiao) - rScale(d.count) / 2;
-    const y = yScale(d.tema) - rScale(d.count) / 2;
-    const scale = rScale(d.count) / 170;
-    return `translate(${x}, ${y}) scale(${scale})`;
-  });
+    circles
+      .transition()
+      .duration(500)
+      .attr("cx", d => xScale(d.regiao))
+      .attr("cy", d => yScale(d.tema))
+      .attr("r", d => rScale(d.count));
 
-    paths
+    circles
       .enter()
-      .append("path")
-        .attr("class", "flower1")
-      .attr("d", "M84.11,83.26c-7.25-7.17-13.98-12.9-20.19-17.4-7.28-9.86-13.1-23.1-10.41-38.76C58.37-1.17,91.17-3.59,105.45,4.61c9.18,5.27,22.85,24.06-3.08,59.58-9.91,7.41-16.33,16.23-18.26,19.06ZM141.5,53.51c-15.86-2.73-29.24,3.28-39.14,10.68-4.44,6.08-10.05,12.66-17.03,19.74,2.87,1.95,11.87,8.51,19.34,18.63,35.35,25.66,54.05,12.03,59.31,2.88,8.2-14.27,5.79-47.08-22.48-51.94ZM63.92,65.85c-35.35-25.66-54.05-12.03-59.31-2.88-8.2,14.27-5.79,47.08,22.48,51.94,15.86,2.73,29.24-3.28,39.14-10.68,4.44-6.08,10.05-12.66,17.03-19.74-2.87-1.95-11.87-8.51-19.34-18.63ZM84.11,83.26c-.41.6-.61.93-.61.93.01.01.02.02.03.03.26-.26.51-.52.77-.78-.06-.06-.12-.12-.18-.18ZM66.23,104.23c-25.93,35.52-12.26,54.31-3.08,59.58,14.27,8.2,47.08,5.79,51.94-22.48,2.69-15.67-3.13-28.91-10.41-38.76-6.21-4.51-12.93-10.24-20.19-17.4-1.93,2.84-8.35,11.65-18.26,19.06ZM84.29,83.44c.26.26.52.51.78.77.09-.09.18-.18.27-.27-.59-.4-.93-.61-.93-.61-.04.04-.08.08-.11.12ZM83.26,84.49c.59.4.93.61.93.61.04-.04.08-.08.11-.12-.26-.26-.52-.51-.78-.77-.09.09-.18.18-.27.27ZM84.49,85.17c.41-.6.61-.93.61-.93-.01-.01-.02-.02-.03-.03-.26.26-.51.52-.77.78.06.06.12.12.18.18Z")
-      .attr("transform", d => {
-        const x = xScale(d.regiao) - rScale(d.count) / 2;
-        const y = yScale(d.tema) - rScale(d.count) / 2;
-        const scale = rScale(d.count) / 170; // 170 é uma estimativa do tamanho original do path
-        return `translate(${x}, ${y}) scale(${scale})`;
-      })
-      .style("fill", "red") // ou como quiseres estilizar
-      .style("cursor", "pointer")
+      .append("circle")
+      .attr("cx", d => xScale(d.regiao))
+      .attr("cy", d => yScale(d.tema))
+      .attr("r", d => rScale(d.count))
+      .attr("fill", "#4682B4")
       .on("click", (event, d) => {
         const artistas = filteredData
           .filter(item => item.Tema === d.tema && item.Região === d.regiao)
@@ -155,44 +147,51 @@ paths
   }, [dadosProcessados, todosTemas, todasRegioes, paginaTema, paginaRegiao]);
 
   return (
-    <div>
-      <svg ref={svgRef} width={1200} height={800} />
+  <div>
+    <svg ref={svgRef} width={1200} height={800} />
+    
+    <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
 
-      <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
-
-      {/* Controles de temas */}
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
-          ← Temas
-        </button>
-        <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
-        <button
-          onClick={() =>
-            setPaginaTema((p) => Math.min(p + 1, totalPaginasTemas - 1))
-          }
-          disabled={paginaTema >= totalPaginasTemas - 1}
-        >
-          Temas →
-        </button>
-      </div>
-
-      {/* Controles de regiões */}
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))} disabled={paginaRegiao === 0}>
-          ← Regiões
-        </button>
-        <span style={{ margin: "0 10px" }}>Página Região {paginaRegiao + 1}</span>
-        <button
-          onClick={() =>
-            setPaginaRegiao((p) => Math.min(p + 1, totalPaginasRegioes - 1))
-          }
-          disabled={paginaRegiao >= totalPaginasRegioes - 1}
-        >
-          Regiões →
-        </button>
-      </div>
+    {/* Controles de temas */}
+    <div style={{ marginTop: "20px" }}>
+      <button
+        onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))}
+        disabled={paginaTema === 0}
+      >
+        ← Temas
+      </button>
+      <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
+      <button
+        onClick={() =>
+          setPaginaTema((p) => Math.min(p + 1, Math.ceil(todosTemas.length / temasPorPagina) - 1))
+        }
+        disabled={paginaTema >= Math.ceil(todosTemas.length / temasPorPagina) - 1}
+      >
+        Temas →
+      </button>
     </div>
-  );
+
+    {/* Controles de regiões */}
+    <div style={{ marginTop: "10px" }}>
+      <button
+        onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))}
+        disabled={paginaRegiao === 0}
+      >
+        ← Regiões
+      </button>
+      <span style={{ margin: "0 10px" }}>Página Região {paginaRegiao + 1}</span>
+      <button
+        onClick={() =>
+          setPaginaRegiao((p) => Math.min(p + 1, Math.ceil(todasRegioes.length / regioesPorPagina) - 1))
+        }
+        disabled={paginaRegiao >= Math.ceil(todasRegioes.length / regioesPorPagina) - 1}
+      >
+        Regiões →
+      </button>
+    </div>
+  </div>
+);
+
 };
 
 export default GraficoTemasPorRegiao;
