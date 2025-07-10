@@ -13,7 +13,7 @@ export default function visPT() {
       <NavigationBar />
 
       <div className="visPT-container">
-        <VerticalNav />
+        {/* <VerticalNav /> */}
 
         {/* Network Diagram */}
         <div id="network-section" className="vispt-roots">

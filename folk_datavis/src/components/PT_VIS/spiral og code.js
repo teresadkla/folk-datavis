@@ -34,10 +34,16 @@ const SpiralVis = () => {
         (d) => temaCounts.get(d.Tema) > 1
       );
 
+      // ESCALA DE COR: 17 CORES PARA 17 ANOS
       const uniqueYears = Array.from(new Set(filteredData.map(d => d.ano))).sort((a, b) => a - b);
-      const colorPalette = d3.schemeTableau10.concat(d3.schemeSet3).slice(0, 17);
-      const yearColor = d3.scaleOrdinal().domain(uniqueYears).range(colorPalette);
 
+      const colorPalette = d3.schemeTableau10.concat(d3.schemeSet3).slice(0, 17);
+
+      const yearColor = d3.scaleOrdinal()
+        .domain(uniqueYears)
+        .range(colorPalette);
+
+      // ESPIRAL
       const a = 5;
       const b = 10;
       const spacing = 15;
@@ -59,7 +65,8 @@ const SpiralVis = () => {
         angle += spacing / ds;
       }
 
-      const spiralLine = d3.line()
+      const spiralLine = d3
+        .line()
         .x((d) => d.x)
         .y((d) => d.y)
         .curve(d3.curveCardinal);
@@ -71,22 +78,15 @@ const SpiralVis = () => {
         .attr("stroke", "#999")
         .attr("stroke-width", 1);
 
-      const leafspath = "M6.62,89.93S-16.49,41.54,27.12,14.23c9.39-5.88,20.03-9.42,31.03-10.74,11.23-1.35,28.8-3.19,39.41-2.96,0,0-15.92,42.18-34.38,57.22S6.26,76.17,6.62,89.93Z";
-
-      g.selectAll(".custom-shape")
+      g.selectAll("circle")
         .data(filteredData)
         .enter()
-        .append("path")
-        .attr("class", "custom-shape")
-        .attr("d", leafspath)
-        .attr("fill", (d) => yearColor(d.ano))
+        .append("circle")
+        .attr("cx", (d) => d.x)
+        .attr("cy", (d) => d.y)
+        .attr("r", 7)
+        .attr("fill", (d) => yearColor(d.ano)) // ← COR PELO ANO (ordinal)
         .attr("opacity", 1)
-        .attr("transform", (d) => {
-          const scale = 0.15;
-          const offsetX = -6.62;
-          const offsetY = -89.93;
-          return `translate(${d.x}, ${d.y}) scale(${scale}) translate(${offsetX}, ${offsetY})`;
-        })
         .on("mouseover", (event, d) => {
           const containerRect = svgRef.current.parentNode.getBoundingClientRect();
           tooltip
@@ -101,7 +101,7 @@ const SpiralVis = () => {
         .on("click", function (event, clickedDatum) {
           const selectedTheme = clickedDatum.Tema;
 
-          g.selectAll(".custom-shape")
+          g.selectAll("circle")
             .transition()
             .duration(300)
             .attr("opacity", (d) => (d.Tema === selectedTheme ? 1 : 0.1));
@@ -113,7 +113,8 @@ const SpiralVis = () => {
             .sort((a, b) => d3.ascending(a.ano, b.ano));
 
           if (themePoints.length > 1) {
-            const line = d3.line()
+            const line = d3
+              .line()
               .x((d) => d.x)
               .y((d) => d.y);
 
@@ -150,6 +151,7 @@ const SpiralVis = () => {
         .attr("fill", "#444")
         .attr("alignment-baseline", "middle");
 
+      // LEGENDA LATERAL
       const legendGroup = svg.append("g")
         .attr("transform", `translate(${width - 160}, ${height / 2 - uniqueYears.length * 10})`);
 
@@ -172,8 +174,8 @@ const SpiralVis = () => {
     });
 
     svg.on("click", function (event) {
-      if (event.target.tagName !== "path") {
-        g.selectAll(".custom-shape")
+      if (event.target.tagName !== "circle") {
+        g.selectAll("circle")
           .transition()
           .duration(300)
           .attr("opacity", 1);

@@ -2,7 +2,7 @@
     width: 100vw;
     overflow: hidden;
     min-height: 100vh;
-    background: #e4e4e4;
+    /* background: #e4e4e4; */
     display: grid;
     grid-template-rows: 100px 1fr max-content;
     grid-template-columns: repeat(12, 1fr);

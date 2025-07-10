@@ -1,0 +1,62 @@
+.homepage{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 6rem;
+    color: #fff;
+    text-align: center;
+}
+
+.homepage h1{
+    font-family: var(--font-primary);
+    font-size: 4rem;
+    font-weight: 700;
+}
+
+.home{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4rem;
+}
+
+.home p{
+    font-size: 1.5rem;
+    width: 60%;
+}
+
+.connection{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+}
+
+.buttonToGraphs{
+    border: none;
+    outline: 1px solid #fff;
+    border-radius: 999px;
+    padding: 1rem;
+    background-color: #0A142188;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s;
+    cursor: pointer;
+}
+
+.buttonToGraphs:hover{
+    outline: 2px solid #fff;
+}
+
+.buttonToGraphs img{
+    width: 2rem;
+    height: auto;
+}
+
+.connection p{
+    font-size: 1rem;
+    font-weight: 300;
+}
