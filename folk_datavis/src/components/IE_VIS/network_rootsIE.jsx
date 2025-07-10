@@ -14,7 +14,6 @@ const NetworkDiagramIE = () => {
       .attr("width", width)
       .attr("height", height);
 
-    // Adicione esta linha para limpar o SVG antes de desenhar
     svg.selectAll("*").remove();
 
     const defs = svg.append("defs");
@@ -42,58 +41,52 @@ const NetworkDiagramIE = () => {
     const container = svg.append("g")
       .attr("transform", `scale(0.7) translate(${width * 0.10}, ${height * 0.10})`);
 
-    // svg.call(
-    //   d3.zoom()
-    //     .scaleExtent([0.2, 5])
-    //     .on("zoom", (event) => {
-    //       container.attr("transform", event.transform);
-    //     })
-    // );
-
     const tooltip = d3.select(tooltipRef.current);
     const color = d3.scaleOrdinal(d3.schemeCategory10);
     const sizeScale = d3.scaleLinear().range([5, 25]);
 
-    d3.csv("sets.csv").then(data => {
-      const themeCounts = {};
-      const themeRegionCounts = {};
-      const regionSet = new Set();
-
-      data.forEach(d => {
-        const name = d.name;
-        const mode = d.mode;
-        regionSet.add(mode);
-        themeCounts[name] = (themeCounts[name] || 0) + 1;
-        const key = `${name}||${mode}`;
-        themeRegionCounts[key] = (themeRegionCounts[key] || 0) + 1;
-      });
-
-      const repeatedThemes = Object.keys(themeCounts).filter(t => themeCounts[t] > 600);
+    d3.json("rootsVis1.json").then(data => {
+      const temasFiltrados = data.temasFiltrados;
       const nodes = [];
       const links = [];
-      const nodeByName = {};
+      const nodeById = {};
+      const modeSet = new Set();
 
-      const maxThemeCount = d3.max(Object.values(themeCounts));
-      sizeScale.domain([1, maxThemeCount]);
+      // Get max occurrences to scale sizes
+      const maxCount = d3.max(Object.values(temasFiltrados), d => d.totalOcorrencias);
+      sizeScale.domain([1, maxCount]);
 
-      repeatedThemes.forEach(theme => {
-        const node = { id: theme, type: "name", count: themeCounts[theme] };
-        nodes.push(node);
-        nodeByName[theme] = node;
-      });
+      // Criar nodes e links
+      for (const temaKey in temasFiltrados) {
+        const tema = temasFiltrados[temaKey];
+        const nomeMusica = tema.nomeMusica;
+        const count = tema.totalOcorrencias;
 
-      regionSet.forEach(region => {
-        const node = { id: region, type: "mode" };
-        nodes.push(node);
-        nodeByName[region] = node;
-      });
-
-      Object.entries(themeRegionCounts).forEach(([key, count]) => {
-        const [name, mode] = key.split("||");
-        if (repeatedThemes.includes(name)) {
-          links.push({ source: name, target: mode, value: count });
+        // Node da música
+        if (!nodeById[nomeMusica]) {
+          const musicaNode = { id: nomeMusica, type: "name", count };
+          nodes.push(musicaNode);
+          nodeById[nomeMusica] = musicaNode;
         }
-      });
+
+        // Nodes dos modos + links
+        tema.ligacoes.forEach(lig => {
+          const modo = lig.modo;
+          modeSet.add(modo);
+
+          if (!nodeById[modo]) {
+            const modoNode = { id: modo, type: "mode" };
+            nodes.push(modoNode);
+            nodeById[modo] = modoNode;
+          }
+
+          links.push({
+            source: nomeMusica,
+            target: modo,
+            value: lig.ocorrencias
+          });
+        });
+      }
 
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(150).strength(1))

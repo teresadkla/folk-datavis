@@ -9,8 +9,8 @@ const MidiCoparisonDotPlot = () => {
   const [selectedName, setSelectedName] = useState(null);
 
   const margin = { top: 50, right: 100, bottom: 50, left: 70 };
-  const width = 1200 - margin.left - margin.right;
-  const height = 800 - margin.top - margin.bottom;
+  const width = 1500 - margin.left - margin.right;
+  const height = 600 - margin.top - margin.bottom;
 
   useEffect(() => {
     Promise.all([
