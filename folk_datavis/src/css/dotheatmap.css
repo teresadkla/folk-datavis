@@ -44,7 +44,7 @@
   border-radius: 4px;
   pointer-events: none;
   font-size: 13px;
-  font-family: sans-serif;
+  font-family: var(--font-secondary);
   box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
 }
 
