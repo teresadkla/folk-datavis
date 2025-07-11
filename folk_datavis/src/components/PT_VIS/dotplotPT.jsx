@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
+import "../../css/mapstyles.css";
 
 const fontText = getComputedStyle(document.documentElement)
   .getPropertyValue('--font-secondary')
@@ -127,7 +128,9 @@ const GraficoTemasPorRegiao = () => {
           .flatMap(instr => (instr ? instr.split(",").map(i => i.trim()) : []))
           .filter((v, i, a) => v && a.indexOf(v) === i);
 
-        d3.select("#categoria-info").html(`
+        d3.select("#categoria-info")
+          .style("display", "block") // torna visível
+        .html(`
           <strong>Tema:</strong> ${d.tema} (${d.regiao})<br>
           <strong>Categoria:</strong> ${d.categoria}<br>
           <strong>Artistas:</strong> ${artistas.join(", ")}<br>
@@ -154,7 +157,7 @@ const GraficoTemasPorRegiao = () => {
       .call(d3.axisLeft(yScale))
       .selectAll("text")
       .style("font-family", fontText)
-      .style("font-size", "14px"); 
+      .style("font-size", "14px");
 
 
     g.selectAll(".x-axis").remove();
@@ -169,41 +172,46 @@ const GraficoTemasPorRegiao = () => {
   }, [dadosProcessados, todosTemas, todasRegioes, paginaTema, paginaRegiao]);
 
   return (
-    <div>
-      <svg ref={svgRef} width={1200} height={800} />
+    <div className="dotplotPT-container">
 
-      <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
+      <div className="dotplotPT-info" >
+        <svg ref={svgRef} width={1200} height={800} />
 
-      {/* Controles de temas */}
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
-          ← Temas
-        </button>
-        <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
-        <button
-          onClick={() =>
-            setPaginaTema((p) => Math.min(p + 1, totalPaginasTemas - 1))
-          }
-          disabled={paginaTema >= totalPaginasTemas - 1}
-        >
-          Temas →
-        </button>
+        <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
       </div>
 
-      {/* Controles de regiões */}
-      <div style={{ marginTop: "10px" }}>
-        <button onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))} disabled={paginaRegiao === 0}>
-          ← Regiões
-        </button>
-        <span style={{ margin: "0 10px" }}>Página Região {paginaRegiao + 1}</span>
-        <button
-          onClick={() =>
-            setPaginaRegiao((p) => Math.min(p + 1, totalPaginasRegioes - 1))
-          }
-          disabled={paginaRegiao >= totalPaginasRegioes - 1}
-        >
-          Regiões →
-        </button>
+      <div className="dotplotPT-controls">
+        {/* Controles de temas */}
+        <div style={{ marginTop: "20px" }}>
+          <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
+            ← Temas
+          </button>
+          <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
+          <button
+            onClick={() =>
+              setPaginaTema((p) => Math.min(p + 1, totalPaginasTemas - 1))
+            }
+            disabled={paginaTema >= totalPaginasTemas - 1}
+          >
+            Temas →
+          </button>
+        </div>
+
+        {/* Controles de regiões */}
+        <div className="dotplt-controls" style={{ marginTop: "10px" }}>
+          <button onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))} disabled={paginaRegiao === 0}>
+            ← Regiões
+          </button>
+          <span style={{ margin: "0 10px" }}>Página Região {paginaRegiao + 1}</span>
+          <button
+            onClick={() =>
+              setPaginaRegiao((p) => Math.min(p + 1, totalPaginasRegioes - 1))
+            }
+            disabled={paginaRegiao >= totalPaginasRegioes - 1}
+          >
+            Regiões →
+          </button>
+        </div>
       </div>
     </div>
   );
