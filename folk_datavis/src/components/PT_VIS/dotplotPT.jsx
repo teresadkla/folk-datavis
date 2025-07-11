@@ -154,7 +154,7 @@ const GraficoTemasPorRegiao = () => {
       .call(d3.axisLeft(yScale))
       .selectAll("text")
       .style("font-family", fontText)
-      .yle("font-size", "14px"); // opcional
+      .style("font-size", "14px"); 
 
 
     g.selectAll(".x-axis").remove();
