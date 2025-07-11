@@ -125,7 +125,7 @@ const NetworkDiagram = () => {
         .selectAll("path")
         .data(links)
         .join("path")
-        .attr("stroke", "brown")
+        .attr("stroke", "#6B3F21")
         .attr("stroke-width", d => Math.sqrt(d.value))
         .attr("stroke-opacity", 0.6)
         .attr("fill", "none")
@@ -138,7 +138,9 @@ const NetworkDiagram = () => {
         .data(nodes)
         .join("circle")
         .attr("r", d => d.type === "tema" ? sizeScale(d.count) : 10) // Tamanho depende do tipo
-        .attr("fill", d => d.type === "regiao" ? color(d.id) : "#69b3a2")
+        // .attr("fill", d => d.type === "regiao" ? color(d.id) : "#C33512")//Cor dos temas
+        .attr("fill", d => d.type === "regiao" ? "#E09D2C" : "#C33512")//Cor dos temas
+
         .attr("fill-opacity", 0.9)
         // Tooltip ao passar por cima de temas
         .on("mouseover", (event, d) => {

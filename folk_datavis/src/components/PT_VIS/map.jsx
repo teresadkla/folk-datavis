@@ -141,7 +141,8 @@ const PortugalMap = () => {
       .attr("cx", d => d.cx)
       .attr("cy", d => d.cy)
       .attr("r", d => Math.sqrt(d.temas.length) * 2)
-      .attr("fill", "rgba(255, 0, 68, 0.6)")
+      .attr("fill", "#DB8671")//Red2
+      .attr("fill-opacity", 0.5)
       .style("cursor", "pointer")
       .on("click", (event, d) => {
         setSelectedDistrictData({

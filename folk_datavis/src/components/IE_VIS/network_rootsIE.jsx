@@ -110,7 +110,8 @@ const NetworkDiagramIE = () => {
         .data(nodes)
         .join("circle")
         .attr("r", d => d.type === "name" ? sizeScale(d.count) : 10)
-        .attr("fill", d => d.type === "mode" ? color(d.id) : "#69b3a2")
+        // .attr("fill", d => d.type === "mode" ? color(d.id) : "#5193AE")//Cor dos names e modes
+        .attr("fill", d => d.type === "mode" ? "#82813E" : "#5193AE")//Cor dos names e modes
         .attr("fill-opacity", 0.9)
         .on("mouseover", (event, d) => {
           if (d.type === "name") {

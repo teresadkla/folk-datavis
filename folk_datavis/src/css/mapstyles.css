@@ -17,7 +17,7 @@
 
 .label {
   font-size: 10px;
-  fill: #444;
+  fill: var(--color-text);
   text-anchor: middle;
   pointer-events: none;
 }

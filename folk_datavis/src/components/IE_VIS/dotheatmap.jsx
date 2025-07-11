@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "../../css/dotheatmap.css";
 
+
+const fontText = getComputedStyle(document.documentElement)
+  .getPropertyValue('--font-secondary')
+  .trim();
+
 // Margens do gráfico
 const margin = { top: 100, right: 50, bottom: 20, left: 400 };
 // Número de linhas exibidas por página
@@ -88,14 +93,20 @@ const DotHeatmap = () => {
       .domain([1, d3.max(Array.from(countMap.values(), (m) => d3.max(m.values())))]);
 
     // Eixo Y (nomes)
-    g.append("g").call(d3.axisLeft(yScale));
+    g.append("g").call(d3.axisLeft(yScale))
+      .selectAll("text")
+      .style("font-family", fontText)
+      .style("font-size", "14px");
+
     // Eixo X (tipos)
     g.append("g")
       .attr("transform", `translate(0,-10)`)
       .call(d3.axisTop(xScale))
       .selectAll("text")
       .attr("transform", "rotate(0)")
-      .style("text-anchor", "center");
+      .style("text-anchor", "center")
+      .style("font-family", fontText)
+      .style("font-size", "14px");
 
     // Linhas de grade horizontais
     g.selectAll(".y-grid")
@@ -156,7 +167,7 @@ const DotHeatmap = () => {
     <div className="DotHeatmap-container">
       <div className="controls">
         {/* Botão para ativar/desativar filtro de músicas com mais de um tipo */}
-        <button onClick={() => setFilterActive((prev) => !prev)}  id="filter-multi-type" >
+        <button onClick={() => setFilterActive((prev) => !prev)} id="filter-multi-type" >
           {filterActive ? "Mostrar todas as músicas" : "Mostrar apenas músicas com mais de um tipo"}
         </button>
         {/* Botão para navegar para cima na paginação */}

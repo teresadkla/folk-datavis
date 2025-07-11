@@ -5,37 +5,81 @@
   font-family: 'Old Claude LP Regular';
   line-height: 1.5;
   font-weight: 400;
-  
+
   /* Variáveis para facilitar o uso */
   --font-primary: 'Almendra SC', serif;
   --font-secondary: 'Old Claude LP Regular', system-ui, sans-serif;
 
+  /* Variáveis de cor */
+  --color-text: #34372C;
+  --color-background: #EBE7D4;
+
+
+  /* Variáveis de cor Portugal */
+  --color-Red1-PT: #C33512;
+  --color-Red2-PT: #DB8671;
+  --color-Red3-PT: #EDC2B8;
+
+  --color-Blue1-PT: #474E95;
+  --color-Blue2-PT: #9195C0;
+  --color-Blue3-PT: #C8CADF;
+
+  --color-Yellow1-PT: #E09D2C;
+  --color-Yellow2-PT: #ECC480;
+  --color-Yellow3-PT: #F6E2C0;
+
+
+  /* Variáveis de cor Irlanda */
+  --color-Green1-IE: #82813E;
+  --color-Green1-IE: #B4B38B;
+  --color-Green1-IE: #DAD9C5;
+
+  --color-Blue1-IE: #5193AE;
+  --color-Blue2-IE: #97BECE;
+  --color-Blue3-IE: #CBDFE7;
+
+  --color-Orange1-IE: #CC5C25;
+  --color-Orange2-IE: #E09D7C;
+  --color-Orange3-IE: #F0CEBE;
+
   color-scheme: light dark;
-  color: rgba(13, 13, 13, 0.87);
-  background-color: #EBE7D4; 
+  color: var(--color-text);
+  background-color: var(--color-background);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+
 }
+
 /* Títulos com Almedra SC */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: var(--font-secondary);
-  color: #222222;
+  color: var(--color-text);
   font-weight: 700;
 }
 
 /* Texto do corpo com Old Claude LP Regular */
-body, p, div {
+body,
+p,
+div {
   font-family: var(--font-secondary);
-    color: #222222;
+  color: var(--color-text);
 }
+
 a {
   font-weight: 500;
   color: #646cff;
   text-decoration: inherit;
 }
+
 a:hover {
   color: #535bf2;
 }
@@ -48,10 +92,12 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
 svg {
-/* background-color: rgb(228, 177, 193);  */
-margin-top: 5%;
+  /* background-color: rgb(228, 177, 193);  */
+  margin-top: 5%;
 }
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
@@ -68,9 +114,11 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
 button:hover {
   border-color: #646cff;
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -81,9 +129,11 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }

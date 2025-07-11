@@ -1,6 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 
+const fontText = getComputedStyle(document.documentElement)
+  .getPropertyValue('--font-secondary')
+  .trim();
+
+
 const temasPorPagina = 8;
 const regioesPorPagina = 8;
 
@@ -108,7 +113,7 @@ const GraficoTemasPorRegiao = () => {
         const scale = rScale(d.count) / 170; // 170 é uma estimativa do tamanho original do path
         return `translate(${x}, ${y}) scale(${scale})`;
       })
-      .style("fill", "#474E95") // ou como quiseres estilizar
+      .style("fill", "#474E95")
       .style("cursor", "pointer")
       .on("click", (event, d) => {
         const artistas = filteredData
@@ -145,13 +150,22 @@ const GraficoTemasPorRegiao = () => {
       .attr("stroke", "#ccc")
       .attr("stroke-dasharray", "2,2");
 
+    eixoYGroup
+      .call(d3.axisLeft(yScale))
+      .selectAll("text")
+      .style("font-family", fontText)
+      .yle("font-size", "14px"); // opcional
+
+
     g.selectAll(".x-axis").remove();
     g.append("g")
       .attr("class", "x-axis")
       .call(d3.axisTop(xScale).tickValues(regioesVisiveis))
       .selectAll("text")
       .attr("transform", "rotate(0)")
-      .style("text-anchor", "center");
+      .style("text-anchor", "center")
+      .style("font-family", fontText)
+      .style("font-size", "14px");
   }, [dadosProcessados, todosTemas, todasRegioes, paginaTema, paginaRegiao]);
 
   return (
