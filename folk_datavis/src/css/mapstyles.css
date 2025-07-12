@@ -104,6 +104,18 @@
 }
 
 
+.close-button {
+  color: #333;
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+
 /*Dot plot PT*/
 .dotplotPT-info {
   display: flex;
@@ -125,4 +137,39 @@
   height: fit-content;
   border-radius: 5px;
   color: #333;
+  max-height: 70vh;
+    overflow-y: auto;
+}
+
+
+
+#categoria-info .header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+#categoria-info .regiao {
+  color: #999;
+  font-weight: 400;
+}
+
+#categoria-info hr {
+  margin: 10px 0;
+  border: none;
+  border-top: 1px solid #999;
+}
+
+#categoria-info .section {
+  margin-bottom: 10px;
+}
+
+#categoria-info ul {
+  margin: 5px 0 0 20px;
+  padding: 0;
+}
+
+#categoria-info li {
+  margin-bottom: 4px;
 }

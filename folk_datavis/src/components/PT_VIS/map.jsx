@@ -79,8 +79,8 @@ const PortugalMap = () => {
           const name = d.properties.name;
           const centroid =
             name === "Azores" ? pathAzores.centroid(d) :
-            name === "Madeira" ? pathMadeira.centroid(d) :
-            pathMainland.centroid(d);
+              name === "Madeira" ? pathMadeira.centroid(d) :
+                pathMainland.centroid(d);
           return `translate(${centroid})`;
         })
         .text(d => d.properties.name);
@@ -121,8 +121,8 @@ const PortugalMap = () => {
       const name = d.properties.name;
       const centroid =
         name === "Azores" ? pathAzores.centroid(d) :
-        name === "Madeira" ? pathMadeira.centroid(d) :
-        pathMainland.centroid(d);
+          name === "Madeira" ? pathMadeira.centroid(d) :
+            pathMainland.centroid(d);
 
       return {
         distrito: name,
@@ -216,50 +216,60 @@ const PortugalMap = () => {
   const anosUnicos = [...new Set(data.map(d => extractYear(d["Data"])))].filter(Boolean).sort();
 
   return (
-    <div className="map-info">
-      <div className="map-timeline-container">
-        <svg ref={svgRef}></svg>
-        <div className="timeline-container">
-          <button className="timeline-button" onClick={() => {
-            setYear("");
+<div className="map-info">
+  <div className="map-timeline-container">
+    <svg ref={svgRef}></svg>
+    <div className="timeline-container">
+      <button
+        className="timeline-button"
+        onClick={() => {
+          setYear("");
+          setClickedDistrict(null);
+        }}
+      >
+        Mostrar todos os anos
+      </button>
+      {anosUnicos.map((ano, index) => (
+        <button
+          className="timeline-button"
+          key={index}
+          onClick={() => {
+            setYear(ano);
             setClickedDistrict(null);
-          }}>
-            Mostrar todos os anos
-          </button>
-          {anosUnicos.map((ano, index) => (
-            <button
-              className="timeline-button"
-              key={index}
-              onClick={() => {
-                setYear(ano);
-                setClickedDistrict(null);
-              }}
-            >
-              {ano}
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="info-section-map">
-        {selectedDistrictData ? (
-          <div>
-            <h2>{selectedDistrictData.distrito}</h2>
-            <p>
-              <strong>{selectedDistrictData.totalTemas}</strong> temas{" "}
-              {selectedDistrictData.ano ? `em ${selectedDistrictData.ano}` : "no total"}
-            </p>
-            <h4>Temas:</h4>
-            <ul>
-              {selectedDistrictData.temas.map((tema, i) => (
-                <li key={i}>{tema}</li>
-              ))}
-            </ul>
-          </div>
-        ) : (
-          <p>Clica numa bolinha para ver os temas e ligações.</p>
-        )}
-      </div>
+          }}
+        >
+          {ano}
+        </button>
+      ))}
     </div>
+  </div>
+
+  {selectedDistrictData && (
+    <div className="info-section-map">
+      <button
+        className="close-button"
+        onClick={() => {
+          setSelectedDistrictData(null);
+          setClickedDistrict(null);
+        }}
+      >
+        ×
+      </button>
+      <h2>{selectedDistrictData.distrito}</h2>
+      <p>
+        <strong>{selectedDistrictData.totalTemas}</strong> temas{" "}
+        {selectedDistrictData.ano ? `em ${selectedDistrictData.ano}` : "no total"}
+      </p>
+      <h4>Temas:</h4>
+      <ul>
+        {selectedDistrictData.temas.map((tema, i) => (
+          <li key={i}>{tema}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
+
   );
 };
 

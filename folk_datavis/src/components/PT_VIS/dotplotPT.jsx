@@ -128,14 +128,38 @@ const GraficoTemasPorRegiao = () => {
           .flatMap(instr => (instr ? instr.split(",").map(i => i.trim()) : []))
           .filter((v, i, a) => v && a.indexOf(v) === i);
 
-        d3.select("#categoria-info")
-          .style("display", "block") // torna visível
-        .html(`
-          <strong>Tema:</strong> ${d.tema} (${d.regiao})<br>
-          <strong>Categoria:</strong> ${d.categoria}<br>
-          <strong>Artistas:</strong> ${artistas.join(", ")}<br>
-          <strong>Instrumentos:</strong> ${instrumentos.join(", ")}
-        `);
+    d3.select("#categoria-info")
+  .style("display", "block")
+  .html(`
+    <button class="close-button">✕</button>
+    <div class="card">
+      <div class="header">
+        <strong>Tema:</strong> ${d.tema}
+        <span class="regiao">${d.regiao}</span>
+      </div>
+      <hr>
+      <div class="section">
+        <strong>Categoria:</strong>
+        <ul><li>${d.categoria}</li></ul>
+      </div>
+      <div class="section">
+        <strong>Artistas:</strong>
+        <ul>${artistas.map(nome => `<li>${nome}</li>`).join("")}</ul>
+      </div>
+      <div class="section">
+        <strong>Instrumentos:</strong>
+        <ul>${instrumentos.map(instr => `<li>${instr}</li>`).join("")}</ul>
+      </div>
+    </div>
+  `);
+
+
+// Adiciona o evento via D3
+d3.select("#categoria-info .close-button").on("click", () => {
+  d3.select("#categoria-info").style("display", "none");
+});
+
+
       })
       .append("title")
       .text(d => `${d.tema} (${d.regiao}): ${d.count}`);
