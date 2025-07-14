@@ -3,6 +3,7 @@ import NavigationBar from './components/nav'
 import Vis1PT from './pages/Vis1PT'
 import VisIE from './pages/VisIE' 
 import Home from './pages/Home'
+import ScrollIntro from './pages/Intro'
 import './App.css'
 
 function App() {

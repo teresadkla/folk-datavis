@@ -172,7 +172,7 @@ const DotHeatmap = () => {
         </button>
         {/* Botão para navegar para cima na paginação */}
         <button id="nav-up" onClick={() => setStartIndex((prev) => Math.max(prev - pageSize, 0))} >
-          ▲
+         ↑
         </button>
         {/* Botão para navegar para baixo na paginação */}
         <button id="nav-down"
@@ -182,7 +182,7 @@ const DotHeatmap = () => {
               setStartIndex((prev) => prev + pageSize);
             }
           }}>
-          ▼
+          ↓
         </button>
       </div>
       {/* SVG onde o heatmap é desenhado */}

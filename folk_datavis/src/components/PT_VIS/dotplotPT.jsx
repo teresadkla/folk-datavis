@@ -206,9 +206,9 @@ d3.select("#categoria-info .close-button").on("click", () => {
 
       <div className="dotplotPT-controls">
         {/* Controles de temas */}
-        <div style={{ marginTop: "20px" }}>
+        <div>
           <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
-            ← Temas
+          ↑
           </button>
           <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
           <button
@@ -217,14 +217,14 @@ d3.select("#categoria-info .close-button").on("click", () => {
             }
             disabled={paginaTema >= totalPaginasTemas - 1}
           >
-            Temas →
+            ↓
           </button>
         </div>
 
         {/* Controles de regiões */}
-        <div className="dotplt-controls" style={{ marginTop: "10px" }}>
+        <div>
           <button onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))} disabled={paginaRegiao === 0}>
-            ← Regiões
+            ← 
           </button>
           <span style={{ margin: "0 10px" }}>Página Região {paginaRegiao + 1}</span>
           <button
@@ -233,7 +233,7 @@ d3.select("#categoria-info .close-button").on("click", () => {
             }
             disabled={paginaRegiao >= totalPaginasRegioes - 1}
           >
-            Regiões →
+            →
           </button>
         </div>
       </div>
