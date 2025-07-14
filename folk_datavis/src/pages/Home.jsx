@@ -1,56 +1,75 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import * as anime from 'animejs';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import "../css/home.css";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Home = () => {
     const navigate = useNavigate();
     const sectionsRef = useRef([]);
     const scrollWrapperRef = useRef(null);
+    const homepageRef = useRef(null);
     const [activeIndex, setActiveIndex] = useState(0);
     const [showDots, setShowDots] = useState(false);
 
     useEffect(() => {
-        const observerOptions = {
-            threshold: 0.4,
-        };
-
-        const sectionObserver = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                const index = sectionsRef.current.indexOf(entry.target);
-
-                if (entry.isIntersecting) {
-                    setActiveIndex(index);
-                    anime({
-                        targets: entry.target,
-                        translateY: [40, 0],
-                        opacity: [0, 1],
-                        duration: 1000,
-                        easing: 'easeOutExpo'
-                    });
-
-                    sectionObserver.unobserve(entry.target);
-                }
-            });
-        }, observerOptions);
-
-        sectionsRef.current.forEach((section) => {
-            if (section) sectionObserver.observe(section);
+        ScrollTrigger.defaults({
+            toggleActions: "play reverse play reverse",
+            markers: false,
         });
 
-        const scrollWrapperObserver = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                setShowDots(entry.isIntersecting);
-            });
-        }, { threshold: 0.1 });
+        // Animação de entrada para cada seção
+        sectionsRef.current.forEach((section, i) => {
+            if (section) {
+                gsap.fromTo(section,
+                    { autoAlpha: 0, y: 40 },
+                    {
+                        autoAlpha: 1,
+                        y: 0,
+                        duration: 1,
+                        ease: 'power2.out',
+                        scrollTrigger: {
+                            trigger: section,
+                            start: "top top",
+                            end: "bottom top",
+                            pin: true,
+                    
+                            onEnter: () => setActiveIndex(i),
+                            onEnterBack: () => setActiveIndex(i),
+                            toggleActions: 'play reverse play reverse',
+                        }
+                    }
+                );
+            }
+        });
 
-        if (scrollWrapperRef.current) {
-            scrollWrapperObserver.observe(scrollWrapperRef.current);
+        // Fade out da homepage ao entrar na part1
+        if (sectionsRef.current[0] && homepageRef.current) {
+            gsap.to(homepageRef.current, {
+                autoAlpha: 0,
+                duration: 1,
+                ease: 'power2.out',
+                scrollTrigger: {
+                    trigger: sectionsRef.current[0],
+                    start: 'top center',
+                    end: 'bottom center',
+                    toggleActions: 'play reverse play reverse',
+                }
+            });
         }
 
+        // Mostrar ou ocultar os dots dependendo da visibilidade do scroll-wrapper
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => setShowDots(entry.isIntersecting));
+        }, { threshold: 0.1 });
+
+        if (scrollWrapperRef.current) observer.observe(scrollWrapperRef.current);
+
         return () => {
-            sectionObserver.disconnect();
-            scrollWrapperObserver.disconnect();
+            ScrollTrigger.getAll().forEach(t => t.kill());
+            observer.disconnect();
         };
     }, []);
 
@@ -60,7 +79,7 @@ const Home = () => {
 
     return (
         <div className="home-intro">
-            <div className="homepage">
+            <div className="homepage" ref={homepageRef}>
                 <div className="home">
                     <h1>The Wandering Song</h1>
                     <p>
@@ -69,7 +88,6 @@ const Home = () => {
                         and roots of all the music that wanders through generations, but is never lost.
                     </p>
 
-                    {/* Setinha de scroll */}
                     <div className="scrollDownArrow" style={{
                         textAlign: 'center',
                         fontSize: '2rem',
@@ -88,7 +106,6 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* Scrollable intro */}
             <div className="scroll-wrapper" ref={scrollWrapperRef}>
                 {showDots && (
                     <div className="dots-container">
@@ -102,34 +119,23 @@ const Home = () => {
                 )}
 
                 <div className='intro-container'>
-                    <div className="part1" ref={el => sectionsRef.current[0] = el}>
-                        <p className='t1'>
-                            Folk music embodies the stories of the land and the people through sound!
-                        </p>
-                    </div>
-                    <div className="part2" ref={el => sectionsRef.current[1] = el}>
-                        <p className='t2'>
-                            Two distant lands however both with profound musical roots!
-                        </p>
-                    </div>
-                    <div className="part3" ref={el => sectionsRef.current[2] = el}>
-                        <p className='t3'>
-                            In Portugal we follow the impact that the territory has in
-                            the variation of folk music.
-                        </p>
-                    </div>
-                    <div className="part4" ref={el => sectionsRef.current[3] = el}>
-                        <p className='t4'>
-                            On the other side, in Ireland we will explore the sound
-                            and how its genres within folk variate from song to song.
-                        </p>
-                    </div>
-                    <div className="part5" ref={el => sectionsRef.current[4] = el}>
-                        <p className='t5'>
-                            This experience is meant to show how folk music is intertwined
-                            by land and sound.
-                        </p>
-                    </div>
+                    {["part1", "part2", "part3", "part4", "part5"].map((cls, i) => (
+                        <div
+                            key={cls}
+                            className={cls}
+                            ref={(el) => sectionsRef.current[i] = el}
+                        >
+                            <p className={`t${i + 1}`}>
+                                {[
+                                    "Folk music embodies the stories of the land and the people through sound!",
+                                    "Two distant lands however both with profound musical roots!",
+                                    "In Portugal we follow the impact that the territory has in the variation of folk music.",
+                                    "On the other side, in Ireland we will explore the sound and how its genres within folk variate from song to song.",
+                                    "This experience is meant to show how folk music is intertwined by land and sound."
+                                ][i]}
+                            </p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

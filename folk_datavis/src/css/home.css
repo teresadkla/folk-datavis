@@ -85,8 +85,8 @@
 /*Intro*/
 
 .intro-container > div {
-  opacity: 1;
-
+    opacity: 1!important;
+    transition: all 0.5s ease-out;
 }
 .part1, .part2, .part3, .part4, .part5 {
   min-height: 100vh; /* só para testar */
@@ -94,6 +94,7 @@
   align-items: center;
   justify-content: center;
   color: black;
+
 }
 .scroll-wrapper {
   position: relative;
