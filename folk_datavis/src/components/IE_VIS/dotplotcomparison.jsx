@@ -2,25 +2,30 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "../../css/comparison.css";
 
-const MidiCoparisonDotPlot = () => {
+const fontText = getComputedStyle(document.documentElement)
+  .getPropertyValue('--font-secondary')
+  .trim();
+
+const MidiHeatmapComparison = () => {
   const svgRef = useRef();
   const [allNames, setAllNames] = useState([]);
   const [pitchData, setPitchData] = useState([]);
   const [selectedName, setSelectedName] = useState(null);
 
-  const margin = { top: 50, right: 100, bottom: 50, left: 70 };
+  const margin = { top: 50, right: 140, bottom: 50, left: 70 };
   const width = 1500 - margin.left - margin.right;
-  const height = 600 - margin.top - margin.bottom;
+  const height = 700 - margin.top - margin.bottom;
 
   useEffect(() => {
-    Promise.all([
-      d3.csv("sets.csv"),
-      d3.json("pitch_compressed.json"),
-    ]).then(([csvData, jsonData]) => {
-      const names = [...new Set(csvData.map(d => d.name))];
-      setAllNames(names);
+    d3.json("pitch_compressed.json").then(jsonData => {
+      const nameCounts = d3.rollup(jsonData, v => v.length, d => d.name);
+      const multiVersionNames = Array.from(nameCounts.entries())
+        .filter(([_, count]) => count > 1)
+        .map(([name]) => name);
+
+      setAllNames(multiVersionNames);
       setPitchData(jsonData);
-      setSelectedName(names[0]);
+      setSelectedName(multiVersionNames[0]);
     });
   }, []);
 
@@ -31,117 +36,172 @@ const MidiCoparisonDotPlot = () => {
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom);
 
-    svg.selectAll("*").remove(); // clear previous chart
+    svg.selectAll("*").remove();
 
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-    const xScale = d3.scaleLinear().range([0, width]);
-    const yScale = d3.scaleLinear().range([height, 0]);
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
+    const g = svg.append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const xAxis = g.append("g").attr("transform", `translate(0,${height})`);
-    const yAxis = g.append("g");
+    const variations = pitchData.filter(d => d.name === selectedName);
 
-    const variations = pitchData
-      .map((d, i) => ({ ...d, variation_id: i }))
-      .filter(d => d.name === selectedName);
-
-    color.domain(variations.map(d => d.variation_id));
-
-    const allNotes = [];
+    const heatmapData = [];
     variations.forEach(variation => {
-      variation.midiValues.forEach((pitch, index) => {
-        allNotes.push({
-          name: variation.name,
-          variation_id: variation.variation_id,
-          Pitch_MIDI: pitch,
-          NoteIndex: index
-        });
+      variation.midiValues.forEach((pitch, idx) => {
+        heatmapData.push({ x: idx, y: pitch });
       });
     });
 
-    const maxLen = d3.max(allNotes, d => d.NoteIndex);
-    const pitchExtent = d3.extent(allNotes, d => d.Pitch_MIDI);
-    xScale.domain([0, maxLen]);
-    yScale.domain([pitchExtent[0] - 2, pitchExtent[1] + 2]);
+    const xMax = d3.max(heatmapData, d => d.x);
+    const yExtent = d3.extent(heatmapData, d => d.y);
 
-    xAxis.call(d3.axisBottom(xScale));
-    yAxis.call(d3.axisLeft(yScale));
+    const xScale = d3.scaleLinear().domain([0, xMax]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([yExtent[0], yExtent[1] + 1]).range([height, 0]);
 
-    let currentlySelected = null;
+    const binSizeX = 1;
+    const binSizeY = 1;
 
-    const circles = g.selectAll("circle")
-      .data(allNotes, d => d.name + d.NoteIndex + d.variation_id)
+    const bins = d3.rollup(
+      heatmapData,
+      v => v.length,
+      d => Math.floor(d.x / binSizeX),
+      d => Math.floor(d.y / binSizeY)
+    );
+
+    const density = [];
+    for (let [xBin, yMap] of bins.entries()) {
+      for (let [yBin, count] of yMap.entries()) {
+        density.push({
+          x: xBin * binSizeX,
+          y: yBin * binSizeY,
+          count
+        });
+      }
+    }
+
+    const maxCount = d3.max(density, d => d.count);
+
+    const color = d3.scaleLinear()
+      .domain([0, maxCount / 2, maxCount])
+      .range(["#5193AE", "#82813E", "#CC5C25"])
+      .interpolate(d3.interpolateLab);
+
+    // Tooltip
+    const tooltip = d3.select(".midi-chart-container")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("background", "#fff")
+      .style("padding", "8px")
+      .style("border", "1px solid #ccc")
+      .style("border-radius", "4px")
+      .style("pointer-events", "none")
+      .style("opacity", 0)
+      .style("font-size", "12px");
+
+    g.selectAll("rect")
+      .data(density)
       .enter()
-      .append("circle")
-      .attr("cx", d => xScale(d.NoteIndex))
-      .attr("cy", d => yScale(d.Pitch_MIDI))
-      .attr("r", 4)
-      .attr("fill", d => color(d.variation_id))
-      .attr("opacity", 0.5)
-      .attr("class", d => `variation-${d.variation_id}`)
-      .on("click", handleClick);
-
-    circles.append("title").text(d => `Pitch: ${d.Pitch_MIDI}`);
-
-    const linePath = g.append("path")
-      .attr("class", "variation-line")
-      .attr("fill", "none")
-      .attr("stroke", "#222")
-      .attr("stroke-width", 2)
-      .attr("opacity", 0);
-
-    function handleClick(event, d) {
-      const selectedVariation = d.variation_id;
-      if (currentlySelected === selectedVariation) {
-        resetView();
-        currentlySelected = null;
-        return;
-      }
-
-      currentlySelected = selectedVariation;
-
-      g.selectAll("circle")
-        .transition().duration(200)
-        .attr("opacity", 0.0)
-        .attr("r", 4);
-
-      g.selectAll(`.variation-${selectedVariation}`)
-        .transition().duration(200)
-        .attr("opacity", 0.5)
-        .attr("r", 6);
-
-      // Desenhar linha conectando as bolinhas da variação selecionada
-      const notes = allNotes
-        .filter(note => note.variation_id === selectedVariation)
-        .sort((a, b) => a.NoteIndex - b.NoteIndex);
-
-      const lineGenerator = d3.line()
-        .x(d => xScale(d.NoteIndex))
-        .y(d => yScale(d.Pitch_MIDI));
-
-      linePath
-        .attr("d", lineGenerator(notes))
-        .attr("stroke", color(selectedVariation))
-        .attr("opacity", 1);
+      .append("rect")
+      .attr("x", d => xScale(d.x))
+      .attr("y", d => yScale(d.y + binSizeY))
+      .attr("width", xScale(binSizeX) - xScale(0))
+      .attr("height", yScale(yExtent[0]) - yScale(yExtent[0] + binSizeY))
+      .attr("fill", d => color(d.count))
+      .attr("stroke", "none")
+      .on("mouseover", (event, d) => {
+        tooltip
+          .style("opacity", 1)
+          .html(
+            `Tempo (x): ${d.x}<br/>
+             Pitch (y): ${d.y}<br/>
+             Contagem: ${d.count}`
+          );
+      })
+      .on("mousemove", event => {
+        tooltip
+          .style("left", event.pageX + 10 + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseout", () => {
+        tooltip.style("opacity", 0);
+      });
+    // Linhas horizontais para cada valor de pitch (MIDI)
+    for (let yVal = yExtent[0]; yVal <= yExtent[1]; yVal++) {
+      g.append("line")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", yScale(yVal))
+        .attr("y2", yScale(yVal))
+        .attr("stroke", "#888")
+        .attr("stroke-opacity", 0.15)
+        .attr("stroke-width", 1);
     }
 
-    function resetView() {
-      g.selectAll("circle")
-        .transition().duration(200)
-        .attr("opacity", 0.5)
-        .attr("r", 4);
+    g.append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(d3.axisBottom(xScale))
+      .selectAll("text")
+      .style("font-family", fontText)
+      .style("font-size", "14px");
 
-      linePath.attr("opacity", 0);
+    g.append("g")
+      .call(d3.axisLeft(yScale))
+      .selectAll("text")
+      .style("font-family", fontText)
+      .style("font-size", "14px");
+
+    // LEGEND
+    const legendHeight = 200;
+    const legendWidth = 20;
+
+    const legendScale = d3.scaleLinear()
+      .domain([0, maxCount])
+      .range([legendHeight, 0]);
+
+    const legendAxis = d3.axisRight(legendScale)
+      .ticks(6)
+      .tickFormat(d3.format(".0f"));
+
+    const defs = svg.append("defs");
+
+    const linearGradient = defs.append("linearGradient")
+      .attr("id", "legend-gradient")
+      .attr("x1", "0%")
+      .attr("y1", "100%")
+      .attr("x2", "0%")
+      .attr("y2", "0%");
+
+    const legendSteps = 10;
+    const step = 1 / (legendSteps - 1);
+    for (let i = 0; i < legendSteps; i++) {
+      const value = i * step * maxCount;
+      linearGradient.append("stop")
+        .attr("offset", `${i * step * 100}%`)
+        .attr("stop-color", color(value));
     }
 
-    svg.on("click", function (event) {
-      if (event.target.tagName === "svg") {
-        resetView();
-        currentlySelected = null;
-      }
-    });
+    svg.append("g")
+      .attr("transform", `translate(${width + margin.left + 20}, ${margin.top})`)
+      .append("rect")
+      .attr("width", legendWidth)
+      .attr("height", legendHeight)
+      .style("fill", "url(#legend-gradient)");
 
-    console.log("Variações encontradas para", selectedName, variations.length);
+    svg.append("g")
+      .attr("transform", `translate(${width + margin.left + 20 + legendWidth}, ${margin.top})`)
+      .call(legendAxis)
+      .selectAll("text")
+      .style("font-family", fontText)
+      .style("font-size", "12px");
+
+
+    svg.append("text")
+      .attr("x", width + margin.left + 10)
+      .attr("y", margin.top - 10)
+      .text("Frequência")
+       .style("font-family", fontText)
+      .style("font-size", "12px")
+      .style("font-weight", "bold");
+
   }, [selectedName, pitchData]);
 
   return (
@@ -168,4 +228,4 @@ const MidiCoparisonDotPlot = () => {
   );
 };
 
-export default MidiCoparisonDotPlot;
+export default MidiHeatmapComparison;
