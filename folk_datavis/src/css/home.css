@@ -7,7 +7,7 @@
     gap: 6rem;
     text-align: center;
     background-color: aquamarine;
-    
+
 }
 
 .homepage h1 {
@@ -143,17 +143,47 @@
 }
 
 .section-images {
-  display: flex;
+    /* display: flex;
   gap: 1rem;
   justify-content: center;
   margin-top: 1rem;
-  flex-wrap: wrap;
+  flex-wrap: wrap; */
 }
 
 .section-images img {
-  max-width: 100%;
-  height: auto;
-  max-height: 300px;
-  border-radius: 8px;
-  object-fit: cover;
+    width: 50%;
+    height: auto;
+    /* max-height: 300px; */
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.pin-spacer {
+    background-color: rgb(240, 180, 240);
+}
+
+#part1-img1 {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+#part1-img2 {
+    width: 60%;
+    position: absolute;
+    top: -10%;
+    right: -15%;
+}
+
+#part2-img1 {
+    position: absolute;
+    width: 60%;
+    left: -10%;
+    top: 0;
+}
+#part2-img2 {
+    position: absolute;
+    width: 60%;
+    top: 0;
+    right: -10%;
 }
