@@ -124,15 +124,42 @@ const Home = () => {
                             className={cls}
                             ref={(el) => sectionsRef.current[i] = el}
                         >
-                            <p className={`t${i + 1}`}>
-                                {[
-                                    "Folk music embodies the stories of the land and the people through sound!",
-                                    "Two distant lands however both with profound musical roots!",
-                                    "In Portugal we follow the impact that the territory has in the variation of folk music.",
-                                    "On the other side, in Ireland we will explore the sound and how its genres within folk variate from song to song.",
-                                    "This experience is meant to show how folk music is intertwined by land and sound."
-                                ][i]}
-                            </p>
+                           {(() => {
+  const texts = [
+    "Folk music embodies the stories of the land and the people through sound!",
+    "Two distant lands however both with profound musical roots!",
+    "In Portugal we follow the impact that the territory has in the variation of folk music.",
+    "On the other side, in Ireland we will explore the sound and how its genres within folk variate from song to song.",
+    "This experience is meant to show how folk music is intertwined by land and sound."
+  ];
+
+  const images = {
+    part1: ["/img/PT1.png", "/img/IE1.png"],
+    part2: ["/img/PT map.png", "/img/IE map.png"],
+    part3: ["/img/PT elements.png"],
+    part4: ["/img/IE elements.png"],
+  };
+
+  const currentPart = `part${i + 1}`;
+  const currentImages = images[currentPart] || [];
+
+  return (
+    <>
+      <p className={`t${i + 1}`}>{texts[i]}</p>
+      <div className="section-images">
+        {currentImages.map((src, idx) => (
+          <img
+            key={idx}
+            id={`${currentPart}-img${idx + 1}`}
+            src={src}
+            alt={`Image ${idx + 1} for ${currentPart}`}
+          />
+        ))}
+      </div>
+    </>
+  );
+})()}
+
                         </div>
                     ))}
                 </div>

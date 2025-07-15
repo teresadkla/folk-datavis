@@ -141,3 +141,19 @@
     background-color: #222;
     /* ou outra cor que destaque */
 }
+
+.section-images {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.section-images img {
+  max-width: 100%;
+  height: auto;
+  max-height: 300px;
+  border-radius: 8px;
+  object-fit: cover;
+}
