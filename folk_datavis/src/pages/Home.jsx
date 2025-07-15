@@ -35,7 +35,6 @@ const Home = () => {
                             start: "top top",
                             end: "bottom top",
                             pin: true,
-                    
                             onEnter: () => setActiveIndex(i),
                             onEnterBack: () => setActiveIndex(i),
                             toggleActions: 'play reverse play reverse',

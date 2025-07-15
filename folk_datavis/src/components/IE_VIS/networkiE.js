@@ -2,18 +2,13 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import "../../css/ramification.css";
 
-// Importar o script perlin.js do public
-const script = document.createElement('script');
-script.src = '/perlin.js';
-document.head.appendChild(script);
-
 const NetworkDiagramIE = () => {
   const svgRef = useRef();
   const tooltipRef = useRef();
 
   useEffect(() => {
     const width = 1000;
-    const height = 900;
+    const height = 800;
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -21,18 +16,37 @@ const NetworkDiagramIE = () => {
 
     svg.selectAll("*").remove();
 
+    const defs = svg.append("defs");
+    const turbulenceFilter = defs.append("filter")
+      .attr("id", "linkTurbulence")
+      .attr("x", "-50%")
+      .attr("y", "-50%")
+      .attr("width", "200%")
+      .attr("height", "200%");
+
+    turbulenceFilter.append("feTurbulence")
+      .attr("type", "turbulence")
+      .attr("baseFrequency", "0.01 0.02")
+      .attr("numOctaves", "10")
+      .attr("seed", "8")
+      .attr("result", "turbulence");
+
+    turbulenceFilter.append("feDisplacementMap")
+      .attr("in", "SourceGraphic")
+      .attr("in2", "turbulence")
+      .attr("scale", "15")
+      .attr("xChannelSelector", "R")
+      .attr("yChannelSelector", "G");
+
     const container = svg.append("g")
       .attr("transform", `scale(0.7) translate(${width * 0.10}, ${height * 0.10})`);
 
     const tooltip = d3.select(tooltipRef.current);
     const color = d3.scaleOrdinal(d3.schemeCategory10);
-    const sizeScale = d3.scaleLinear().range([10, 35]);
+    const sizeScale = d3.scaleLinear().range([5, 25]);
 
     d3.json("rootsVis1.json").then(data => {
-  const temasFiltrados = Object.fromEntries(
-  Object.entries(data.temasFiltrados).filter(([_, tema]) => tema.totalOcorrencias > 800)
-);
-
+      const temasFiltrados = data.temasFiltrados;
       const nodes = [];
       const links = [];
       const nodeById = {};
@@ -85,10 +99,10 @@ const NetworkDiagramIE = () => {
         .data(links)
         .join("path")
         .attr("stroke", "#6B3F21")
-        .attr("stroke-width", d => Math.min(Math.sqrt(d.value), 8)) // Valor máximo de 8
+        .attr("stroke-width", d => Math.sqrt(d.value))
         .attr("stroke-opacity", 0.6)
-        .attr("fill", "none");
-        // .attr("filter", "url(#linkTurbulence)");
+        .attr("fill", "none")
+        .attr("filter", "url(#linkTurbulence)");
 
       const node = container.append("g")
         .attr("class", "nodes")
@@ -130,68 +144,21 @@ const NetworkDiagramIE = () => {
         .attr("dy", "0.35em")
         .style("opacity", 0);
 
-      // Atualiza posições a cada tick da simulação
- simulation.on("tick", () => {
-    link.attr("d", d => {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Ponto de controle para a curva (ponto médio com offset perpendicular)
-      const midX = (d.source.x + d.target.x) / 2;
-      const midY = (d.source.y + d.target.y) / 2;
-      
-      // Criar offset perpendicular para a curva
-      const perpX = -dy / distance;
-      const perpY = dx / distance;
-      
-      // Intensidade da curva baseada na distância
-      const curveIntensity = Math.min(distance * 0.5, 50);
-      
-      // Aplicar ruído de Perlin ao ponto de controle
-      const time = Date.now() * 0.00001; // para animação suave
-      const noiseScale = 0.02;
-      const perlinOffset = noise.perlin3(midX * noiseScale, midY * noiseScale, time) * 100;
-      
-      // Ponto de controle final com ruído
-      const controlX = midX + (perpX * curveIntensity) + perlinOffset;
-      const controlY = midY + (perpY * curveIntensity) + perlinOffset;
-      
-      // Criar curva de Bézier quadrática com múltiplos pontos para aplicar ruído
-      const segments = 100;// estava 15
-      let path = `M ${d.source.x} ${d.source.y}`;
-      
-      for (let i = 1; i <= segments; i++) {
-        const t = i / segments;
-        const t2 = t * t;
-        const mt = 1 - t;
-        const mt2 = mt * mt;
-        
-        // Ponto na curva de Bézier
-        const x = mt2 * d.source.x + 2 * mt * t * controlX + t2 * d.target.x;
-        const y = mt2 * d.source.y + 2 * mt * t * controlY + t2 * d.target.y;
-        
-        // Aplicar ruído de Perlin adicional a cada segmento
-        const segmentNoise = noise.perlin3(x * noiseScale * 2, y * noiseScale * 2, time) * 8;
-        const segmentNoiseY = noise.perlin3(y * noiseScale * 2, x * noiseScale * 2, time + 100) * 8;
-        
-        path += ` L ${x + segmentNoise} ${y + segmentNoiseY}`;
-      }
-      
-      return path;
-    });
+      simulation.on("tick", () => {
+        link.attr("d", d => {
+          const dx = d.target.x - d.source.x;
+          const dy = d.target.y - d.source.y;
+          const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
+          return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+        });
 
-    node
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y);
+        node.attr("cx", d => d.x)
+          .attr("cy", d => d.y);
 
-    label
-        .attr("x", d => d.x)
-        .attr("y", d => d.y);
-  });
+        label.attr("x", d => d.x)
+          .attr("y", d => d.y);
+      });
 
-
-         // Função para permitir arrastar nós
       function drag(simulation) {
         return d3.drag()
           .on("start", (event, d) => {

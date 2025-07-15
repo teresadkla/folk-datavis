@@ -2,17 +2,18 @@ import React, { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import "../../css/ramification.css";
 
-// Importar o script perlin.js do public
-const script = document.createElement('script');
-script.src = '/perlin.js';
-document.head.appendChild(script);
+
 
 const NetworkDiagram = () => {
   const svgRef = useRef();
   const tooltipRef = useRef();
 
   useEffect(() => {
-  
+      // Verifica se o perlin está disponível globalmente
+    if (window.perlin) {
+      // Use as funções do perlin aqui
+      console.log('Perlin disponível:', window.perlin);
+    }
     // Define dimensões fixas para o container do SVG
     const width = 1000;
     const height = 800;
@@ -27,11 +28,41 @@ const NetworkDiagram = () => {
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
 
+    // Adiciona filtros SVG para efeito visual nas linhas
+    // const defs = svg.append("defs");
+    // const turbulenceFilter = defs.append("filter")
+    //   .attr("id", "linkTurbulence")
+    //   .attr("x", "-50%")
+    //   .attr("y", "-50%")
+    //   .attr("width", "200%")
+    //   .attr("height", "200%");
+
+    // turbulenceFilter.append("feTurbulence")
+    //   .attr("type", "turbulence")
+    //   .attr("baseFrequency", "0.01 0.02")
+    //   .attr("numOctaves", "20")
+    //   .attr("seed", "15")
+    //   .attr("result", "turbulence");
+
+    // turbulenceFilter.append("feDisplacementMap")
+    //   .attr("in", "SourceGraphic")
+    //   .attr("in2", "turbulence")
+    //   .attr("scale", "10")
+    //   .attr("xChannelSelector", "R")
+    //   .attr("yChannelSelector", "G");
 
     // Grupo principal para aplicar zoom/pan
     const container = svg.append("g")
       .attr("transform", `scale(0.8) translate(${width * 0.10}, ${height * 0.10})`); // Aplica escala e centra
 
+    // // Permite zoom e pan no SVG
+    // svg.call(
+    //   d3.zoom()
+    //     .scaleExtent([0.5, 5])
+    //     .on("zoom", (event) => {
+    //       container.attr("transform", event.transform);
+    //     })
+    // );
 
     // Seletores e escalas
     const tooltip = d3.select(tooltipRef.current);
@@ -155,94 +186,36 @@ const NetworkDiagram = () => {
         .attr("dy", "0.35em")
         .style("opacity", 0);
 
-
-
-
       // Atualiza posições a cada tick da simulação
- simulation.on("tick", () => {
-    link.attr("d", d => {
-      const dx = d.target.x - d.source.x;
-      const dy = d.target.y - d.source.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      // Ponto de controle para a curva (ponto médio com offset perpendicular)
-      const midX = (d.source.x + d.target.x) / 2;
-      const midY = (d.source.y + d.target.y) / 2;
-      
-      // Criar offset perpendicular para a curva
-      const perpX = -dy / distance;
-      const perpY = dx / distance;
-      
-      // Intensidade da curva baseada na distância
-      const curveIntensity = Math.min(distance * 0.5, 50);
-      
-      // Aplicar ruído de Perlin ao ponto de controle
-      const time = Date.now() * 0.0001; // para animação suave
-      const noiseScale = 0.02;
-      const perlinOffset = noise.perlin3(midX * noiseScale, midY * noiseScale, time) * 100;
-      
-      // Ponto de controle final com ruído
-      const controlX = midX + (perpX * curveIntensity) + perlinOffset;
-      const controlY = midY + (perpY * curveIntensity) + perlinOffset;
-      
-      // Criar curva de Bézier quadrática com múltiplos pontos para aplicar ruído
-      const segments = 300;// estava 15
-      let path = `M ${d.source.x} ${d.source.y}`;
-      
-      for (let i = 1; i <= segments; i++) {
-        const t = i / segments;
-        const t2 = t * t;
-        const mt = 1 - t;
-        const mt2 = mt * mt;
-        
-        // Ponto na curva de Bézier
-        const x = mt2 * d.source.x + 2 * mt * t * controlX + t2 * d.target.x;
-        const y = mt2 * d.source.y + 2 * mt * t * controlY + t2 * d.target.y;
-        
-        // Aplicar ruído de Perlin adicional a cada segmento
-        const segmentNoise = noise.perlin3(x * noiseScale * 2, y * noiseScale * 2, time) * 8;
-        const segmentNoiseY = noise.perlin3(y * noiseScale * 2, x * noiseScale * 2, time + 100) * 8;
-        
-        path += ` L ${x + segmentNoise} ${y + segmentNoiseY}`;
-      }
-      
-      return path;
-    });
-
-    node
-        .attr("cx", d => d.x)
-        .attr("cy", d => d.y);
-
-    label
-        .attr("x", d => d.x)
-        .attr("y", d => d.y);
-  });
-
+      simulation.on("tick", () => {
+        link.attr("d", d => {
+          const dx = d.target.x - d.source.x;
+          const dy = d.target.y - d.source.y;
+          const dr = Math.sqrt(dx * dx + dy * dy) * 1.2;
+          return `M${d.source.x},${d.source.y} A${dr},${dr} 0 0,1 ${d.target.x},${d.target.y}`;
+        });
+        node.attr("cx", d => d.x).attr("cy", d => d.y);
+        label.attr("x", d => d.x).attr("y", d => d.y);
+      });
 
       // Função para permitir arrastar nós
-     function drag(simulation) {
-    function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
-    }
-
-    function dragged(event, d) {
-      d.fx = event.x;
-      d.fy = event.y;
-    }
-
-    function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
-      d.fx = null;
-      d.fy = null;
-    }
-
-    return d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended);
-  }
+      function drag(simulation) {
+        return d3.drag()
+          .on("start", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+          })
+          .on("drag", (event, d) => {
+            d.fx = event.x;
+            d.fy = event.y;
+          })
+          .on("end", (event, d) => {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+          });
+      }
 
       // Destaca conexões de um tema selecionado
       function highlightConnections(selectedId) {

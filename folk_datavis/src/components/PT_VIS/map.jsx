@@ -2,6 +2,11 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "../../css/mapstyles.css";
 
+// Importar o script perlin.js do public
+const script = document.createElement('script');
+script.src = '/perlin.js';
+document.head.appendChild(script);
+
 const width = 1500;
 const height = 900;
 
@@ -91,6 +96,56 @@ const PortugalMap = () => {
     };
   }, []);
 
+  // Função para criar linhas com Perlin noise
+  const createPerlinLine = (sourceX, sourceY, targetX, targetY) => {
+    const dx = targetX - sourceX;
+    const dy = targetY - sourceY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    
+    // Ponto de controle para a curva (ponto médio com offset perpendicular)
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2;
+    
+    // Criar offset perpendicular para a curva
+    const perpX = -dy / distance;
+    const perpY = dx / distance;
+    
+    // Intensidade da curva baseada na distância
+    const curveIntensity = Math.min(distance * 0.5, 50);
+    
+    // Aplicar ruído de Perlin ao ponto de controle
+    const time = Date.now() * 0.0001; // para animação suave
+    const noiseScale = 0.02;
+    const perlinOffset = window.noise ? window.noise.perlin3(midX * noiseScale, midY * noiseScale, time) * 100 : 0;
+    
+    // Ponto de controle final com ruído
+    const controlX = midX + (perpX * curveIntensity) + perlinOffset;
+    const controlY = midY + (perpY * curveIntensity) + perlinOffset;
+    
+    // Criar curva de Bézier quadrática com múltiplos pontos para aplicar ruído
+    const segments = 300;
+    let path = `M ${sourceX} ${sourceY}`;
+    
+    for (let i = 1; i <= segments; i++) {
+      const t = i / segments;
+      const t2 = t * t;
+      const mt = 1 - t;
+      const mt2 = mt * mt;
+      
+      // Ponto na curva de Bézier
+      const x = mt2 * sourceX + 2 * mt * t * controlX + t2 * targetX;
+      const y = mt2 * sourceY + 2 * mt * t * controlY + t2 * targetY;
+      
+      // Aplicar ruído de Perlin adicional a cada segmento
+      const segmentNoise = window.noise ? window.noise.perlin3(x * noiseScale * 2, y * noiseScale * 2, time) * 8 : 0;
+      const segmentNoiseY = window.noise ? window.noise.perlin3(y * noiseScale * 2, x * noiseScale * 2, time + 100) * 8 : 0;
+      
+      path += ` L ${x + segmentNoise} ${y + segmentNoiseY}`;
+    }
+    
+    return path;
+  };
+
   useEffect(() => {
     if (!geojson || !data.length) return;
 
@@ -154,7 +209,7 @@ const PortugalMap = () => {
         setClickedDistrict(d);
       });
 
-    g.select(".lines-group").selectAll("line").remove();
+    g.select(".lines-group").selectAll("path").remove();
 
     if (clickedDistrict) {
       const temasSelecionados = new Set(clickedDistrict.temas);
@@ -165,10 +220,10 @@ const PortugalMap = () => {
       });
 
       const newLines = relatedCoords.map(d => ({
-        x1: clickedDistrict.cx,
-        y1: clickedDistrict.cy,
-        x2: d.cx,
-        y2: d.cy,
+        sourceX: clickedDistrict.cx,
+        sourceY: clickedDistrict.cy,
+        targetX: d.cx,
+        targetY: d.cy,
         temasComuns: d.temas.filter(t => temasSelecionados.has(t)),
       }));
 
@@ -184,16 +239,14 @@ const PortugalMap = () => {
         .style("opacity", 0);
 
       g.select(".lines-group")
-        .selectAll("line")
+        .selectAll("path")
         .data(newLines)
-        .join("line")
-        .attr("x1", d => d.x1)
-        .attr("y1", d => d.y1)
-        .attr("x2", d => d.x2)
-        .attr("y2", d => d.y2)
+        .join("path")
+        .attr("d", d => createPerlinLine(d.sourceX, d.sourceY, d.targetX, d.targetY))
         .attr("stroke", "#555")
         .attr("stroke-opacity", 0.5)
         .attr("stroke-width", 1.8)
+        .attr("fill", "none")
         .on("mouseover", (event, d) => {
           tooltip.transition().duration(200).style("opacity", 0.95);
           const temasUnicos = [...new Set(d.temasComuns)];
@@ -210,6 +263,20 @@ const PortugalMap = () => {
         .on("mouseout", () => {
           tooltip.transition().duration(300).style("opacity", 0);
         });
+
+      // Animação contínua das linhas com Perlin noise
+      const animateLines = () => {
+        g.select(".lines-group")
+          .selectAll("path")
+          .attr("d", d => createPerlinLine(d.sourceX, d.sourceY, d.targetX, d.targetY));
+        
+        requestAnimationFrame(animateLines);
+      };
+      
+      // Iniciar animação apenas se o Perlin noise estiver disponível
+      if (window.noise) {
+        animateLines();
+      }
     }
   }, [year, geojson, data, clickedDistrict]);
 
