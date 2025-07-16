@@ -163,7 +163,7 @@
 
 .pin-spacer {
 
-    background-color: rgb(240, 180, 240);
+    /* background-color: rgb(240, 180, 240); */
 }
 
 #part1-img1 {
@@ -199,7 +199,7 @@
 }
 #part4-img1 {
     position: absolute;
-    width: 60%;
+    width: 70%;
     bottom: 0;
-    right: 5%;
+    right: -10%;
 }
