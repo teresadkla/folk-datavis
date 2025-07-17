@@ -97,12 +97,12 @@ const Home = () => {
                     </div>
                 </div>
 
-                <div className="connection">
+                {/* <div className="connection">
                     <button className="buttonToGraphs" onClick={handleExploreClick}>
                         <img src="/path/to/your/icon.png" alt="Explore" />
                     </button>
                     <p>Click here to start exploring!</p>
-                </div>
+                </div> */}
             </div>
 
             <div className="scroll-wrapper" ref={scrollWrapperRef}>
@@ -156,6 +156,14 @@ const Home = () => {
           />
         ))}
       </div>
+       {/* botão em todas as partes */}
+          <div className="connection">
+            <button className="buttonToGraphs" onClick={handleExploreClick}>
+              {/* <img src="/path/to/your/icon.png" alt="Explore" /> */}
+              Start Exploring
+            </button>
+            {/* <p>Click here to start exploring!</p> */}
+          </div>
     </>
   );
 })()}
