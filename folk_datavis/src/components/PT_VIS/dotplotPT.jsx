@@ -7,7 +7,7 @@ const fontText = getComputedStyle(document.documentElement)
   .trim();
 
 
-const temasPorPagina = 8;
+const temasPorPagina = 20;
 const regioesPorPagina = 8;
 
 const GraficoTemasPorRegiao = () => {
@@ -128,9 +128,9 @@ const GraficoTemasPorRegiao = () => {
           .flatMap(instr => (instr ? instr.split(",").map(i => i.trim()) : []))
           .filter((v, i, a) => v && a.indexOf(v) === i);
 
-    d3.select("#categoria-info")
-  .style("display", "block")
-  .html(`
+        d3.select("#categoria-info")
+          .style("display", "block")
+          .html(`
     <button class="close-button">✕</button>
     <div class="card">
       <div class="header">
@@ -154,17 +154,20 @@ const GraficoTemasPorRegiao = () => {
   `);
 
 
-// Adiciona o evento via D3
-d3.select("#categoria-info .close-button").on("click", () => {
-  d3.select("#categoria-info").style("display", "none");
-});
+        // Adiciona o evento via D3
+        d3.select("#categoria-info .close-button").on("click", () => {
+          d3.select("#categoria-info").style("display", "none");
+        });
 
 
       })
       .append("title")
       .text(d => `${d.tema} (${d.regiao}): ${d.count}`);
-
+    // Remove linhas de grade antigas
     g.selectAll(".x-grid").remove();
+    g.selectAll(".y-grid").remove();
+
+    // Adiciona linhas verticais (grade X)
     g.selectAll(".x-grid")
       .data(regioesVisiveis)
       .enter()
@@ -176,6 +179,23 @@ d3.select("#categoria-info .close-button").on("click", () => {
       .attr("y2", innerHeight)
       .attr("stroke", "#ccc")
       .attr("stroke-dasharray", "2,2");
+
+    // Adiciona linhas horizontais (grade Y)
+    g.selectAll(".y-grid")
+      .data(temasVisiveis)
+      .enter()
+      .append("line")
+      .attr("class", "y-grid")
+      .attr("x1", 0)
+      .attr("x2", innerWidth)
+      .attr("y1", d => yScale(d))
+      .attr("y2", d => yScale(d))
+      .attr("stroke", "#eee")
+      .attr("stroke-dasharray", "2,2");
+
+    // Certifique-se de que o grupo de ícones fique por cima da grade
+    imagesGroup.raise();
+
 
     eixoYGroup
       .call(d3.axisLeft(yScale))
@@ -208,7 +228,7 @@ d3.select("#categoria-info .close-button").on("click", () => {
         {/* Controles de temas */}
         <div>
           <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
-          ↑
+            ↑
           </button>
           <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
           <button
@@ -224,7 +244,7 @@ d3.select("#categoria-info .close-button").on("click", () => {
         {/* Controles de regiões */}
         <div>
           <button onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))} disabled={paginaRegiao === 0}>
-            ← 
+            ←
           </button>
           <span style={{ margin: "0 10px" }}>Página Região {paginaRegiao + 1}</span>
           <button

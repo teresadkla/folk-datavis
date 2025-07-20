@@ -117,7 +117,9 @@ const DotHeatmap = () => {
       .attr("x1", 0)
       .attr("x2", width)
       .attr("y1", (d) => yScale(d) + yScale.bandwidth() / 2)
-      .attr("y2", (d) => yScale(d) + yScale.bandwidth() / 2);
+      .attr("y2", (d) => yScale(d) + yScale.bandwidth() / 2)
+      .attr("stroke", "#ccc")
+      .attr("stroke-dasharray", "2,2");
 
     // Linhas de grade verticais
     g.selectAll(".x-grid")
@@ -128,7 +130,9 @@ const DotHeatmap = () => {
       .attr("y1", 0)
       .attr("y2", height)
       .attr("x1", (d) => xScale(d) + xScale.bandwidth() / 2)
-      .attr("x2", (d) => xScale(d) + xScale.bandwidth() / 2);
+      .attr("x2", (d) => xScale(d) + xScale.bandwidth() / 2)
+      .attr("stroke", "#ccc")
+      .attr("stroke-dasharray", "2,2");
 
     // Tooltip para mostrar detalhes ao passar o mouse
     const tooltip = d3
@@ -172,7 +176,7 @@ const DotHeatmap = () => {
         </button>
         {/* Botão para navegar para cima na paginação */}
         <button id="nav-up" onClick={() => setStartIndex((prev) => Math.max(prev - pageSize, 0))} >
-         ↑
+          ↑
         </button>
         {/* Botão para navegar para baixo na paginação */}
         <button id="nav-down"
