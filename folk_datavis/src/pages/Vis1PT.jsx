@@ -56,7 +56,7 @@ export default function VisPT() {
             <h2 className="dotplot-PT-title">Frequency of songs throughout the Portuguese Territory</h2>
           </div>
           <div id="dotplot-section" className="visPT-dotplot">
-                <TemaRegiaoVis />
+                <TemaRegiaoVis active={currentVis === 3 }/>
           </div>
         </div>
 

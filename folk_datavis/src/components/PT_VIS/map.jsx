@@ -10,44 +10,39 @@ document.head.appendChild(script);
 const width = 1500;
 const height = 900;
 
-// Extrai o ano a partir de uma string no formato "15 de março de 1980"
 const extractYear = (dateString) => {
   const match = dateString.match(/(\d{1,2})\s+de\s+([a-zA-Z]+)\s+de\s+(\d{4})/);
   return match ? match[3] : null;
 };
 
 const PortugalMap = ({ active }) => {
-  const svgRef = useRef(); // Referência ao SVG
-  const [year, setYear] = useState(""); // Ano selecionado
-  const [data, setData] = useState([]); // CSV com os registos
-  const [geojson, setGeojson] = useState(null); // GeoJSON de Portugal
-  const [selectedDistrictData, setSelectedDistrictData] = useState(null); // Info do distrito clicado
-  const [clickedDistrict, setClickedDistrict] = useState(null); // Distrito clicado
+  const svgRef = useRef();
+  const [year, setYear] = useState("");
+  const [data, setData] = useState([]);
+  const [geojson, setGeojson] = useState(null);
+  const [selectedDistrictData, setSelectedDistrictData] = useState(null);
+  const [clickedDistrict, setClickedDistrict] = useState(null);
+  const [showLegend, setShowLegend] = useState(false); // NOVO estado
 
-  // Inicializa o mapa e carrega dados
   useEffect(() => {
     const svg = d3.select(svgRef.current)
       .attr("width", width)
       .attr("height", height);
 
-    // Cria grupos para elementos do mapa
     const g = svg.append("g");
     g.append("g").attr("class", "map-group");
     g.append("g").attr("class", "labels-group");
     g.append("g").attr("class", "circles-group");
     g.append("g").attr("class", "lines-group");
 
-    // Projeções para o continente e ilhas
     const projectionMainland = d3.geoMercator().center([-8, 39.5]).scale(6000).translate([width / 2, height / 2]);
     const projectionAzores = d3.geoMercator().center([-28, 38]).scale(12000).translate([300, 780]);
     const projectionMadeira = d3.geoMercator().center([-17, 32.6]).scale(14000).translate([480, 800]);
 
-    // Funções de caminho (path) para desenhar distritos
     const pathMainland = d3.geoPath().projection(projectionMainland);
     const pathAzores = d3.geoPath().projection(projectionAzores);
     const pathMadeira = d3.geoPath().projection(projectionMadeira);
 
-    // Carrega os dados GeoJSON e CSV
     Promise.all([
       d3.json("/Portugal.json"),
       d3.csv("VIMEO_V8.csv")
@@ -55,7 +50,6 @@ const PortugalMap = ({ active }) => {
       setGeojson(geojsonData);
       setData(csvData);
 
-      // Desenha os distritos com animação
       g.select(".map-group")
         .selectAll("path")
         .data(geojsonData.features)
@@ -73,7 +67,6 @@ const PortugalMap = ({ active }) => {
         .duration(1000)
         .attr("opacity", 0.6);
 
-      // Adiciona os nomes dos distritos
       g.select(".labels-group")
         .selectAll("text")
         .data(geojsonData.features)
@@ -91,13 +84,11 @@ const PortugalMap = ({ active }) => {
         .text(d => d.properties.name);
     });
 
-    // Cleanup ao desmontar
     return () => {
       svg.selectAll("*").remove();
     };
   }, []);
 
-  // Anima o fade-in do mapa quando a visualização se torna ativa
   useEffect(() => {
     if (!active) return;
     const svg = d3.select(svgRef.current);
@@ -105,7 +96,6 @@ const PortugalMap = ({ active }) => {
     svg.transition().duration(1000).style("opacity", 1);
   }, [active]);
 
-  // Gera linhas curvas com ruído Perlin entre distritos
   const createPerlinLine = (sourceX, sourceY, targetX, targetY) => {
     const dx = targetX - sourceX;
     const dy = targetY - sourceY;
@@ -121,7 +111,6 @@ const PortugalMap = ({ active }) => {
     const controlX = midX + (perpX * curveIntensity) + perlinOffset;
     const controlY = midY + (perpY * curveIntensity) + perlinOffset;
 
-    // Cria caminho com Bezier + ruído
     const segments = 300;
     let path = `M ${sourceX} ${sourceY}`;
     for (let i = 1; i <= segments; i++) {
@@ -137,7 +126,6 @@ const PortugalMap = ({ active }) => {
     return path;
   };
 
-  // Atualiza o mapa quando muda o ano, dados ou distrito clicado
   useEffect(() => {
     if (!geojson || !data.length) return;
 
@@ -145,7 +133,6 @@ const PortugalMap = ({ active }) => {
     const svg = d3.select(svgRef.current);
     const g = svg.select("g");
 
-    // Projeções
     const projectionMainland = d3.geoMercator().center([-8, 39.5]).scale(6000).translate([width / 2, height / 2]);
     const projectionAzores = d3.geoMercator().center([-28, 38]).scale(12000).translate([300, 780]);
     const projectionMadeira = d3.geoMercator().center([-17, 32.6]).scale(14000).translate([480, 800]);
@@ -154,7 +141,6 @@ const PortugalMap = ({ active }) => {
     const pathAzores = d3.geoPath().projection(projectionAzores);
     const pathMadeira = d3.geoPath().projection(projectionMadeira);
 
-    // Calcula os círculos com temas por distrito
     const circles = geojson.features.map(d => {
       const name = d.properties.name;
       const centroid =
@@ -172,7 +158,6 @@ const PortugalMap = ({ active }) => {
       };
     });
 
-    // Renderiza os círculos nos distritos
     g.select(".circles-group")
       .selectAll("circle")
       .data(circles)
@@ -199,11 +184,9 @@ const PortugalMap = ({ active }) => {
         update => update.transition().duration(800).attr("r", d => Math.sqrt(d.temas.length) * 2)
       );
 
-    // Remove linhas anteriores
     g.select(".lines-group").selectAll("path").remove();
 
     if (clickedDistrict) {
-      // Identifica distritos com temas comuns ao clicado
       const temasSelecionados = new Set(clickedDistrict.temas);
       const relatedCoords = circles.filter(d => {
         if (d.distrito === clickedDistrict.distrito) return false;
@@ -218,7 +201,6 @@ const PortugalMap = ({ active }) => {
         temasComuns: d.temas.filter(t => temasSelecionados.has(t)),
       }));
 
-      // Cria tooltip para os temas em comum
       const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip-line")
         .style("position", "absolute")
@@ -230,7 +212,6 @@ const PortugalMap = ({ active }) => {
         .style("pointer-events", "none")
         .style("opacity", 0);
 
-      // Desenha as linhas animadas com ruído Perlin
       g.select(".lines-group")
         .selectAll("path")
         .data(newLines)
@@ -254,7 +235,6 @@ const PortugalMap = ({ active }) => {
           tooltip.transition().duration(300).style("opacity", 0);
         });
 
-      // Animação contínua das linhas com Perlin
       if (window.noise) {
         const animateLines = () => {
           g.select(".lines-group")
@@ -267,16 +247,13 @@ const PortugalMap = ({ active }) => {
     }
   }, [year, geojson, data, clickedDistrict]);
 
-  // Lista única e ordenada dos anos disponíveis
   const anosUnicos = [...new Set(data.map(d => extractYear(d["Data"])))].filter(Boolean).sort();
 
   return (
     <div className="map-info">
       <div className="map-timeline-container">
-        {/* Mapa */}
         <svg ref={svgRef}></svg>
 
-        {/* Botões de timeline */}
         <div className="timeline-container">
           <button className="timeline-button" onClick={() => {
             setYear("");
@@ -295,10 +272,13 @@ const PortugalMap = ({ active }) => {
               {ano}
             </button>
           ))}
+
+          <button className="timeline-button" onClick={() => setShowLegend(true)}>
+            Ver legenda
+          </button>
         </div>
       </div>
 
-      {/* Caixa de informação ao clicar num distrito */}
       {selectedDistrictData && (
         <div className="info-section-map">
           <button
@@ -317,6 +297,20 @@ const PortugalMap = ({ active }) => {
             {selectedDistrictData.temas.map((tema, i) => (
               <li key={i}>{tema}</li>
             ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Pop-up da legenda */}
+      {showLegend && (
+        <div className="legend-popup">
+          <button className="close-button" onClick={() => setShowLegend(false)}>×</button>
+          <h3>Legenda</h3>
+          <ul>
+            <li><strong>Círculos:</strong> Representam a quantidade de temas por distrito.</li>
+            <li><strong>Linhas curvas:</strong> Conexões entre distritos com temas em comum.</li>
+            <li><strong>Tamanho do círculo:</strong> Proporcional ao número de temas.</li>
+            <li><strong>Cor dos círculos:</strong> Fixa, com opacidade para sobreposição.</li>
           </ul>
         </div>
       )}

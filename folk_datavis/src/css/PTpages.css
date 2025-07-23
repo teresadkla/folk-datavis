@@ -17,12 +17,12 @@
 
 .vispt-roots {
   grid-column: 1 / span 2;
-  grid-row: 1 / span 2;
+  grid-row: 2 / span 2;
 }
 
 .roots-description {
   grid-column: 9 / span 3;
-  grid-row: 1 / span 2;
+  grid-row: 2 / span 2;
   /* margin-left: 10%; */
   text-align: left;
   width: fit-content;

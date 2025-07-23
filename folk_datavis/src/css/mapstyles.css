@@ -12,7 +12,7 @@
 
 .distrito {
   fill: #ddd;
-  stroke: #333;
+  stroke: #33333326;
 }
 
 .label {
@@ -63,6 +63,35 @@
   display: block;
   margin: 0 auto;
 }
+ .legend-popup {
+  position: absolute;
+  top: 80px;
+  right: 40px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 16px 20px;
+  width: 300px;
+  z-index: 1000;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.legend-popup h3 {
+  margin-top: 0;
+}
+
+.legend-popup ul {
+  padding-left: 18px;
+}
+
+.legend-popup li {
+  margin-bottom: 8px;
+}
+
+
+
+
+
 
 /*estilos do dotplot das regiões e musicas*/
 .visualization-controls {

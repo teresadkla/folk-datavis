@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE";
 import DotHeatmap from "../components/IE_VIS/dotheatmap";
-import MidiHeatmapComparison from "../components/IE_VIS/dotplotcomparison";
+import MidiHeatmapComparison from "../components/IE_VIS/heatmapcomparison";
 import ABCVisualizer from "../components/IE_VIS/pitchabc";
 import NavigationBar from "../components/nav";
 import VerticalNav from "../components/verticalnav";
