@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
 import "../../css/dotplottypes.css";
 
@@ -10,37 +10,35 @@ const fontText = getComputedStyle(document.documentElement)
 // Margens do gráfico
 const margin = { top: 100, right: 50, bottom: 20, left: 400 };
 // Número de linhas exibidas por página
-const pageSize = 30;
+const pageSize = 20;
 
 const DotPlotTypes = () => {
   const svgRef = useRef();
   // Estados para armazenar dados e configurações
   const [data, setData] = useState([]);
-  const [names, setNames] = useState([]);
-  const [types, setTypes] = useState([]);
-  const [countMap, setCountMap] = useState(new Map());
   const [startIndex, setStartIndex] = useState(0); // Índice inicial para paginação
   const [filterActive, setFilterActive] = useState(false); // Filtro de músicas com mais de um tipo
+  const [isLoading, setIsLoading] = useState(true); // Estado de carregamento
+  // Add a new state to track the animation mode
+  const [shouldAnimate, setShouldAnimate] = useState(true);
 
   // Carrega e processa os dados CSV ao montar o componente
   useEffect(() => {
-    d3.csv("sets.csv").then((rawData) => {
-      // Agrupa os dados por nome e tipo, contando ocorrências
-      const count = d3.rollup(
-        rawData,
-        (v) => v.length,
-        (d) => d.name,
-        (d) => d.type
-      );
-      // Lista única de nomes e tipos, ordenados
-      const nameList = Array.from(new Set(rawData.map((d) => d.name))).sort();
-      const typeList = Array.from(new Set(rawData.map((d) => d.type))).sort();
-      setData(rawData);
-      setNames(nameList);
-      setTypes(typeList);
-      setCountMap(count);
-    });
+    setIsLoading(true);
+    d3.csv("sets.csv")
+      .then(setData)
+      .finally(() => setIsLoading(false));
   }, []);
+
+  // Memoriza nomes, tipos e countMap
+  const names = useMemo(() => Array.from(new Set(data.map(d => d.name))).sort(), [data]);
+  const types = useMemo(() => Array.from(new Set(data.map(d => d.type))).sort(), [data]);
+  const countMap = useMemo(() => d3.rollup(
+    data,
+    v => v.length,
+    d => d.name,
+    d => d.type
+  ), [data]);
 
   // Re-renderiza o dotplot quando os dados ou controles mudam
   useEffect(() => {
@@ -61,19 +59,16 @@ const DotPlotTypes = () => {
   const renderDotPlotTypes = () => {
     const svg = d3.select(svgRef.current);
     
-    // Fade out dos elementos existentes antes de remover
-    svg.selectAll("g")
-      .transition()
-      .duration(300)
-      .style("opacity", 0)
-      .on("end", function() {
-        svg.selectAll("g").remove(); // Remove após fade out
-        createNewChart(); // Cria novo gráfico
-      });
-
-    // Se não há elementos existentes, cria diretamente
-    if (svg.selectAll("g").empty()) {
-      createNewChart();
+    // Clear any existing content regardless of animation setting
+    svg.selectAll("g").remove();
+    
+    // Create new chart immediately
+    createNewChart();
+    
+    // Reset animation flag for future renders
+    if (!shouldAnimate) {
+      // Use setTimeout to avoid batching with current render
+      setTimeout(() => setShouldAnimate(true), 0);
     }
 
     function createNewChart() {
@@ -85,11 +80,12 @@ const DotPlotTypes = () => {
       const svgWidth = +svg.attr("width");
       const gTranslateX = margin.left + (svgWidth - margin.left - margin.right - width) / 2;
 
-      // Grupo principal do gráfico (começa invisível)
+      // Grupo principal do gráfico 
       const g = svg
         .append("g")
         .attr("transform", `translate(${gTranslateX},${margin.top})`)
-        .style("opacity", 0);
+        // Skip initial opacity setting if not animating
+        .style("opacity", shouldAnimate ? 0 : 1);
 
       // Define nomes visíveis de acordo com filtro e paginação
       const currentNames = filterActive ? getFilteredNames() : names;
@@ -168,10 +164,10 @@ const DotPlotTypes = () => {
           const circle = g.append("circle")
             .attr("cx", xScale(type) + xScale.bandwidth() / 2)
             .attr("cy", yScale(name) + yScale.bandwidth() / 2)
-            .attr("r", 0) // Começa com raio 0
+            .attr("r", shouldAnimate ? 0 : 5) // Start with final size if not animating
             .attr("fill", colorScale(count))
             .attr("stroke", "none")
-            .style("opacity", 0) // Começa invisível
+            .style("opacity", shouldAnimate ? 0 : 1) // Start visible if not animating
             .on("mouseover", function (event) {
               tooltip.transition().duration(100).style("opacity", 1);
               tooltip.html(`<strong>${name}</strong><br>${type}: <b>${count}</b> variações`);
@@ -185,24 +181,29 @@ const DotPlotTypes = () => {
               tooltip.transition().duration(200).style("opacity", 0);
             });
           
-          circles.push(circle);
+          if (shouldAnimate) {
+            circles.push(circle);
+          }
         }
       }
 
-      // Animação de fade in do grupo principal
-      g.transition()
-        .duration(700)
-        .style("opacity", 1);
-
-      // Animação dos círculos com delay escalonado
-      circles.forEach((circle, index) => {
-        circle
-          .transition()
-          .delay(200 + index * 10) // Delay escalonado para efeito em cascata
+      // Only animate if shouldAnimate is true
+      if (shouldAnimate) {
+        // Animação de fade in do grupo principal
+        g.transition()
           .duration(700)
-          .attr("r", 5) // Cresce até o tamanho final
-          .style("opacity", 1); // Fade in
-      });
+          .style("opacity", 1);
+          
+        // Animação dos círculos com delay escalonado
+        circles.forEach((circle, index) => {
+          circle
+            .transition()
+            .delay(200 + index * 10) // Delay escalonado para efeito em cascata
+            .duration(700)
+            .attr("r", 5) // Cresce até o tamanho final
+            .style("opacity", 1); // Fade in
+        });
+      }
     }
   };
 
@@ -214,17 +215,20 @@ const DotPlotTypes = () => {
           {filterActive ? "Mostrar todas as músicas" : "Mostrar apenas músicas com mais de um tipo"}
         </button>
         {/* Botão para navegar para cima na paginação */}
-        <button id="nav-up" onClick={() => setStartIndex((prev) => Math.max(prev - pageSize, 0))} >
+        <button id="nav-up" onClick={() => {
+          setShouldAnimate(false);
+          setStartIndex((prev) => Math.max(prev - pageSize, 0));
+        }} >
           ↑
         </button>
         {/* Botão para navegar para baixo na paginação */}
-        <button id="nav-down"
-          onClick={() => {
-            const currentNames = filterActive ? getFilteredNames() : names;
-            if (startIndex + pageSize < currentNames.length) {
-              setStartIndex((prev) => prev + pageSize);
-            }
-          }}>
+        <button id="nav-down" onClick={() => {
+          setShouldAnimate(false);
+          const currentNames = filterActive ? getFilteredNames() : names;
+          if (startIndex + pageSize < currentNames.length) {
+            setStartIndex((prev) => prev + pageSize);
+          }
+        }}>
           ↓
         </button>
       </div>

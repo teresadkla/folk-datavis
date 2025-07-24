@@ -13,7 +13,7 @@ const NetworkDiagramIE = () => {
 
   useEffect(() => {
     const width = 1000;
-    const height = 900;
+    const height = 800;
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -76,8 +76,9 @@ const NetworkDiagramIE = () => {
 
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(150).strength(1))
-        .force("charge", d3.forceManyBody().strength(-1500))
-        .force("center", d3.forceCenter(width / 2, height / 2));
+        .force("charge", d3.forceManyBody().strength(-1000))
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .alphaDecay(0.05); // Valor padrão é 0.022, maior = estabiliza mais rápido
 
       const link = container.append("g")
         .attr("class", "links")
@@ -158,9 +159,8 @@ const NetworkDiagramIE = () => {
       const controlY = midY + (perpY * curveIntensity) + perlinOffset;
       
       // Criar curva de Bézier quadrática com múltiplos pontos para aplicar ruído
-      const segments = 100;// estava 15
+      const segments = 50; // estava 15
       let path = `M ${d.source.x} ${d.source.y}`;
-      
       for (let i = 1; i <= segments; i++) {
         const t = i / segments;
         const t2 = t * t;

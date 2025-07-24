@@ -1,19 +1,11 @@
-.visPT-container {
-  /* width: 100vw; */
+/* .visPT-container {
   overflow: hidden;
   min-height: 100vh;
-  /* background: #e4e4e4; */
-  /* display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; */
   display: grid;
-  /* grid-template-rows: (12, 1fr); */
   grid-template-rows: 100px 1fr max-content;
   grid-template-columns: repeat(12, 1fr);
-  font-family: sans-serif;
   padding: 2%;
-}
+} */
 
 .vispt-roots {
   grid-column: 1 / span 2;
@@ -110,9 +102,15 @@
 }
 
 .vis1, .vis2, .vis3, .vis4 {
-    width: 100%;
-    height: 100%;
-    display: contents;
+    /* display: contents; */
+    width: 100vw;
+    overflow: hidden;
+    /* min-height: 100vh; */
+    /* background: #e4e4e4; */
+    display: grid;
+    grid-template-rows: 100px 1fr max-content;
+    grid-template-columns: repeat(12, 1fr);
+    padding: 2%;
 }
 
 .nav-buttons {

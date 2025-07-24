@@ -25,7 +25,7 @@ export default function VisIE() {
                 {/* <VerticalNav /> */}
 
                 {/* VIS 1 */}
-                <div className="vis1" style={{ display: currentVis === 1 ? "contents" : "none" }}>
+                <div className="vis1" style={{ display: currentVis === 1 ? "grid" : "none" }}>
                     {/* Descriptive Text */}
                     <div className="roots-description-IE">
                         <h2 className="roots-title-IE">
@@ -45,14 +45,14 @@ export default function VisIE() {
                     </div>
                     {/* Network Diagram */}
                     <div id="network-IE-section" className="visIE-roots">
-                        <NetworkDiagramIE />
+                        {currentVis === 1 && <NetworkDiagramIE />}
                     </div>
                 </div>
 
 
 
                 {/* VIS 2 */}
-                <div className="vis2" style={{ display: currentVis === 2 ? "contents" : "none" }}>
+                <div className="vis2" style={{ display: currentVis === 2 ? "grid" : "none" }}>
                     {/* Heatmap dots */}
                     <div className="Types-description">
                         <h2 className="Types-title">
@@ -70,26 +70,24 @@ export default function VisIE() {
                             Non mauris enim mus egestas.
                         </p>
                     </div>
-                    <div id="heatmap-section" className="heatmap-types">
-                        <DotPlotTypes active={currentVis === 2} />
+                    <div id="dptypes-section" className="dotplot-types">
+                        {currentVis === 2 && <DotPlotTypes active={true} />}
                     </div>
                 </div>
 
 
                 {/* VIS 3 */}
-                <div className="vis3" style={{ display: currentVis === 3 ? "contents" : "none" }}>
-                    {/* Comparison */}
+                <div className="vis3" style={{ display: currentVis === 3 ? "grid" : "none" }}>
                     <div id="dotplot-comparison-section" className="dotplot-comparison">
-                        <MidiHeatmapComparison />
+                        {currentVis === 3 && <MidiHeatmapComparison />}
                     </div>
                 </div>
 
 
                 {/* VIS 4 */}
-                <div className="vis4" style={{ display: currentVis === 4 ? "contents" : "none" }}>
-                    {/* Pitch */}
+                <div className="vis4" style={{ display: currentVis === 4 ? "grid" : "none" }}>
                     <div id="picth-section" className="pitch-abc">
-                        <ABCVisualizer />
+                        {currentVis === 4 && <ABCVisualizer />}
                     </div>
                 </div >
                 {/* NAVIGATION BUTTONS */}

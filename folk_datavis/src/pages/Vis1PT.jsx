@@ -23,7 +23,7 @@ export default function VisPT() {
       <div className="visPT-container">
 
         {/* VIS 1 */}
-        <div className="vis1" style={{ display: currentVis === 1 ? "contents" : "none" }}>
+        <div className="vis1" style={{ display: currentVis === 1 ? "grid" : "none" }}>
           <div id="network-section" className="vispt-roots">
             <NetworkDiagram />
           </div>
@@ -38,7 +38,7 @@ export default function VisPT() {
         </div>
 
         {/* VIS 2 */}
-        <div className="vis2" style={{ display: currentVis === 2 ? "contents" : "none" }}>
+        <div className="vis2" style={{ display: currentVis === 2 ? "grid" : "none" }}>
           <div className="map-description">
             <h2 className="map-title">Number of registers of folk music per district</h2>
           </div>
@@ -51,7 +51,7 @@ export default function VisPT() {
         </div>
 
         {/* VIS 3 */}
-        <div className="vis3" style={{ display: currentVis === 3 ? "contents" : "none" }}>
+        <div className="vis3" style={{ display: currentVis === 3 ? "grid" : "none" }}>
           <div className="dotplot-PT-description">
             <h2 className="dotplot-PT-title">Frequency of songs throughout the Portuguese Territory</h2>
           </div>
@@ -61,7 +61,7 @@ export default function VisPT() {
         </div>
 
         {/* VIS 4 */}
-        <div className="vis4" style={{ display: currentVis === 4 ? "contents" : "none" }}>
+        <div className="vis4" style={{ display: currentVis === 4 ? "grid" : "none" }}>
           <div id="spiral-section" className="visPT-spiral">
            <SpiralVis active={currentVis === 4} />
           </div>
