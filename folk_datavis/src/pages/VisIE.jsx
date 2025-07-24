@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE";
-import DotHeatmap from "../components/IE_VIS/dotheatmap";
+import DotPlotTypes from "../components/IE_VIS/dotplottype";
 import MidiHeatmapComparison from "../components/IE_VIS/heatmapcomparison";
 import ABCVisualizer from "../components/IE_VIS/pitchabc";
 import NavigationBar from "../components/nav";
@@ -71,7 +71,7 @@ export default function VisIE() {
                         </p>
                     </div>
                     <div id="heatmap-section" className="heatmap-types">
-                        <DotHeatmap />
+                        <DotPlotTypes active={currentVis === 2} />
                     </div>
                 </div>
 
