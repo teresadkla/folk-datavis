@@ -44,7 +44,7 @@ export default function VisPT() {
           </div>
           <div id="map-section" className="visPT-map">
 
-          <PortugalMap key={currentVis === 2 ? Date.now() : "hidden"} active={currentVis === 2} />
+            <PortugalMap key={currentVis === 2 ? Date.now() : "hidden"} active={currentVis === 2} />
 
 
           </div>
@@ -56,14 +56,14 @@ export default function VisPT() {
             <h2 className="dotplot-PT-title">Frequency of songs throughout the Portuguese Territory</h2>
           </div>
           <div id="dotplot-section" className="visPT-dotplot">
-                <TemaRegiaoVis active={currentVis === 3 }/>
+            {currentVis === 3 && <TemaRegiaoVis active={true} />}
           </div>
         </div>
 
         {/* VIS 4 */}
         <div className="vis4" style={{ display: currentVis === 4 ? "grid" : "none" }}>
           <div id="spiral-section" className="visPT-spiral">
-           <SpiralVis active={currentVis === 4} />
+            <SpiralVis active={currentVis === 4} />
           </div>
         </div>
 

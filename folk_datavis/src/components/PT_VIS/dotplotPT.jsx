@@ -18,6 +18,8 @@ const GraficoTemasPorRegiao = ({ active }) => {
   const [paginaTema, setPaginaTema] = useState(0);
   const [paginaRegiao, setPaginaRegiao] = useState(0);
   const [prevActive, setPrevActive] = useState(false); // Track previous active state
+  const [prevPaginaTema, setPrevPaginaTema] = useState(0); // Track previous tema page
+  const [prevPaginaRegiao, setPrevPaginaRegiao] = useState(0); // Track previous regiao page
 
   const totalPaginasTemas = Math.ceil(todosTemas.length / temasPorPagina);
   const totalPaginasRegioes = Math.ceil(todasRegioes.length / regioesPorPagina);
@@ -92,13 +94,19 @@ const GraficoTemasPorRegiao = ({ active }) => {
 
     const paths = imagesGroup.selectAll("path.flower1").data(visiveis, d => d.tema + d.regiao);
 
-    // Determina se deve animar (primeira vez ou mudança de active state)
-    const shouldAnimate = !prevActive || prevActive !== active;
+    // Determine if animation should occur - only when first loading or when active state changes
+    // Not when just navigating between pages
+    const isPageChange = (prevPaginaTema !== paginaTema || prevPaginaRegiao !== paginaRegiao);
+    const shouldAnimate = !prevActive || (prevActive !== active && !isPageChange);
 
-    // Remove os paths antigos
+    // Update previous page states for next render
+    setPrevPaginaTema(paginaTema);
+    setPrevPaginaRegiao(paginaRegiao);
+    
+    // Remove old paths
     paths.exit()
       .transition()
-      .duration(300)
+      .duration(isPageChange ? 0 : 300)
       .style("opacity", 0)
       .attr("transform", d => {
         const x = xScale(d.regiao) - rScale(d.count) / 2;
@@ -107,9 +115,22 @@ const GraficoTemasPorRegiao = ({ active }) => {
       })
       .remove();
 
-    // Função para aplicar animação a qualquer seleção de paths
+    // Function to apply animation to any path selection
     const animatePaths = (selection, isNew = false) => {
-      // Define posições iniciais para animação
+      if (isPageChange) {
+        // If just changing pages, don't animate - just place elements in final position
+        selection
+          .attr("transform", d => {
+            const x = xScale(d.regiao) - rScale(d.count) / 2;
+            const y = yScale(d.tema) - rScale(d.count) / 2;
+            const scale = rScale(d.count) / 170;
+            return `translate(${x}, ${y}) scale(${scale})`;
+          })
+          .style("opacity", 1);
+        return;
+      }
+
+      // Define initial positions for animation
       selection
         .attr("transform", d => {
           const x = xScale(d.regiao) - rScale(d.count) / 2;
@@ -118,7 +139,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
         })
         .style("opacity", 0);
 
-      // Aplica a animação
+      // Apply animation
       selection
         .transition()
         .duration(700)
@@ -132,11 +153,11 @@ const GraficoTemasPorRegiao = ({ active }) => {
         .style("opacity", 1);
     };
 
-    // Para paths existentes, anima apenas se shouldAnimate for true
+    // For existing paths, animate only if shouldAnimate is true
     if (shouldAnimate) {
       animatePaths(paths);
     } else {
-      // Se não deve animar, apenas atualiza posições
+      // If no animation needed, just update positions
       paths
         .attr("transform", d => {
           const x = xScale(d.regiao) - rScale(d.count) / 2;
@@ -264,7 +285,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
       .duration(600)
       .style("opacity", 1);
 
-  }, [active, dadosProcessados, todosTemas, todasRegioes, paginaTema, paginaRegiao, prevActive]);
+  }, [active, dadosProcessados, todosTemas, todasRegioes, paginaTema, paginaRegiao, prevActive, prevPaginaTema, prevPaginaRegiao]);
 
   return (
     <div className="dotplotPT-container">
