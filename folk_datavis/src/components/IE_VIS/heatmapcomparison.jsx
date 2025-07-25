@@ -9,18 +9,29 @@ const fontText = getComputedStyle(document.documentElement)
 
 const MidiHeatmapComparison = ({active}) => {
   const svgRef = useRef(); // Referência ao elemento SVG
+  const miniMapRef = useRef(); // Referência para o minimap
   const [allNames, setAllNames] = useState([]); // Lista com os nomes com múltiplas versões
   const [pitchData, setPitchData] = useState([]); // Dados brutos carregados do JSON
   const [selectedName, setSelectedName] = useState(null); // Nome atualmente selecionado no dropdown
   const [zoomRange, setZoomRange] = useState([0, 100]); // Range de zoom em percentagem
+  const [isDragging, setIsDragging] = useState(false); // Estado para controlar o arrasto no minimap
+  const [highlightHighFrequency, setHighlightHighFrequency] = useState(false); // Estado para destacar bins de alta frequência
+  const [setsData, setSetsData] = useState([]); // Dados do arquivo sets.csv
+  const [highFrequencyInfo, setHighFrequencyInfo] = useState([]); // Informações sobre os bins de alta frequência
 
   // Margens e dimensões do gráfico
-  const margin = { top: 50, right: 140, bottom: 50, left: 70 }; // Voltou ao normal
+  const margin = { top: 50, right: 140, bottom: 50, left: 70 };
   const width = 1500 - margin.left - margin.right;
   const height = 700 - margin.top - margin.bottom;
+  
+  // Dimensões do minimap
+  const miniMapHeight = 80;
+  const miniMapMargin = { top: 10, right: 10, bottom: 20, left: 70 };
+  const miniMapWidth = width;
 
   // Carrega os dados na primeira renderização
   useEffect(() => {
+    // Carregar os dados de pitch
     d3.json("pitch_compressed.json").then(jsonData => {
       // Conta quantas vezes cada nome aparece
       const nameCounts = d3.rollup(jsonData, v => v.length, d => d.name);
@@ -33,6 +44,11 @@ const MidiHeatmapComparison = ({active}) => {
       setAllNames(multiVersionNames);
       setPitchData(jsonData);
       setSelectedName(multiVersionNames[0]); // Seleciona o primeiro nome por padrão
+    });
+    
+    // Carregar os dados de sets.csv
+    d3.csv("sets.csv").then(csvData => {
+      setSetsData(csvData);
     });
   }, []);
 
@@ -109,7 +125,7 @@ const MidiHeatmapComparison = ({active}) => {
     const yScale = d3.scaleLinear().domain([yExtent[0], yExtent[1] + 1]).range([height, 0]);
 
     // Define o tamanho dos "bins" (caixas) para agregação
-const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
+    const desiredBinCount = 200;
     const binSizeX = Math.max(1, Math.floor((xEnd - xStart) / desiredBinCount));
     const binSizeY = 1;
 
@@ -139,25 +155,68 @@ const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
       .domain([1, maxCount / 2, maxCount])
       .range(["#82813E", "#CC5C25"]) // Laranja e verde
       .interpolate(d3.interpolateLab);
+      
+    // Identificar bins de alta frequência (acima de 75% do máximo)
+    const highFrequencyThreshold = maxCount * 0.75;
+    const highFrequencyBins = density.filter(d => d.count >= highFrequencyThreshold);
+    
+    // Ordenar por contagem (do maior para o menor)
+    highFrequencyBins.sort((a, b) => b.count - a.count);
+    
+    // Encontrar meter e mode para o nome selecionado no sets.csv
+    let meterAndMode = { meter: "Desconhecido", mode: "Desconhecido" };
 
-    // Cria o tooltip (balão de informação)
+    if (setsData.length > 0) {
+      const songInfo = setsData.find(d => d.name === selectedName);
+      if (songInfo) {
+        meterAndMode = {
+          meter: songInfo.meter || "Desconhecido",
+          mode: songInfo.mode || "Desconhecido"
+        };
+      }
+    }
+
+    // Armazenar informações sobre bins de alta frequência com meter e mode
+    setHighFrequencyInfo(highFrequencyBins.map(bin => ({
+      ...bin,
+      meter: meterAndMode.meter,
+      mode: meterAndMode.mode
+    })));
+
+    // Remover tooltip existente para evitar duplicação
+    d3.select(".midi-chart-tooltip").remove();
+
+    // Criar o tooltip unificado para todo o aplicativo
     const tooltip = d3.select(".midi-chart-container")
       .append("div")
-      .attr("class", "tooltip")
+      .attr("class", "midi-chart-tooltip")
       .style("position", "absolute")
       .style("background", "#fff")
       .style("padding", "8px")
       .style("border", "1px solid #ccc")
       .style("border-radius", "4px")
+      .style("box-shadow", "0 2px 5px rgba(0,0,0,0.2)")
       .style("pointer-events", "none")
       .style("opacity", 0)
+      .style("z-index", 1000)
       .style("font-size", "12px");
 
-    // Desenha os retângulos do heatmap
-    g.selectAll("rect")
+    // ============ CRIAÇÃO DA LAYER DE INTERAÇÃO ============
+  
+    // Primeiro: criar um grupo para a camada de brush
+    const brushLayer = g.append("g")
+      .attr("class", "brush-layer");
+    
+    // Segundo: criar um grupo para os elementos visuais
+    const vizLayer = g.append("g")
+      .attr("class", "viz-layer");
+  
+    // Desenha os retângulos do heatmap na camada de visualização
+    vizLayer.selectAll("rect.heatmap-cell")
       .data(density)
       .enter()
       .append("rect")
+      .attr("class", d => d.count >= highFrequencyThreshold ? "heatmap-cell high-frequency" : "heatmap-cell")
       .attr("x", d => xScale(d.x))
       .attr("y", d => yScale(d.y + binSizeY))
       .attr("width", Math.max(1, xScale(binSizeX) - xScale(0)))
@@ -165,14 +224,17 @@ const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
       .attr("rx", 2) // Raio dos cantos arredondados horizontal
       .attr("ry", 2) // Raio dos cantos arredondados vertical
       .attr("fill", d => color(d.count))
-      .attr("stroke", "none")
+      .attr("stroke", d => d.count >= highFrequencyThreshold && highlightHighFrequency ? "#fff" : "none")
+      .attr("stroke-width", d => d.count >= highFrequencyThreshold && highlightHighFrequency ? 1 : 0)
+      .style("opacity", d => highlightHighFrequency ? 
+        (d.count >= highFrequencyThreshold ? 1 : 0.3) : 1)
       .on("mouseover", (event, d) => {
         tooltip
           .style("opacity", 1)
           .html(
             `Tempo (x): ${d.x}<br/>
              Pitch (y): ${d.y}<br/>
-             Contagem: ${d.count}`
+             Contagem: ${d.count}${d.count >= highFrequencyThreshold ? '<br/><strong>Alta frequência!</strong>' : ''}`
           );
       })
       .on("mousemove", event => {
@@ -186,7 +248,7 @@ const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
 
     // Adiciona linhas horizontais para cada valor de pitch (melhor leitura)
     for (let yVal = yExtent[0]; yVal <= yExtent[1]; yVal++) {
-      g.append("line")
+      vizLayer.append("line")
         .attr("x1", 0)
         .attr("x2", width)
         .attr("y1", yScale(yVal))
@@ -210,8 +272,6 @@ const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
       .selectAll("text")
       .style("font-family", fontText)
       .style("font-size", "14px");
-
-
 
     // ============ LEGENDA DE CORES ============
 
@@ -271,8 +331,233 @@ const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
       .style("font-size", "12px")
       .style("font-weight", "bold");
 
-  }, [selectedName, pitchData, zoomRange]);
+    // ============ FUNCIONALIDADE DE BRUSH/ZOOM DIRETO NO GRÁFICO ============
+    
+    // Brush para seleção de área - agora na camada de brush
+    const brush = d3.brushX()
+      .extent([[0, 0], [width, height]])
+      .on("start", brushStarted)
+      .on("brush", brushing)
+      .on("end", brushEnded);
 
+    // Adiciona o brush à camada de brush
+    brushLayer.call(brush);
+
+    // Funções para controlar a interação entre brush e tooltip
+    let isBrushing = false;
+
+    function brushStarted() {
+      // Marca que começamos a usar o brush
+      isBrushing = true;
+      // Esconde o tooltip durante o brushing para evitar conflito visual
+      tooltip.style("opacity", 0);
+    }
+    
+    function brushing() {
+      // Mantém a flag ativa durante o brushing
+      isBrushing = true;
+    }
+
+    function brushEnded(event) {
+      // Depois de um pequeno atraso, permite que o tooltip funcione novamente
+      setTimeout(() => {
+        isBrushing = false;
+      }, 300);
+      
+      if (!event.selection) return; // Se não houver seleção, não faz nada
+      
+      // Converte a seleção de pixels para o domínio de dados
+      const [x0, x1] = event.selection.map(x => xScale.invert(x));
+      
+      // Converte para percentagens do total
+      const newStart = Math.max(0, Math.round((x0 / xMax) * 100));
+      const newEnd = Math.min(100, Math.round((x1 / xMax) * 100));
+      
+      // Atualiza o estado de zoom
+      setZoomRange([newStart, newEnd]);
+      
+      // Reset do brush após uso
+      brushLayer.call(brush.move, null);
+    }
+    
+    // Atualiza os handlers de eventos do tooltip para verificar se estamos brushing
+    vizLayer.selectAll("rect.heatmap-cell")
+      .on("mouseover", (event, d) => {
+        if (!isBrushing) {
+          tooltip
+            .style("opacity", 1)
+            .html(
+              `Tempo (x): ${d.x}<br/>
+               Pitch (y): ${d.y}<br/>
+               Contagem: ${d.count}`
+            );
+        }
+      });
+  
+  }, [selectedName, pitchData, zoomRange, highlightHighFrequency, setsData]);
+
+  // Efeito para criar e atualizar o minimap
+  useEffect(() => {
+    if (!selectedName || heatmapData.length === 0) return;
+    
+    // Seleciona o SVG do minimap e configura
+    const svg = d3.select(miniMapRef.current)
+      .attr("width", miniMapWidth + miniMapMargin.left + miniMapMargin.right)
+      .attr("height", miniMapHeight + miniMapMargin.top + miniMapMargin.bottom);
+    
+    svg.selectAll("*").remove(); // Limpa o minimap antes de redesenhar
+    
+    const g = svg.append("g")
+      .attr("transform", `translate(${miniMapMargin.left}, ${miniMapMargin.top})`);
+    
+    // Define escalas para o minimap
+    const xScale = d3.scaleLinear()
+      .domain([0, xMax])
+      .range([0, miniMapWidth]);
+    
+    const yExtent = d3.extent(heatmapData, d => d.y);
+    const yScale = d3.scaleLinear()
+      .domain([yExtent[0], yExtent[1] + 1])
+      .range([miniMapHeight - miniMapMargin.bottom, 0]);
+    
+    // Simplifica os dados para o minimap (menos detalhes)
+    const binSizeX = Math.max(1, Math.floor(xMax / 100));
+    const binSizeY = 1;
+    
+    const bins = d3.rollup(
+      heatmapData,
+      v => v.length,
+      d => Math.floor(d.x / binSizeX),
+      d => Math.floor(d.y / binSizeY)
+    );
+    
+    const miniDensity = [];
+    for (let [xBin, yMap] of bins.entries()) {
+      for (let [yBin, count] of yMap.entries()) {
+        miniDensity.push({
+          x: xBin * binSizeX,
+          y: yBin * binSizeY,
+          count
+        });
+      }
+    }
+    
+    // Escala de cor simplificada para o minimap
+    const maxCount = d3.max(miniDensity, d => d.count);
+    const color = d3.scaleLinear()
+      .domain([1, maxCount])
+      .range(["#82813E", "#CC5C25"])
+      .interpolate(d3.interpolateLab);
+
+    // Obter referência ao tooltip existente
+    const tooltip = d3.select(".midi-chart-tooltip");
+    
+    // Desenha os retângulos do minimap
+    g.selectAll("rect.minimap-cell")
+      .data(miniDensity)
+      .enter()
+      .append("rect")
+      .attr("class", "minimap-cell")
+      .attr("x", d => xScale(d.x))
+      .attr("y", d => yScale(d.y + binSizeY))
+      .attr("width", Math.max(1, xScale(binSizeX) - xScale(0)))
+      .attr("height", yScale(yExtent[0]) - yScale(yExtent[0] + binSizeY))
+      .attr("fill", d => color(d.count))
+      .attr("stroke", "none")
+      .attr("opacity", 0.7)
+      // Adicionar eventos de tooltip também ao minimap
+      .on("mouseover", (event, d) => {
+        tooltip
+          .style("opacity", 1)
+          .html(
+            `Tempo (x): ${d.x}<br/>
+             Pitch (y): ${d.y}<br/>
+             Contagem: ${d.count}`
+          );
+      })
+      .on("mousemove", event => {
+        tooltip
+          .style("left", event.pageX + 10 + "px")
+          .style("top", event.pageY - 28 + "px");
+      })
+      .on("mouseout", () => {
+        tooltip.style("opacity", 0);
+      });
+  
+    // Eixo X do minimap
+    g.append("g")
+      .attr("transform", `translate(0, ${miniMapHeight - miniMapMargin.bottom})`)
+      .call(d3.axisBottom(xScale).ticks(5))
+      .selectAll("text")
+      .style("font-family", fontText)
+      .style("font-size", "10px");
+    
+    // Retângulo indicador da área com zoom
+    const zoomLeft = (zoomRange[0] / 100) * miniMapWidth;
+    const zoomRight = (zoomRange[1] / 100) * miniMapWidth;
+    
+    const zoomIndicator = g.append("rect")
+      .attr("class", "zoom-indicator")
+      .attr("x", zoomLeft)
+      .attr("y", 0)
+      .attr("width", zoomRight - zoomLeft)
+      .attr("height", miniMapHeight - miniMapMargin.bottom)
+      .attr("fill", "rgba(255, 255, 255, 0.2)")
+      .attr("stroke", "#CC5C25")
+      .attr("stroke-width", 2)
+      .style("cursor", "move")
+      .call(d3.drag()
+        .on("start", () => setIsDragging(true))
+        .on("drag", dragged)
+        .on("end", () => setIsDragging(false))
+      );
+    
+    // Alças de redimensionamento nas bordas do indicador
+    const handleWidth = 8;
+    
+    // Alça esquerda
+    g.append("rect")
+      .attr("class", "resize-handle left")
+      .attr("x", zoomLeft - handleWidth/2)
+      .attr("y", 0)
+      .attr("width", handleWidth)
+      .attr("height", miniMapHeight - miniMapMargin.bottom)
+      .attr("fill", "#CC5C25")
+      .attr("opacity", 0.8)
+      .style("cursor", "ew-resize")
+      .call(d3.drag().on("drag", draggedLeft));
+    
+    // Alça direita
+    g.append("rect")
+      .attr("class", "resize-handle right")
+      .attr("x", zoomRight - handleWidth/2)
+      .attr("y", 0)
+      .attr("width", handleWidth)
+      .attr("height", miniMapHeight - miniMapMargin.bottom)
+      .attr("fill", "#CC5C25")
+      .attr("opacity", 0.8)
+      .style("cursor", "ew-resize")
+      .call(d3.drag().on("drag", draggedRight));
+    
+    // Funções para manipulação dos elementos de zoom
+    function dragged(event) {
+      const zoomWidth = zoomRange[1] - zoomRange[0];
+      const newLeft = Math.max(0, Math.min(100 - zoomWidth, (event.x / miniMapWidth) * 100));
+      setZoomRange([newLeft, newLeft + zoomWidth]);
+    }
+    
+    function draggedLeft(event) {
+      const newStart = Math.max(0, Math.min(zoomRange[1] - 1, (event.x / miniMapWidth) * 100));
+      setZoomRange([newStart, zoomRange[1]]);
+    }
+    
+    function draggedRight(event) {
+      const newEnd = Math.max(zoomRange[0] + 1, Math.min(100, (event.x / miniMapWidth) * 100));
+      setZoomRange([zoomRange[0], newEnd]);
+    }
+    
+  }, [selectedName, heatmapData, zoomRange, xMax]);
+  
   return (
     <div className="midi-chart-container">
       {/* Dropdown de seleção de nome/música */}
@@ -295,66 +580,122 @@ const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
           })()
         )}
       </div>
+      
       {/* Elemento SVG onde o gráfico será desenhado */}
       <svg ref={svgRef}></svg>
-       {/* Controles de zoom simples */}
-      <div style={{ clear: "both", marginTop: "20px", marginBottom: "20px" }}>
-        <h4 style={{ margin: "0 0 10px 0", fontFamily: fontText }}>Zoom no Eixo X:</h4>
-        
-        <div style={{ display: "flex", alignItems: "center", gap: "15px", flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <label style={{ fontFamily: fontText, fontSize: "14px", minWidth: "60px" }}>Início:</label>
-            <input
-              type="range"
-              min="0"
-              max="99"
-              value={zoomRange[0]}
-              onChange={(e) => {
-                const newStart = parseInt(e.target.value);
-                if (newStart < zoomRange[1]) {
-                  setZoomRange([newStart, zoomRange[1]]);
-                }
-              }}
-              style={{ width: "200px" }}
-            />
-            <span style={{ fontFamily: fontText, fontSize: "14px", minWidth: "40px" }}>{zoomRange[0]}%</span>
-          </div>
-          
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <label style={{ fontFamily: fontText, fontSize: "14px", minWidth: "60px" }}>Fim:</label>
-            <input
-              type="range"
-              min="1"
-              max="100"
-              value={zoomRange[1]}
-              onChange={(e) => {
-                const newEnd = parseInt(e.target.value);
-                if (newEnd > zoomRange[0]) {
-                  setZoomRange([zoomRange[0], newEnd]);
-                }
-              }}
-              style={{ width: "200px" }}
-            />
-            <span style={{ fontFamily: fontText, fontSize: "14px", minWidth: "40px" }}>{zoomRange[1]}%</span>
-          </div>
-          
-          <button
-            onClick={() => setZoomRange([0, 100])}
-            style={{
-              padding: "5px 15px",
-              backgroundColor: "#CC5C25",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontFamily: fontText,
-              fontSize: "12px"
-            }}
-          >
-            Reset Zoom
-          </button>
-        </div>
+      
+      {/* Instruções para o zoom */}
+      <div style={{ 
+        padding: "8px", 
+        background: "rgba(204, 92, 37, 0.1)", 
+        borderRadius: "4px", 
+        marginBottom: "10px" 
+      }}>
+        <p style={{ margin: "0", fontFamily: fontText, fontSize: "14px" }}>
+          <strong>Dicas de zoom:</strong> Arraste no gráfico principal para criar uma seleção e ampliar essa área.
+          Ou use o minimap abaixo para ajustar a visualização: arraste a área destacada ou use as alças laterais para redimensionar.
+        </p>
       </div>
+      
+      {/* Minimap para visualização geral e controle de zoom */}
+      <div style={{ marginBottom: "15px" }}>
+        <h4 style={{ margin: "0 0 5px 0", fontFamily: fontText }}>Visualização geral:</h4>
+        <svg ref={miniMapRef}></svg>
+      </div>
+      
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
+        <button
+          onClick={() => setZoomRange([0, 100])}
+          style={{
+            padding: "5px 15px",
+            backgroundColor: "#CC5C25",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontFamily: fontText,
+            fontSize: "12px",
+            marginRight: "10px"
+          }}
+        >
+          Visualizar tudo (Reset)
+        </button>
+        
+        <button
+          onClick={() => setHighlightHighFrequency(!highlightHighFrequency)}
+          style={{
+            padding: "5px 15px",
+            backgroundColor: highlightHighFrequency ? "#82813E" : "#CC5C25",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontFamily: fontText,
+            fontSize: "12px"
+          }}
+        >
+          {highlightHighFrequency ? "Mostrar todos os bins" : "Destacar bins de alta frequência"}
+        </button>
+      </div>
+      
+      {/* Card de informações sobre bins de alta frequência */}
+      {highlightHighFrequency && highFrequencyInfo.length > 0 && (
+        <div style={{
+          padding: "15px",
+          backgroundColor: "#f8f8f8",
+          borderRadius: "4px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          marginBottom: "20px",
+          maxHeight: "300px", // Aumentando a altura máxima para acomodar mais informações
+          overflowY: "auto"
+        }}>
+          <h3 style={{ margin: "0 0 10px 0", fontFamily: fontText, color: "#CC5C25" }}>
+            Bins de Alta Frequência ({highFrequencyInfo.length})
+          </h3>
+          
+          {/* Informações sobre meter e mode */}
+          {highFrequencyInfo.length > 0 && (
+            <div style={{ 
+              marginBottom: "15px", 
+              padding: "10px", 
+              backgroundColor: "rgba(204, 92, 37, 0.1)", 
+              borderRadius: "4px",
+              fontFamily: fontText
+            }}>
+              <strong>Informações da música:</strong><br/>
+              Compasso (meter): {highFrequencyInfo[0].meter}<br/>
+              Modo musical (mode): {highFrequencyInfo[0].mode}
+            </div>
+          )}
+          
+          <p style={{ marginBottom: "10px", fontFamily: fontText }}>
+            Os seguintes padrões aparecem com alta frequência nas variações desta música:
+          </p>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: fontText }}>
+            <thead>
+              <tr style={{ backgroundColor: "#eee" }}>
+                <th style={{ padding: "5px", textAlign: "left" }}>Tempo (X)</th>
+                <th style={{ padding: "5px", textAlign: "left" }}>Pitch (Y)</th>
+                <th style={{ padding: "5px", textAlign: "left" }}>Frequência</th>
+              </tr>
+            </thead>
+            <tbody>
+              {highFrequencyInfo.slice(0, 10).map((bin, idx) => (
+                <tr key={idx} style={{ borderBottom: "1px solid #ddd" }}>
+                  <td style={{ padding: "5px" }}>{bin.x}</td>
+                  <td style={{ padding: "5px" }}>{bin.y}</td>
+                  <td style={{ padding: "5px" }}>{bin.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {highFrequencyInfo.length > 10 && (
+            <p style={{ marginTop: "10px", fontStyle: "italic", textAlign: "center" }}>
+              Mostrando os 10 bins mais frequentes de {highFrequencyInfo.length} totais.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
