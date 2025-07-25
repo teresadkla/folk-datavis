@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "../../css/ramification.css";
 
@@ -10,6 +10,7 @@ document.head.appendChild(script);
 const NetworkDiagramIE = () => {
   const svgRef = useRef();
   const tooltipRef = useRef();
+  const [showLegend, setShowLegend] = useState(false);
 
   useEffect(() => {
     const width = 1000;
@@ -242,6 +243,70 @@ const NetworkDiagramIE = () => {
     <div>
       <svg ref={svgRef}></svg>
       <div ref={tooltipRef} className="tooltipIE" style={{ position: "absolute", display: "none" }}></div>
+      <button
+        className="legend-btn"
+        onClick={() => setShowLegend(true)}
+      >
+        Ver legenda
+      </button>
+      {showLegend && (
+        <div
+          className="legend-popup-overlay"
+          onClick={() => setShowLegend(false)}
+        >
+          <div
+            className="legend-popup-content"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="legend-popup-close"
+              onClick={() => setShowLegend(false)}
+              aria-label="Fechar legenda"
+            >
+              ×
+            </button>
+            <h3>Legenda</h3>
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              <li>
+                <span style={{
+                  display: "inline-block",
+                  width: 18, height: 18,
+                  background: "#5193AE",
+                  borderRadius: "50%",
+                  marginRight: 8,
+                  verticalAlign: "middle"
+                }}></span>
+                <b>Círculo azul</b>: Nome da música (tamanho proporcional ao número de ocorrências)
+              </li>
+              <li>
+                <span style={{
+                  display: "inline-block",
+                  width: 18, height: 18,
+                  background: "#82813E",
+                  borderRadius: "50%",
+                  marginRight: 8,
+                  verticalAlign: "middle"
+                }}></span>
+                <b>Círculo verde</b>: Modo musical
+              </li>
+              <li>
+                <span style={{
+                  display: "inline-block",
+                  width: 30, height: 4,
+                  background: "#6B3F21",
+                  marginRight: 8,
+                  verticalAlign: "middle"
+                }}></span>
+                <b>Linha castanha</b>: Ligação entre música e modo (espessura = nº de ocorrências)
+              </li>
+            </ul>
+            <p style={{ fontSize: "12px", color: "#555" }}>
+              Clique num círculo azul para destacar as ligações.<br />
+              Passe o rato sobre um círculo azul para ver detalhes.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

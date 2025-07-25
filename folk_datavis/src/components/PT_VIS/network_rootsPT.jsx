@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import "../../css/ramification.css";
 
@@ -10,6 +10,7 @@ document.head.appendChild(script);
 const NetworkDiagram = () => {
   const svgRef = useRef();
   const tooltipRef = useRef();
+  const [showLegend, setShowLegend] = useState(false); // Estado para o pop-up
 
   useEffect(() => {
     const width = 1000;
@@ -246,8 +247,73 @@ const NetworkDiagram = () => {
 
   return (
     <div>
-      <svg ref={svgRef}></svg>
+        <svg ref={svgRef}></svg>
       <div ref={tooltipRef} className="tooltip_roots" />
+      <button
+        className="legend-btn"
+        onClick={() => setShowLegend(true)}
+      >
+        Ver legenda
+      </button>
+      {showLegend && (
+        <div
+          className="legend-popup-overlay"
+          onClick={() => setShowLegend(false)}
+        >
+          <div
+            className="legend-popup-content"
+            onClick={e => e.stopPropagation()}
+          >
+            <button
+              className="legend-popup-close"
+              onClick={() => setShowLegend(false)}
+              aria-label="Fechar legenda"
+            >
+              ×
+            </button>
+            <h3>Legenda</h3>
+            <ul style={{ listStyle: "none", padding: 0 }}>
+              <li>
+                <span style={{
+                  display: "inline-block",
+                  width: 18, height: 18,
+                  background: "#C33512",
+                  borderRadius: "50%",
+                  marginRight: 8,
+                  verticalAlign: "middle"
+                }}></span>
+                <b>Flor vermelha</b>: Tema (tamanho proporcional ao número de ocorrências)
+              </li>
+              <li>
+                <span style={{
+                  display: "inline-block",
+                  width: 18, height: 18,
+                  background: "#E09D2C",
+                  borderRadius: "50%",
+                  marginRight: 8,
+                  verticalAlign: "middle"
+                }}></span>
+                <b>Círculo amarelo</b>: Região
+              </li>
+              <li>
+                <span style={{
+                  display: "inline-block",
+                  width: 30, height: 4,
+                  background: "#6B3F21",
+                  marginRight: 8,
+                  verticalAlign: "middle"
+                }}></span>
+                <b>Linha castanha</b>: Ligação entre tema e região (espessura = nº de ocorrências)
+              </li>
+            </ul>
+            <p style={{ fontSize: "12px", color: "#555" }}>
+              Clique numa flor para destacar as ligações.<br />
+              Passe o rato sobre uma flor para ver detalhes.
+            </p>
+          </div>
+        </div>
+      )}
+    
     </div>
   );
 };

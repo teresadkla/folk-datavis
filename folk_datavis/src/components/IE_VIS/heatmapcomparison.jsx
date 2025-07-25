@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
 import "../../css/comparison.css";
 
@@ -7,7 +7,7 @@ const fontText = getComputedStyle(document.documentElement)
   .getPropertyValue('--font-secondary')
   .trim();
 
-const MidiHeatmapComparison = () => {
+const MidiHeatmapComparison = ({active}) => {
   const svgRef = useRef(); // Referência ao elemento SVG
   const [allNames, setAllNames] = useState([]); // Lista com os nomes com múltiplas versões
   const [pitchData, setPitchData] = useState([]); // Dados brutos carregados do JSON
@@ -35,6 +35,39 @@ const MidiHeatmapComparison = () => {
       setSelectedName(multiVersionNames[0]); // Seleciona o primeiro nome por padrão
     });
   }, []);
+
+  // Filtragem de dados memorizada
+  const variations = useMemo(() => {
+    if (!selectedName || pitchData.length === 0) return [];
+    return pitchData.filter(d => d.name === selectedName);
+  }, [selectedName, pitchData]);
+
+  // Construção de heatmapData memorizada
+  const heatmapData = useMemo(() => {
+    if (variations.length === 0) return [];
+    const data = [];
+    variations.forEach(variation => {
+      variation.midiValues.forEach((pitch, idx) => {
+        data.push({ x: idx, y: pitch });
+      });
+    });
+    return data;
+  }, [variations]);
+
+  // Outros cálculos memorizados
+  const { xMax, yExtent, filteredHeatmapData } = useMemo(() => {
+    if (heatmapData.length === 0) return { xMax: 0, yExtent: [0, 0], filteredHeatmapData: [] };
+    
+    const xMax = d3.max(heatmapData, d => d.x);
+    const yExtent = d3.extent(heatmapData, d => d.y);
+    
+    const xStart = Math.floor((zoomRange[0] / 100) * xMax);
+    const xEnd = Math.ceil((zoomRange[1] / 100) * xMax);
+    
+    const filteredData = heatmapData.filter(d => d.x >= xStart && d.x <= xEnd);
+    
+    return { xMax, yExtent, filteredHeatmapData: filteredData };
+  }, [heatmapData, zoomRange]);
 
   // Atualiza o gráfico toda vez que o nome selecionado, os dados ou o zoom mudarem
   useEffect(() => {
@@ -77,7 +110,7 @@ const MidiHeatmapComparison = () => {
 
     // Define o tamanho dos "bins" (caixas) para agregação
 const desiredBinCount = 200; // ou outro valor que faça sentido visualmente
-const binSizeX = Math.max(1, Math.floor((xEnd - xStart) / desiredBinCount));
+    const binSizeX = Math.max(1, Math.floor((xEnd - xStart) / desiredBinCount));
     const binSizeY = 1;
 
     // Agrupa os dados filtrados por bin e conta quantos pontos caem em cada um
@@ -129,6 +162,8 @@ const binSizeX = Math.max(1, Math.floor((xEnd - xStart) / desiredBinCount));
       .attr("y", d => yScale(d.y + binSizeY))
       .attr("width", Math.max(1, xScale(binSizeX) - xScale(0)))
       .attr("height", yScale(yExtent[0]) - yScale(yExtent[0] + binSizeY))
+      .attr("rx", 2) // Raio dos cantos arredondados horizontal
+      .attr("ry", 2) // Raio dos cantos arredondados vertical
       .attr("fill", d => color(d.count))
       .attr("stroke", "none")
       .on("mouseover", (event, d) => {
