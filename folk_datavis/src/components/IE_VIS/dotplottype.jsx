@@ -21,6 +21,7 @@ const DotPlotTypes = () => {
   const [isLoading, setIsLoading] = useState(true); // Estado de carregamento
   // Add a new state to track the animation mode
   const [shouldAnimate, setShouldAnimate] = useState(true);
+  const [showLegend, setShowLegend] = useState(false); // Estado para mostrar/ocultar legenda
 
   // Carrega e processa os dados CSV ao montar o componente
   useEffect(() => {
@@ -231,7 +232,62 @@ const DotPlotTypes = () => {
         }}>
           ↓
         </button>
+        {/* Botão para mostrar/ocultar legenda */}
+        <button id="legend-btn" onClick={() => setShowLegend((prev) => !prev)}>
+          {showLegend ? "Ocultar Legenda" : "Ver Legenda"}
+        </button>
       </div>
+      
+      {/* Modal da Legenda */}
+      {showLegend && (
+        <div className="legend-modal">
+          <div className="legend-content">
+            <h3>Legenda do Gráfico</h3>
+            <div className="legend-section">
+              <h4>Sobre o Gráfico:</h4>
+              <p>Este é um <strong>Dot Plot</strong> que mostra a relação entre músicas folclóricas e seus tipos musicais.</p>
+            </div>
+            <div className="legend-section">
+              <h4>Como Ler:</h4>
+              <ul>
+                <li><strong>Eixo Vertical (Y):</strong> Nomes das músicas</li>
+                <li><strong>Eixo Horizontal (X):</strong> Tipos de música</li>
+                <li><strong>Círculos:</strong> Indicam que uma música pertence a um tipo específico</li>
+                <li><strong>Cor dos Círculos:</strong> Intensidade da cor representa o número de variações da música nesse tipo</li>
+              </ul>
+            </div>
+            <div className="legend-section">
+              <h4>Cores:</h4>
+              <div className="color-legend">
+                <div className="color-item">
+                  <div className="color-box" style={{backgroundColor: '#0d0887'}}></div>
+                  <span>Poucas variações</span>
+                </div>
+                <div className="color-item">
+                  <div className="color-box" style={{backgroundColor: '#7e03a8'}}></div>
+                  <span>Variações médias</span>
+                </div>
+                <div className="color-item">
+                  <div className="color-box" style={{backgroundColor: '#f0f921'}}></div>
+                  <span>Muitas variações</span>
+                </div>
+              </div>
+            </div>
+            <div className="legend-section">
+              <h4>Controles:</h4>
+              <ul>
+                <li><strong>Filtro:</strong> Mostra apenas músicas com múltiplos tipos</li>
+                <li><strong>Navegação (↑/↓):</strong> Navega entre páginas do gráfico</li>
+                <li><strong>Hover:</strong> Passe o mouse sobre os círculos para ver detalhes</li>
+              </ul>
+            </div>
+            <button className="legend-close" onClick={() => setShowLegend(false)}>
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* SVG onde o heatmap é desenhado */}
       <svg className="DotPlotTypessvg" ref={svgRef} width={1500} height={900} />
     </div>
