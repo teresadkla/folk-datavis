@@ -28,11 +28,10 @@ export default function VisPT() {
             <NetworkDiagram />
           </div>
           <div className="roots-description">
-            <h2 className="roots-title">Song variation and propagation through Portuguese territory</h2>
+            <h2 className="roots-title">Portuguese Musical Roots</h2>
             <p className="roots-text">
-              Lorem ipsum dolor sit amet consectetur. Pulvinar faucibus non pellentesque hac nisl. Potenti vel sit neque nunc sed fames urna.
-              <br /><br />
-              Tristique risus volutpat viverra nibh phasellus massa magna urna. Non mauris enim mus egestas.
+              Portuguese folk music emerges like a deep echo of local communities. In this visualization, we trace some of the traditional songs with the most variations across the land, branching out like living roots.
+              Each ramification represents a shared story, a sung tradition, a connection between people from the north to the south of the country.
             </p>
           </div>
         </div>
@@ -40,12 +39,15 @@ export default function VisPT() {
         {/* VIS 2 */}
         <div className="vis2" style={{ display: currentVis === 2 ? "grid" : "none" }}>
           <div className="map-description">
-            <h2 className="map-title">Number of registers of folk music per district</h2>
+            <h2 className="map-title">Echoes Across the Land </h2>
+            <p className="map-text">
+              By mapping folk music recordings by district, we reveal the density and geographic spread of Portugal’s traditional repertoire.
+              The connections between districts highlight songs that cross administrative borders — shared echoes that unite regions through common melodies.
+            </p>
           </div>
           <div id="map-section" className="visPT-map">
 
             <PortugalMap key={currentVis === 2 ? Date.now() : "hidden"} active={currentVis === 2} />
-
 
           </div>
         </div>
@@ -53,7 +55,12 @@ export default function VisPT() {
         {/* VIS 3 */}
         <div className="vis3" style={{ display: currentVis === 3 ? "grid" : "none" }}>
           <div className="dotplot-PT-description">
-            <h2 className="dotplot-PT-title">Frequency of songs throughout the Portuguese Territory</h2>
+            <h2 className="dotplot-PT-title">Wandering Melodies</h2>
+            <p className="dotplot-PT-text">
+              Which folk songs echo the most across Portugal? Who were the voices behind them, and what instruments carried their melodies?
+              Explore the similiarities and patterns between the songs across the country’s cultural soundscape.
+
+            </p>
           </div>
           <div id="dotplot-section" className="visPT-dotplot">
             {currentVis === 3 && <TemaRegiaoVis active={true} />}
@@ -63,6 +70,11 @@ export default function VisPT() {
         {/* VIS 4 */}
         <div className="vis4" style={{ display: currentVis === 4 ? "grid" : "none" }}>
           <div id="spiral-section" className="visPT-spiral">
+            <h2 className="spiral-title">The Spiral of Time</h2>
+            <p className="spiral-text">
+              Some songs endure across generations, reappearing throughout time with the same name but new voices.
+               This spiral traces those songs over the years, connecting them chronologically and revealing patterns in how cultural memory is preserved through music.
+            </p>
             <SpiralVis active={currentVis === 4} />
           </div>
         </div>

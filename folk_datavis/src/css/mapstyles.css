@@ -21,7 +21,12 @@
   text-anchor: middle;
   pointer-events: none;
 }
-
+.map-info {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
 /* Novo container para alinhar o gráfico e a timeline em coluna */
 .map-timeline-container {
   display: flex;
@@ -34,12 +39,14 @@
 
 /* Ajuste: timeline agora fica abaixo do gráfico */
 .timeline-container {
+  position: relative;
+
+  transform: translateX(-50%,-50%);
+  bottom: 5vh;
   display: flex;
   justify-content: center;
-  width: 100%;
-  position: relative;
-  bottom: 5vh;
-
+  width: auto;
+  z-index: 100;
 }
 
 .timeline-button {
@@ -63,33 +70,17 @@
   display: block;
   margin: 0 auto;
 }
- .legend-popup {
-  position: absolute;
-  top: 80px;
-  right: 40px;
-  background: white;
-  border: 1px solid #ccc;
+
+.legend-popup {
+  background: #fff;
+  padding: 24px 32px;
   border-radius: 10px;
-  padding: 16px 20px;
-  width: 300px;
-  z-index: 1000;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  text-align: left;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
-
-.legend-popup h3 {
-  margin-top: 0;
-}
-
-.legend-popup ul {
-  padding-left: 18px;
-}
-
-.legend-popup li {
-  margin-bottom: 8px;
-}
-
-
-
 
 
 
@@ -104,25 +95,19 @@
   left: 60vw;
 }
 
-.map-info {
-  display: flex;
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
+
 
 .info-section-map {
-  position: absolute;
-  top: 10%;
-  left: 75%;
-  text-align: left;
-  width: 30%;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 2%;
-  border-radius: 5px;
-  max-height: 70vh;
-  overflow-y: auto;
-  /* ativa scroll vertical se necessário */
+    position: absolute;
+    top: 15%;
+    right: 0;
+    text-align: left;
+    width: 30%;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 2%;
+    border-radius: 5px;
+    max-height: 59vh;
+    overflow-y: auto;
 }
 
 .tooltip-line {
@@ -145,7 +130,7 @@
 }
 
 
-/*Dot plot PT*/
+/*-------------------------Dot plot PT-------------------*/
 .dotplotPT-info {
   display: flex;
   flex-direction: row;
@@ -222,4 +207,174 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+/* Estilos para o botão de legenda */
+.legenda-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  position: absolute;
+  left: 0%;
+  top: 30%;
+  transition: all 0.2s ease
+}
+
+
+/* Estilos para o popup da legenda do dotplot */
+.legenda-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  max-width: 500px;
+  font-family: var(--font-secondary);
+}
+
+.legenda-close-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #555;
+  transition: color 0.2s;
+}
+
+
+
+.legenda-titulo {
+  margin-top: 0;
+  color: #474e95;
+  margin-bottom: 15px;
+}
+
+.legenda-secao {
+  margin-bottom: 15px;
+}
+
+.legenda-secao p {
+  margin-top: 0;
+  line-height: 1.5;
+}
+
+.legenda-secao ul {
+  padding-left: 20px;
+  line-height: 1.5;
+}
+
+.legenda-exemplo {
+  display: flex;
+  align-items: center;
+  margin-top: 20px;
+  justify-content: center;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.legenda-flor-exemplo {
+  fill: #474e95;
+}
+
+.legenda-texto-exemplo {
+  margin-left: 15px;
+}
+
+.dotplotPT-filters {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.instrumento-filter {
+  position: relative;
+  display: inline-block;
+}
+
+.filter-button {
+  background-color: #474e95;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+}
+
+.filter-button:hover {
+  background-color: #363c75;
+}
+
+.dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  width: 300px;
+  max-height: 400px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  overflow: hidden;
+}
+
+.dropdown-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.select-all-button {
+  background: none;
+  border: none;
+  color: #474e95;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.close-dropdown {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.instrumento-list {
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.instrumento-item {
+  display: flex;
+  align-items: center;
+  padding: 5px 0;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.instrumento-item input {
+  margin-right: 10px;
+}
+
+/* Estilo para indicar quando não há dados */
+.no-data-message {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  color: #666;
 }
