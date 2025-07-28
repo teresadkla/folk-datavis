@@ -300,7 +300,7 @@ const PortugalMap = ({ active }) => {
         </div>
       </div>
       {/* Botão para mostrar a legenda */}
-      <button className="legenda-btn" onClick={() => setShowLegend(true)}> Ver legenda</button>
+      <button className="map-legenda-btn" onClick={() => setShowLegend(true)}> Ver legenda</button>
 
       {/* Pop-up com informação do distrito selecionado */}
       {selectedDistrictData && (

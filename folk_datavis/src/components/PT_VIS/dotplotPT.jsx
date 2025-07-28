@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import "../../css/mapstyles.css";
+// import "../../css/mapstyles.css";
+import "../../css/dotplotPT.css";
 
 const fontText = getComputedStyle(document.documentElement)
   .getPropertyValue('--font-secondary')
@@ -89,7 +90,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
     const width = +svg.attr("width");
     const height = +svg.attr("height");
 
-    const margin = { top: 60, right: 20, bottom: 120, left: 200 };
+    const margin = { top: 60, right: 60, bottom: 120, left: 200 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -98,7 +99,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
       .data([null])
       .join("g")
       .attr("class", "container")
-      .attr("transform", `translate(${margin.left}, ${(height - innerHeight) / 2})`);
+      .attr("transform", `translate(${margin.left}, ${(height - innerHeight) / 2+ 60})`);
 
     const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
     const imagesGroup = g.selectAll("g.images").data([null]).join("g").attr("class", "images");
@@ -400,12 +401,12 @@ const GraficoTemasPorRegiao = ({ active }) => {
       </div>
       
       <div className="dotplotPT-info">
-        <svg ref={svgRef} width={1200} height={800} />
+        <svg ref={svgRef} width={1200} height={1000} />
         <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
         
         {/* Botão para mostrar a legenda */}
         <button 
-          className="legenda-button" 
+          className="legenda-btn" 
           onClick={() => setMostrarLegenda(true)}
         >
           Ver Legenda
@@ -462,7 +463,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
           <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
             ↑
           </button>
-          <span style={{ margin: "0 10px" }}>Página Tema {paginaTema + 1}</span>
+          <span style={{ margin: "0 10px" }}>Tema {paginaTema + 1}</span>
           <button
             onClick={() => setPaginaTema((p) => Math.min(p + 1, totalPaginasTemas - 1))}
             disabled={paginaTema >= totalPaginasTemas - 1}
@@ -471,7 +472,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
           </button>
         </div>
 
-        <div>
+        {/* <div>
           <button onClick={() => setPaginaRegiao((p) => Math.max(p - 1, 0))} disabled={paginaRegiao === 0}>
             ←
           </button>
@@ -482,7 +483,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
           >
             →
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -13,12 +13,12 @@
 }
 
 .roots-description {
-grid-column: 8 / span 3;
-    grid-row: 2 / span 1;
+  grid-column: 8 / span 3;
+  grid-row: 2 / span 1;
 
-    text-align: left;
-    width: fit-content;
-    height: fit-content;
+  text-align: left;
+  width: fit-content;
+  height: fit-content;
 }
 
 .visPT-map {
@@ -28,33 +28,35 @@ grid-column: 8 / span 3;
 }
 
 .map-description {
- z-index: 1000;
-    height: fit-content;
-    grid-column: 2 / span 4;
-    grid-row: 2 / span 2;
-    /* margin-left: 10%; */
-    width: fit-content;
-    text-align: left;
-}
-
-.visPT-dotplot {
-  grid-column: 1 / span 12;
-  grid-row: 10 / span 2;
-}
-
-.dotplotPT-container {
-    width: 100vw;
-}
-.dotplot-PT-description {
-  /* background-color: chocolate; */
   z-index: 1000;
   height: fit-content;
-  grid-column: 2 / span 8;
-  grid-row: 8 / span 2;
+  grid-column: 2 / span 3;
+  grid-row: 2 / span 2;
   /* margin-left: 10%; */
   width: fit-content;
   text-align: left;
+}
 
+.visPT-dotplot {
+  grid-column: 4 / span 12;
+  grid-row: 2 / span 2;
+  width: fit-content;
+  height: fit-content;
+  margin-top: 10%;
+
+}
+
+.dotplotPT-container {
+  width: 100vw;
+}
+
+.dotplot-PT-description {
+  z-index: 1000;
+  height: fit-content;
+  grid-column: 1 / span 3;
+  grid-row: 2 / span 1;
+  width: fit-content;
+  text-align: left;
 }
 
 .visPT-spiral {
@@ -100,15 +102,18 @@ grid-column: 8 / span 3;
   }
 }
 
-.vis1, .vis2, .vis3, .vis4 {
-    /* display: contents; */
-    width: 100vw;
-    max-height: 100vw;
-    overflow: hidden;
-    display: grid;
-    grid-template-rows: 100px 1fr max-content;
-    grid-template-columns: repeat(12, 1fr);
-    padding: 2%;
+.vis1,
+.vis2,
+.vis3,
+.vis4 {
+  /* display: contents; */
+  width: 100vw;
+  max-height: 100vw;
+  overflow: hidden;
+  display: grid;
+  grid-template-rows: 100px 1fr max-content;
+  grid-template-columns: repeat(12, 1fr);
+  padding: 2%;
 }
 
 .nav-buttons {
