@@ -244,7 +244,7 @@ const NetworkDiagramIE = () => {
       <svg ref={svgRef}></svg>
       <div ref={tooltipRef} className="tooltipIE" style={{ position: "absolute", display: "none" }}></div>
       <button
-        className="legend-btn"
+        className="legend-btn-IE"
         onClick={() => setShowLegend(true)}
       >
         Ver legenda

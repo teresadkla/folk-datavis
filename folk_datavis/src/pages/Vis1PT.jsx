@@ -69,12 +69,15 @@ export default function VisPT() {
 
         {/* VIS 4 */}
         <div className="vis4" style={{ display: currentVis === 4 ? "grid" : "none" }}>
-          <div id="spiral-section" className="visPT-spiral">
+
+          <div className="spiral-description">
             <h2 className="spiral-title">The Spiral of Time</h2>
             <p className="spiral-text">
               Some songs endure across generations, reappearing throughout time with the same name but new voices.
-               This spiral traces those songs over the years, connecting them chronologically and revealing patterns in how cultural memory is preserved through music.
+              This spiral traces those songs over the years, connecting them chronologically and revealing patterns in how cultural memory is preserved through music.
             </p>
+          </div>
+          <div id="spiral-section" className="visPT-spiral">
             <SpiralVis active={currentVis === 4} />
           </div>
         </div>

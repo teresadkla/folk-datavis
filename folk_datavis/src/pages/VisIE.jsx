@@ -64,14 +64,14 @@ export default function VisIE() {
 
                 {/* VIS 3 */}
                 <div className="vis3" style={{ display: currentVis === 3 ? "grid" : "none" }}>
-                    <div className="dotplot-comparison-description">
-                        <h2 className="dotplot-comparison-title">Heat of the Melody</h2>
-                        <p className="dotplot-comparison-text">
+                    <div className="heatmap-comparison-description">
+                        <h2 className="heatmap-comparison-title">Heat of the Melody</h2>
+                        <p className="heatmap-comparison-text">
                         Every variation of a folk song tells a slightly different musical story. This heatmap uncovers those differences by highlighting the notes most frequently played across versions — revealing which tones anchor the melody, and where change happens. 
                         As time unfolds, we see not just how songs shift, but how tradition evolves through subtle musical choices.
                         </p>
                     </div>
-                    <div id="dotplot-comparison-section" className="dotplot-comparison">
+                    <div id="heatmap-comparison-section" className="heatmap-comparison">
                         {currentVis === 3 && <MidiHeatmapComparison />}
                     </div>
                 </div>

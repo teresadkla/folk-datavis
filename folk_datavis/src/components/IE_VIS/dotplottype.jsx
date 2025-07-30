@@ -232,12 +232,12 @@ const DotPlotTypes = () => {
         }}>
           ↓
         </button>
-        {/* Botão para mostrar/ocultar legenda */}
-        <button id="legend-btn" onClick={() => setShowLegend((prev) => !prev)}>
+        
+      </div>
+      {/* Botão para mostrar/ocultar legenda */}
+        <button className="legend-btn-types" onClick={() => setShowLegend((prev) => !prev)}>
           {showLegend ? "Ocultar Legenda" : "Ver Legenda"}
         </button>
-      </div>
-      
       {/* Modal da Legenda */}
       {showLegend && (
         <div className="legend-modal">

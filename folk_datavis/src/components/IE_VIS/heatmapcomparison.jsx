@@ -118,30 +118,36 @@ const MidiHeatmapComparison = ({active}) => {
     const xStart = Math.floor((zoomRange[0] / 100) * xMax);
     const xEnd = Math.ceil((zoomRange[1] / 100) * xMax);
 
-    // Filtra dados do heatmap para o range de zoom
-    const filteredHeatmapData = heatmapData.filter(d => d.x >= xStart && d.x <= xEnd);
-
     const xScale = d3.scaleLinear().domain([xStart, xEnd]).range([0, width]);
     const yScale = d3.scaleLinear().domain([yExtent[0], yExtent[1] + 1]).range([height, 0]);
 
-    // Define o tamanho dos "bins" (caixas) para agregação
+    // MUDANÇA: Calcular bins SEMPRE com base em TODOS os dados usando tamanho fixo
     const desiredBinCount = 200;
-    const binSizeX = Math.max(1, Math.floor((xEnd - xStart) / desiredBinCount));
+    const binSizeX = Math.max(1, Math.floor(xMax / desiredBinCount));
     const binSizeY = 1;
 
-    // Agrupa os dados filtrados por bin e conta quantos pontos caem em cada um
-    const bins = d3.rollup(
-      filteredHeatmapData,
+    // Agrupa TODOS os dados por bin para determinar a escala de cores global
+    const fullBins = d3.rollup(
+      heatmapData,
       v => v.length,
       d => Math.floor(d.x / binSizeX),
       d => Math.floor(d.y / binSizeY)
     );
 
-    // Transforma os bins em um array de objetos com x, y e contagem
-    const density = [];
-    for (let [xBin, yMap] of bins.entries()) {
+    // Calcula o máximo global para a escala de cores
+    const globalMaxCount = d3.max(Array.from(fullBins.values()).flatMap(yMap => Array.from(yMap.values())));
+
+    // Define escala de cor baseada no máximo GLOBAL
+    const color = d3.scaleLinear()
+      .domain([1, globalMaxCount / 2, globalMaxCount])
+      .range(["#82813E", "#CC5C25"])
+      .interpolate(d3.interpolateLab);
+
+    // MUDANÇA: Converter os bins para array e DEPOIS filtrar por zoom
+    const allDensity = [];
+    for (let [xBin, yMap] of fullBins.entries()) {
       for (let [yBin, count] of yMap.entries()) {
-        density.push({
+        allDensity.push({
           x: xBin * binSizeX,
           y: yBin * binSizeY,
           count
@@ -149,15 +155,11 @@ const MidiHeatmapComparison = ({active}) => {
       }
     }
 
-    // Define escala de cor com interpolação LAB para melhor percepção visual
-    const maxCount = d3.max(density, d => d.count);
-    const color = d3.scaleLinear()
-      .domain([1, maxCount / 2, maxCount])
-      .range(["#82813E", "#CC5C25"]) // Laranja e verde
-      .interpolate(d3.interpolateLab);
-      
-    // Identificar bins de alta frequência (acima de 75% do máximo)
-    const highFrequencyThreshold = maxCount * 0.75;
+    // MUDANÇA: Filtrar os bins que estão na área de zoom
+    const density = allDensity.filter(d => d.x >= xStart && d.x <= xEnd);
+
+    // Identificar bins de alta frequência baseado no máximo GLOBAL
+    const highFrequencyThreshold = globalMaxCount * 0.75;
     const highFrequencyBins = density.filter(d => d.count >= highFrequencyThreshold);
     
     // Ordenar por contagem (do maior para o menor)
@@ -221,8 +223,8 @@ const MidiHeatmapComparison = ({active}) => {
       .attr("y", d => yScale(d.y + binSizeY))
       .attr("width", Math.max(1, xScale(binSizeX) - xScale(0)))
       .attr("height", yScale(yExtent[0]) - yScale(yExtent[0] + binSizeY))
-      .attr("rx", 2) // Raio dos cantos arredondados horizontal
-      .attr("ry", 2) // Raio dos cantos arredondados vertical
+      .attr("rx", 2)
+      .attr("ry", 2)
       .attr("fill", d => color(d.count))
       .attr("stroke", d => d.count >= highFrequencyThreshold && highlightHighFrequency ? "#fff" : "none")
       .attr("stroke-width", d => d.count >= highFrequencyThreshold && highlightHighFrequency ? 1 : 0)
@@ -278,13 +280,13 @@ const MidiHeatmapComparison = ({active}) => {
     const legendHeight = 200;
     const legendWidth = 20;
 
-    // Escala da legenda vertical - agora começando em 1
+    // MUDANÇA: Escala da legenda baseada no máximo GLOBAL
     const legendScale = d3.scaleLinear()
-      .domain([1, maxCount])
+      .domain([1, globalMaxCount])
       .range([legendHeight, 0]);
 
     const legendAxis = d3.axisRight(legendScale)
-      .tickValues([1, ...d3.ticks(1, maxCount, 4), maxCount])
+      .tickValues([1, ...d3.ticks(1, globalMaxCount, 4), globalMaxCount])
       .tickFormat(d3.format(".0f"));
 
     // Gradiente de cor para a legenda
@@ -296,11 +298,11 @@ const MidiHeatmapComparison = ({active}) => {
       .attr("x2", "0%")
       .attr("y2", "0%");
 
-    // Adiciona stops (faixas de cor) ao gradiente - agora começando em 1
+    // Adiciona stops (faixas de cor) ao gradiente baseado no máximo GLOBAL
     const legendSteps = 10;
     for (let i = 0; i < legendSteps; i++) {
-      const t = i / (legendSteps - 1); // t vai de 0 a 1
-      const value = 1 + t * (maxCount - 1); // value vai de 1 a maxCount
+      const t = i / (legendSteps - 1);
+      const value = 1 + t * (globalMaxCount - 1);
       linearGradient.append("stop")
         .attr("offset", `${t * 100}%`)
         .attr("stop-color", color(value));
