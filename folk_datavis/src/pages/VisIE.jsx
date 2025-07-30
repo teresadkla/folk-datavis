@@ -3,6 +3,7 @@ import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE";
 import DotPlotTypes from "../components/IE_VIS/dotplottype";
 import MidiHeatmapComparison from "../components/IE_VIS/heatmapcomparison";
 import ABCVisualizer from "../components/IE_VIS/pitchabc";
+import ChordDiagramABC from "../components/IE_VIS/pitchabc";
 import NavigationBar from "../components/nav";
 import VerticalNav from "../components/verticalnav";
 import "../css/IEpages.css";
@@ -84,7 +85,7 @@ export default function VisIE() {
                         <p className="pitch-abc-text"></p>
                         </div>
                     <div id="picth-section" className="pitch-abc">
-                        {currentVis === 4 && <ABCVisualizer />}
+                        {currentVis === 4 && <ChordDiagramABC />}
                     </div>
                 </div >
                 {/* NAVIGATION BUTTONS */}

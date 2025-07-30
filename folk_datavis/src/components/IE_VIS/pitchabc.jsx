@@ -1,202 +1,268 @@
-// ABCVisualizer.jsx
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-import * as ABCJS from "abcjs";
+import * as abcjs from "abcjs";
 import Papa from "papaparse";
-import "../../css/abc.css";
 
-// Componente principal para visualização de músicas em ABC notation
-const ABCVisualizer = () => {
-  // Estados para armazenar dados ABC, nomes, índice atual, controle do sintetizador e objeto visual
-  const [abcData, setAbcData] = useState([]);
-  const [nameData, setNameData] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [synthControl, setSynthControl] = useState(null);
-  const [visualObj, setVisualObj] = useState(null);
-  const svgRef = useRef(); // Referência ao SVG do D3
-  const noteElements = useRef(null); // Referência aos círculos das notas no gráfico
+const ChordDiagramABC = () => {
+  const svgRef = useRef();
+  const [musicData, setMusicData] = useState([]);
+  const [selected, setSelected] = useState(null);
 
-  // Carrega e processa o CSV com as músicas ao montar o componente
   useEffect(() => {
-    fetch("sets.csv")
-      .then((res) => res.text())
-      .then((csvText) => {
-        const results = Papa.parse(csvText, { header: true });
-        const abcArr = [];
-        const nameArr = [];
-        // Para cada linha do CSV, monta a string ABC com cabeçalhos
-        results.data.forEach((row) => {
-          if (row.abc) {
-            const meter = row.meter || "4/4";
-            const mode = row.mode || "C";
-            const abcWithHeaders = `X:1\nT:${row.name || "Sem nome"}\nM:${meter}\nK:${mode}\n%%MIDI program 49\n${row.abc}`;
-            abcArr.push(abcWithHeaders);
-            nameArr.push(row.name || "Sem nome");
-          }
-        });
-        setAbcData(abcArr);
-        setNameData(nameArr);
-      });
+    // Load CSV data
+    Papa.parse("/sets.csv", {
+      download: true,
+      header: true,
+      complete: (result) => {
+        const allTunes = result.data.filter(d => d.name && d.abc);
+        const randomTunes = d3.shuffle(allTunes).slice(0, 6);
+        setMusicData(randomTunes);
+      }
+    });
   }, []);
 
-  // Renderiza a música atual sempre que abcData ou currentIndex mudar
   useEffect(() => {
-    if (abcData.length > 0) renderABC(currentIndex);
-  }, [abcData, currentIndex]);
+    if (musicData.length < 6) return;
 
-  // Função principal para renderizar a notação, gráfico e áudio
-  const renderABC = async (index) => {
-    const abc = abcData[index];
-    const name = nameData[index];
-    if (!abc) return;
+    // Function to extract just the musical notes from ABC notation
+    const extractNotes = (abcText) => {
+      // Remove ornaments (~), triplets (3..), grace notes, and other symbols
+      let cleaned = abcText
+        .replace(/~+/g, '')           // Remove ornaments
+        .replace(/\(\d+\.[^)]*\)/g, '') // Remove triplets like (3.g.f.e
+        .replace(/[|:]/g, '')         // Remove bar lines and repeat marks
+        // .replace(/\d+/g, '')          // Remove numbers (durations)
+        .replace(/[.,]/g, '')         // Remove dots and commas
+        .replace(/[\s\n]/g, '');      // Remove whitespace and newlines
+      
+      // Extract only valid note letters (A-G, a-g)
+      return cleaned.match(/[A-Ga-g]/g) || [];
+    };
 
-    // Atualiza o nome da música
-    document.getElementById("musicName").textContent = name;
+    // Compute pairwise similarity with detailed info for 6 songs
+    const similarity = Array.from({ length: 6 }, (_, i) =>
+      Array.from({ length: 6 }, (_, j) => {
+        if (i === j) return { 
+          value: 1, 
+          shared: [], 
+          notesA: [], 
+          notesB: [], 
+          sharedNotes: [],
+          attributeMatches: { mode: true, type: true, meter: true }
+        };
+        
+        const notesA = extractNotes(musicData[i].abc);
+        const notesB = extractNotes(musicData[j].abc);
+        
+        // Find shared notes
+        const sharedNotes = notesA.filter(note => notesB.includes(note));
+        const uniqueSharedNotes = [...new Set(sharedNotes)];
+        
+        // Calculate note similarity based on shared notes vs total unique notes
+        const allUniqueNotes = [...new Set([...notesA, ...notesB])];
+        const noteSimilarity = uniqueSharedNotes.length / allUniqueNotes.length;
+        
+        // Calculate attribute similarity
+        const tuneA = musicData[i];
+        const tuneB = musicData[j];
+        
+        const attributeMatches = {
+          mode: tuneA.mode === tuneB.mode,
+          type: tuneA.type === tuneB.type,
+          meter: tuneA.meter === tuneB.meter
+        };
+        
+        // Count matching attributes (out of 3)
+        const matchingAttributes = Object.values(attributeMatches).filter(match => match).length;
+        const attributeSimilarity = matchingAttributes / 3;
+        
+        // Combined similarity: 70% notes, 30% attributes
+        const combinedSimilarity = (noteSimilarity * 0.7) + (attributeSimilarity * 0.3);
+        
+        return {
+          value: combinedSimilarity,
+          shared: uniqueSharedNotes,
+          notesA: notesA,
+          notesB: notesB,
+          sharedNotes: sharedNotes,
+          totalNotesA: notesA.length,
+          totalNotesB: notesB.length,
+          sharedCount: sharedNotes.length,
+          uniqueNotesA: [...new Set(notesA)].length,
+          uniqueNotesB: [...new Set(notesB)].length,
+          noteSimilarity: noteSimilarity,
+          attributeSimilarity: attributeSimilarity,
+          attributeMatches: attributeMatches
+        };
+      })
+    );
 
-    // NÃO renderiza a notação ABC
-    // const visual = ABCJS.renderAbc("notation", abc)[0];
-    // Em vez disso, só gera o objeto visual para extração dos dados:
-    const visual = ABCJS.parseOnly(abc)[0];
-    setVisualObj(visual);
+    // Extract just values for the chord diagram
+    const matrix = similarity.map(row => row.map(cell => cell.value));
+    
+    // Set diagonal to 0 to remove self-connections (100% similarity)
+    for (let i = 0; i < matrix.length; i++) {
+      matrix[i][i] = 0;
+    }
+    
+    const width = 500; // Reduced size
+    const height = 500; // Reduced size
+    const innerRadius = width / 2 - 50; // Adjusted for smaller size
+    const outerRadius = innerRadius + 15; // Slightly thinner arcs
 
-    // Extrai valores MIDI das notas para visualização
-    const midiValues = extractPitchValues(visual);
-    drawRadialDotPlot(midiValues);
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    // Pausa o áudio anterior, se houver
-    if (synthControl) synthControl.pause();
+    const chord = d3.chord().padAngle(0.05).sortSubgroups(d3.descending); // Increased padding for clarity
 
-    // Cria novo controle de sintetizador para áudio
-    const newSynthControl = new ABCJS.synth.SynthController();
-    newSynthControl.load("#audio-controls", null, { displayLoop: false });
-    setSynthControl(newSynthControl);
+    const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+    const ribbon = d3.ribbon().radius(innerRadius);
 
-    // Inicializa o sintetizador e prepara o áudio
-    const synth = new ABCJS.synth.CreateSynth();
-    await synth.init({ visualObj: visual });
-    await newSynthControl.setTune(visual, false);
-    await synth.prime();
+    const chords = chord(matrix);
 
-    // Liga a animação das notas à reprodução do áudio
-    attachNoteAnimation(visual, newSynthControl);
+    // Filter out ribbons that connect a node to itself (should be none now, but just in case)
+    const filteredChords = chords.filter(d => d.source.index !== d.target.index);
 
-    // (Opcional) Gera visualização de waveform do áudio
-    drawWaveform(synth.audioBuffer);
-  };
+    // Create tooltip
+    const tooltip = d3.select("body")
+      .selectAll(".chord-tooltip")
+      .data([0])
+      .join("div")
+      .attr("class", "chord-tooltip")
+      .style("position", "absolute")
+      .style("background", "rgba(0, 0, 0, 0.8)")
+      .style("color", "white")
+      .style("padding", "10px")
+      .style("border-radius", "5px")
+      .style("pointer-events", "none")
+      .style("opacity", 0)
+      .style("font-size", "12px")
+      .style("max-width", "350px")
+      .style("z-index", "1000");
 
-  // Extrai valores MIDI das notas do objeto visual da ABCJS
-  const extractPitchValues = (visual) => {
-    const midiValues = [];
-    visual?.lines?.forEach((line) => {
-      line.staff?.forEach((staff) => {
-        staff.voices?.forEach((voice) => {
-          voice.forEach((el) => {
-            if (el.el_type === "note" && el.pitches) {
-              el.pitches.forEach((p) => {
-                midiValues.push(60 + p.pitch); // 60 = C4 (MIDI)
-              });
-            }
-          });
-        });
-      });
-    });
-    return midiValues;
-  };
-
-  // Desenha o gráfico radial de pontos usando D3
-  const drawRadialDotPlot = (midiValues) => {
     const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove(); // Limpa o SVG
+    svg.selectAll("*").remove();
+    
+    // Center the diagram in the larger SVG
+    const svgWidth = 800;
+    const svgHeight = 800;
+    const translateX = (svgWidth - width) / 2 + width / 2;
+    const translateY = (svgHeight - height) / 2 + height / 2;
+    
+    svg
+      .attr("viewBox", [0, 0, svgWidth, svgHeight])
+      .append("g")
+      .attr("transform", `translate(${translateX},${translateY})`);
 
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
-    const centerX = width / 2;
-    const centerY = height / 2;
-    const g = svg.append("g").attr("transform", `translate(${centerX},${centerY})`);
+    const g = svg.select("g");
 
-    const angleStep = (2 * Math.PI) / midiValues.length;
-    const midiMin = d3.min(midiValues);
-    const midiMax = d3.max(midiValues);
+    const group = g
+      .append("g")
+      .selectAll("g")
+      .data(chords.groups)
+      .join("g");
 
-    // Escala radial para a distância dos pontos
-    const radiusScale = d3.scaleLinear().domain([-24, 24]).range([40, 250]);
-    // Escala de cor para os pontos
-    const colorScale = d3.scaleSequential(d3.interpolatePlasma).domain([midiMin, midiMax]);
+    group
+      .append("path")
+      .attr("fill", d => color(d.index))
+      .attr("stroke", "#000")
+      .attr("stroke-width", 1)
+      .attr("d", arc)
+      .on("click", (event, d) => setSelected(musicData[d.index]));
 
-    // Desenha círculos de referência para diferentes alturas
-    const pitchLevels = [-24, -12, 0, 12, 24];
-    g.selectAll("circle.axis")
-      .data(pitchLevels)
-      .enter()
-      .append("circle")
-      .attr("r", (d) => radiusScale(d))
-      .attr("fill", "none")
-      .attr("stroke", "#ccc")
-      .attr("stroke-dasharray", "2,2")
-      ;
-
-    // Adiciona rótulos de altura (pitch)
-    g.selectAll("text.pitch-label")
-      .data(pitchLevels)
-      .enter()
+    group
       .append("text")
-      .attr("y", (d) => -radiusScale(d))
-      .attr("dy", "-0.35em")
-      .attr("text-anchor", "middle")
-      .attr("class", "pitch-label")
-      .text((d) => `MIDI ${60 + d}`)
-      .attr("font-size", "10px")
-      .attr("fill", "#666");
+      .each(d => {
+        d.angle = (d.startAngle + d.endAngle) / 2;
+      })
+      .attr("dy", ".35em")
+      .attr("transform", d => `rotate(${(d.angle * 180) / Math.PI - 90}) translate(${outerRadius + 8})${d.angle > Math.PI ? " rotate(180)" : ""}`)
+      .attr("text-anchor", d => (d.angle > Math.PI ? "end" : "start"))
+      .attr("font-size", "11px") // Smaller font for better fit
+      .text(d => musicData[d.index].name);
 
-    // Desenha os pontos das notas
-    noteElements.current = g
-      .selectAll("circle.note")
-      .data(midiValues)
-      .enter()
-      .append("circle")
-      .attr("class", "note-dot")
-      .attr("cx", (d, i) => Math.cos(i * angleStep) * radiusScale(d - 60))
-      .attr("cy", (d, i) => Math.sin(i * angleStep) * radiusScale(d - 60))
-      .attr("r", 4)
-      .attr("fill", (d) => colorScale(d))
-      .attr("opacity", 0.8);
-  };
+    g.append("g")
+      .attr("fill-opacity", 0.67)
+      .selectAll("path")
+      .data(filteredChords)
+      .join("path")
+      .attr("d", ribbon)
+      .attr("fill", d => color(d.target.index))
+      .attr("stroke", d => d3.rgb(color(d.target.index)).darker())
+      .on("mouseover", (event, d) => {
+        const sourceIdx = d.source.index;
+        const targetIdx = d.target.index;
+        const simData = similarity[sourceIdx][targetIdx];
+        
+        const sourceName = musicData[sourceIdx].name;
+        const targetName = musicData[targetIdx].name;
+        
+        const tuneA = musicData[sourceIdx];
+        const tuneB = musicData[targetIdx];
+        
+        const attributeInfo = `
+          <strong>Mode:</strong> ${tuneA.mode || 'N/A'} ${simData.attributeMatches.mode ? '✓' : '✗'} ${tuneB.mode || 'N/A'}<br/>
+          <strong>Type:</strong> ${tuneA.type || 'N/A'} ${simData.attributeMatches.type ? '✓' : '✗'} ${tuneB.type || 'N/A'}<br/>
+          <strong>Meter:</strong> ${tuneA.meter || 'N/A'} ${simData.attributeMatches.meter ? '✓' : '✗'} ${tuneB.meter || 'N/A'}
+        `;
+        
+        const tooltipContent = `
+          <strong>${sourceName} ↔ ${targetName}</strong><br/>
+          <strong>Similaridade Total:</strong> ${(simData.value * 100).toFixed(1)}%<br/>
+          <strong>Similaridade de Notas:</strong> ${(simData.noteSimilarity * 100).toFixed(1)}%<br/>
+          <strong>Similaridade de Atributos:</strong> ${(simData.attributeSimilarity * 100).toFixed(1)}%<br/>
+          <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
+          ${attributeInfo}<br/>
+          <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
+          <strong>Notas totais:</strong> ${simData.totalNotesA} ↔ ${simData.totalNotesB}<br/>
+          <strong>Notas únicas:</strong> ${simData.uniqueNotesA} ↔ ${simData.uniqueNotesB}<br/>
+          <strong>Notas únicas partilhadas:</strong><br/>
+          ${simData.shared.join(', ')}<br/>
+          <small><em>Similaridade: 70% notas + 30% atributos</em></small>
+        `;
+        
+        tooltip.html(tooltipContent)
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px")
+          .transition()
+          .duration(200)
+          .style("opacity", 1);
+      })
+      .on("mousemove", (event) => {
+        tooltip
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px");
+      })
+      .on("mouseout", () => {
+        tooltip.transition()
+          .duration(200)
+          .style("opacity", 0);
+      });
 
-  // Liga a animação dos pontos à reprodução das notas
-  const attachNoteAnimation = (visual, controller) => {
-    controller.setTune(visual, false, {
-      noteListener: (note) => {
-        const index = note.noteIndex;
-        if (typeof index !== "number") return;
-        // Destaca o ponto correspondente à nota tocada
-        noteElements.current
-          .attr("r", (d, i) => (i === index ? 10 : 4))
-          .attr("opacity", (d, i) => (i === index ? 1 : 0.6));
-      },
-    });
-  };
+    // Cleanup function
+    return () => {
+      d3.select("body").selectAll(".chord-tooltip").remove();
+    };
+  }, [musicData]);
 
-  // (Opcional) Função para desenhar o waveform do áudio
-  const drawWaveform = (audioBuffer) => {
-    console.log("Waveform gerada para o buffer de áudio", audioBuffer);
-  };
+  useEffect(() => {
+    if (selected) {
+      abcjs.renderAbc("abc-output", selected.abc);
+      abcjs.renderMidi("midi-output", selected.abc, { responsive: "resize" });
+    }
+  }, [selected]);
 
-  // Renderização do componente
   return (
-    <div className="abc-container">
-            <svg className="abcsvg" ref={svgRef} width="600" height="600"></svg>
-
-      <h2 id="musicName">Carregando...</h2>
-      {/* <div id="notation" className="notation-area"></div> */}
-      <div id="audio-controls" className="audio-controls"></div>
-      <div className="controls-abc">
-        <button onClick={() => synthControl?.play()}>Play</button>
-        <button onClick={() => synthControl?.pause()}>Pause</button>
-        <button onClick={() => setCurrentIndex((prev) => (prev - 1 + abcData.length) % abcData.length)}>Prev</button>
-        <button onClick={() => setCurrentIndex((prev) => (prev + 1) % abcData.length)}>Next</button>
-      </div>
+    <div>
+      <svg ref={svgRef} width={800} height={800} />
+      {selected && (
+        <div>
+          <h3>{selected.name}</h3>
+          <div id="abc-output"></div>
+          <div id="midi-output"></div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default ABCVisualizer;
+export default ChordDiagramABC;
