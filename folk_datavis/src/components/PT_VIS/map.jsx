@@ -238,10 +238,11 @@ const PortugalMap = ({ active }) => {
         .data(newLines)
         .join("path")
         .attr("d", d => createPerlinLine(d.sourceX, d.sourceY, d.targetX, d.targetY))
-        .attr("stroke", "#555")
-        .attr("stroke-opacity", 0.5)
-        .attr("stroke-width", 1.8)
+        .attr("stroke", "#6B3F21")
+        .attr("stroke-opacity", 0.4)
+        .attr("stroke-width", d => 1 + d.temasComuns.length * 0.2) // Espessura dinâmica
         .attr("fill", "none")
+        .style("cursor", "pointer") // <-- Adicionado cursor pointer
         .on("mouseover", (event, d) => {
           tooltip.transition().duration(200).style("opacity", 0.95);
           tooltip

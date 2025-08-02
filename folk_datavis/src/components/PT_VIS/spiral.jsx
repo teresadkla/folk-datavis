@@ -141,18 +141,18 @@ const SpiralVis = ({ active }) => {
             .sort((a, b) => d3.ascending(a.ano, b.ano));
 
           if (themePoints.length > 1) {
-            const line = d3.line()
-              .x((d) => d.x)
-              .y((d) => d.y);
-
-            g.append("path")
-              .datum(themePoints)
-              .attr("class", "highlight-line")
-              .attr("d", line)
-              .attr("fill", "none")
-              .attr("stroke", "#222")
-              .attr("stroke-width", 2)
-              .attr("stroke-dasharray", "4 2");
+            // Desenha linhas com Perlin noise entre cada par de pontos consecutivos
+            for (let i = 0; i < themePoints.length - 1; i++) {
+              g.append("path")
+                .attr("class", "highlight-line")
+                .attr("fill", "none")
+                .attr("stroke", "#6B3F21")
+                .attr("stroke-width", 2.5)
+                .attr("d", createPerlinLine(
+                  themePoints[i].x, themePoints[i].y,
+                  themePoints[i + 1].x, themePoints[i + 1].y
+                ));
+            }
           }
 
           event.stopPropagation();
@@ -220,6 +220,39 @@ const SpiralVis = ({ active }) => {
       svg.selectAll("*").remove();
     };
   }, [active]);
+
+  // Função para criar linhas curvas com Perlin noise entre pontos
+  const createPerlinLine = (sourceX, sourceY, targetX, targetY) => {
+    const dx = targetX - sourceX;
+    const dy = targetY - sourceY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const midX = (sourceX + targetX) / 2;
+    const midY = (sourceY + targetY) / 2;
+    const perpX = -dy / distance;
+    const perpY = dx / distance;
+    const curveIntensity = Math.min(distance * 0.5, 50);
+    const time = Date.now() * 0.00001;
+    const noiseScale = 0.02;
+    // Aplica Perlin noise ao ponto de controlo da curva
+    const perlinOffset = window.noise ? window.noise.perlin3(midX * noiseScale, midY * noiseScale, time) * 100 : 0;
+    const controlX = midX + (perpX * curveIntensity) + perlinOffset;
+    const controlY = midY + (perpY * curveIntensity) + perlinOffset;
+
+    // Gera a linha curva com vários segmentos e ruído
+    const segments = 300;
+    let path = `M ${sourceX} ${sourceY}`;
+    for (let i = 1; i <= segments; i++) {
+      const t = i / segments;
+      const mt = 1 - t;
+      const x = mt * mt * sourceX + 2 * mt * t * controlX + t * t * targetX;
+      const y = mt * mt * sourceY + 2 * mt * t * controlY + t * t * targetY;
+      const segmentNoise = window.noise ? window.noise.perlin3(x * noiseScale * 2, y * noiseScale * 2, time) * 8 : 0;
+      const segmentNoiseY = window.noise ? window.noise.perlin3(y * noiseScale * 2, x * noiseScale * 2, time + 100) * 8 : 0;
+      path += ` L ${x + segmentNoise} ${y + segmentNoiseY}`;
+    }
+
+    return path;
+  };
 
   return (
     <div style={{ position: "relative" }}>

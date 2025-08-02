@@ -11,6 +11,7 @@ const MidiHeatmapComparison = ({active}) => {
   const svgRef = useRef(); // Referência ao elemento SVG
   const miniMapRef = useRef(); // Referência para o minimap
   const [allNames, setAllNames] = useState([]); // Lista com os nomes com múltiplas versões
+  const [filteredNames, setFilteredNames] = useState([]); // Lista filtrada de nomes
   const [pitchData, setPitchData] = useState([]); // Dados brutos carregados do JSON
   const [selectedName, setSelectedName] = useState(null); // Nome atualmente selecionado no dropdown
   const [zoomRange, setZoomRange] = useState([0, 100]); // Range de zoom em percentagem
@@ -18,11 +19,24 @@ const MidiHeatmapComparison = ({active}) => {
   const [highlightHighFrequency, setHighlightHighFrequency] = useState(false); // Estado para destacar bins de alta frequência
   const [setsData, setSetsData] = useState([]); // Dados do arquivo sets.csv
   const [highFrequencyInfo, setHighFrequencyInfo] = useState([]); // Informações sobre os bins de alta frequência
+  
+  // Estados para filtros
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [availableFilters, setAvailableFilters] = useState({
+    meter: [],
+    mode: [],
+    type: []
+  });
+  const [selectedFilters, setSelectedFilters] = useState({
+    meter: [],
+    mode: [],
+    type: []
+  });
 
   // Margens e dimensões do gráfico
   const margin = { top: 50, right: 140, bottom: 50, left: 70 };
   const width = 1500 - margin.left - margin.right;
-  const height = 700 - margin.top - margin.bottom;
+  const height = 600 - margin.top - margin.bottom;
   
   // Dimensões do minimap
   const miniMapHeight = 80;
@@ -42,15 +56,99 @@ const MidiHeatmapComparison = ({active}) => {
         .map(([name]) => name);
 
       setAllNames(multiVersionNames);
+      setFilteredNames(multiVersionNames); // Inicialmente, todos os nomes estão visíveis
       setPitchData(jsonData);
-      setSelectedName(multiVersionNames[0]); // Seleciona o primeiro nome por padrão
     });
     
     // Carregar os dados de sets.csv
     d3.csv("sets.csv").then(csvData => {
       setSetsData(csvData);
+      
+      // Extrair valores únicos para cada filtro
+      const meters = [...new Set(csvData.map(item => item.meter).filter(Boolean))];
+      const modes = [...new Set(csvData.map(item => item.mode).filter(Boolean))];
+      const types = [...new Set(csvData.map(item => item.type).filter(Boolean))];
+      
+      setAvailableFilters({
+        meter: meters,
+        mode: modes,
+        type: types
+      });
     });
   }, []);
+  
+  // Efeito para selecionar o primeiro nome filtrado quando a lista filtrada muda
+  useEffect(() => {
+    if (filteredNames.length > 0) {
+      // Se o nome selecionado atual não está na lista filtrada, selecionar o primeiro
+      if (!selectedName || !filteredNames.includes(selectedName)) {
+        setSelectedName(filteredNames[0]);
+      }
+    } else if (allNames.length > 0) {
+      // Fallback para o primeiro nome da lista completa se a lista filtrada estiver vazia
+      setSelectedName(allNames[0]);
+    }
+  }, [filteredNames, selectedName, allNames]);
+
+  // Função para aplicar filtros
+  const applyFilters = () => {
+    // Se não houver filtros selecionados, mostrar todos
+    if (
+      selectedFilters.meter.length === 0 && 
+      selectedFilters.mode.length === 0 && 
+      selectedFilters.type.length === 0
+    ) {
+      setFilteredNames(allNames);
+      return;
+    }
+    
+    // Filtrar os nomes baseado nos atributos selecionados
+    const filtered = allNames.filter(name => {
+      // Encontrar informações da música no conjunto de dados
+      const songInfo = setsData.find(d => d.name === name);
+      if (!songInfo) return false;
+      
+      // Verificar se a música atende a todos os critérios de filtro
+      const meterMatch = selectedFilters.meter.length === 0 || 
+                        selectedFilters.meter.includes(songInfo.meter);
+      const modeMatch = selectedFilters.mode.length === 0 || 
+                       selectedFilters.mode.includes(songInfo.mode);
+      const typeMatch = selectedFilters.type.length === 0 || 
+                       selectedFilters.type.includes(songInfo.type);
+      
+      return meterMatch && modeMatch && typeMatch;
+    });
+    
+    setFilteredNames(filtered);
+    // Fechar o menu após aplicar filtros
+    setShowFilterMenu(false);
+  };
+  
+  // Função para limpar todos os filtros
+  const clearFilters = () => {
+    setSelectedFilters({
+      meter: [],
+      mode: [],
+      type: []
+    });
+    setFilteredNames(allNames);
+    setShowFilterMenu(false);
+  };
+  
+  // Função para alternar seleção de filtro
+  const toggleFilter = (category, value) => {
+    setSelectedFilters(prev => {
+      const newFilters = {...prev};
+      if (newFilters[category].includes(value)) {
+        // Remover o valor se já estiver selecionado
+        newFilters[category] = newFilters[category].filter(item => item !== value);
+      } else {
+        // Adicionar o valor se não estiver selecionado
+        newFilters[category] = [...newFilters[category], value];
+      }
+      return newFilters;
+    });
+  };
 
   // Filtragem de dados memorizada
   const variations = useMemo(() => {
@@ -121,8 +219,10 @@ const MidiHeatmapComparison = ({active}) => {
     const xScale = d3.scaleLinear().domain([xStart, xEnd]).range([0, width]);
     const yScale = d3.scaleLinear().domain([yExtent[0], yExtent[1] + 1]).range([height, 0]);
 
-    // MUDANÇA: Calcular bins SEMPRE com base em TODOS os dados usando tamanho fixo
-    const desiredBinCount = 200;
+    // MODIFICADO: Ajustar o número de bins desejados baseado no zoom
+    const zoomRatio = (xEnd - xStart) / xMax; // Proporção da área visível
+    const baseDesiredBinCount = 200; // Valor base para visualização completa
+    const desiredBinCount = Math.max(100, Math.round(baseDesiredBinCount * (1/zoomRatio)));
     const binSizeX = Math.max(1, Math.floor(xMax / desiredBinCount));
     const binSizeY = 1;
 
@@ -562,27 +662,192 @@ const MidiHeatmapComparison = ({active}) => {
   
   return (
     <div className="midi-chart-container">
-      {/* Dropdown de seleção de nome/música */}
-      <select
-        className="music-select"
-        onChange={(e) => setSelectedName(e.target.value)}
-        value={selectedName || ""}
-      >
-        {allNames.map((name, idx) => (
-          <option key={idx} value={name}>{name}</option>
-        ))}
-      </select>
-
-      {/* Número de variações disponíveis para o nome selecionado */}
-      <div style={{ float: "right", marginLeft: "20px", fontWeight: "bold" }}>
-        {selectedName && pitchData.length > 0 && (
-          (() => {
-            const variations = pitchData.filter(d => d.name === selectedName);
-            return `Nº de variações: ${variations.length}`;
-          })()
-        )}
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems: "center" }}>
+        {/* Dropdown de seleção de nome/música */}
+        <select
+          className="music-select"
+          onChange={(e) => setSelectedName(e.target.value)}
+          value={selectedName || ""}
+          style={{ flexGrow: 1, marginRight: "10px" }}
+        >
+          {filteredNames.map((name, idx) => (
+            <option key={idx} value={name}>{name}</option>
+          ))}
+        </select>
+        
+        {/* Botão para abrir/fechar menu de filtros */}
+        <button
+          onClick={() => setShowFilterMenu(!showFilterMenu)}
+          style={{
+            padding: "5px 10px",
+            backgroundColor: showFilterMenu ? "#82813E" : "#CC5C25",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontFamily: fontText,
+            fontSize: "12px",
+            display: "flex",
+            alignItems: "center"
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" style={{ marginRight: "5px" }}>
+            <path 
+              fill="white" 
+              d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"
+            />
+          </svg>
+          {showFilterMenu ? "Fechar Filtros" : "Filtrar Músicas"}
+        </button>
+        
+        {/* Número de variações disponíveis */}
+        <div style={{ marginLeft: "20px", fontWeight: "bold" }}>
+          {selectedName && pitchData.length > 0 && (
+            (() => {
+              const variations = pitchData.filter(d => d.name === selectedName);
+              return `Nº de variações: ${variations.length}`;
+            })()
+          )}
+        </div>
       </div>
       
+      {/* Menu de filtros (pop-up) */}
+      {showFilterMenu && (
+        <div style={{
+          padding: "15px",
+          backgroundColor: "#fff",
+          borderRadius: "4px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+          marginBottom: "20px",
+          position: "relative",
+          border: "1px solid #ccc"
+        }}>
+          <h3 style={{ margin: "0 0 15px 0", fontFamily: fontText, color: "#333" }}>
+            Filtrar por atributos musicais
+          </h3>
+          
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+            {/* Filtro de Compasso (Meter) */}
+            <div style={{ flex: "1", minWidth: "200px" }}>
+              <h4 style={{ margin: "0 0 8px 0", fontFamily: fontText }}>Compasso (Meter)</h4>
+              <div style={{ display: "flex", flexDirection: "column", maxHeight: "150px", overflowY: "auto" }}>
+                {availableFilters.meter.map((meter, idx) => (
+                  <label key={idx} style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    marginBottom: "5px",
+                    fontFamily: fontText,
+                    fontSize: "14px"
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.meter.includes(meter)}
+                      onChange={() => toggleFilter("meter", meter)}
+                      style={{ marginRight: "8px" }}
+                    />
+                    {meter}
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            {/* Filtro de Modo (Mode) */}
+            <div style={{ flex: "1", minWidth: "200px" }}>
+              <h4 style={{ margin: "0 0 8px 0", fontFamily: fontText }}>Modo Musical (Mode)</h4>
+              <div style={{ display: "flex", flexDirection: "column", maxHeight: "150px", overflowY: "auto" }}>
+                {availableFilters.mode.map((mode, idx) => (
+                  <label key={idx} style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    marginBottom: "5px",
+                    fontFamily: fontText,
+                    fontSize: "14px"
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.mode.includes(mode)}
+                      onChange={() => toggleFilter("mode", mode)}
+                      style={{ marginRight: "8px" }}
+                    />
+                    {mode}
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            {/* Filtro de Tipo (Type) */}
+            <div style={{ flex: "1", minWidth: "200px" }}>
+              <h4 style={{ margin: "0 0 8px 0", fontFamily: fontText }}>Tipo (Type)</h4>
+              <div style={{ display: "flex", flexDirection: "column", maxHeight: "150px", overflowY: "auto" }}>
+                {availableFilters.type.map((type, idx) => (
+                  <label key={idx} style={{ 
+                    display: "flex", 
+                    alignItems: "center", 
+                    marginBottom: "5px",
+                    fontFamily: fontText,
+                    fontSize: "14px"
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedFilters.type.includes(type)}
+                      onChange={() => toggleFilter("type", type)}
+                      style={{ marginRight: "8px" }}
+                    />
+                    {type}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+            <button
+              onClick={clearFilters}
+              style={{
+                padding: "6px 12px",
+                backgroundColor: "#f0f0f0",
+                color: "#333",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontFamily: fontText,
+                fontSize: "14px"
+              }}
+            >
+              Limpar Filtros
+            </button>
+            <button
+              onClick={applyFilters}
+              style={{
+                padding: "6px 15px",
+                backgroundColor: "#CC5C25",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontFamily: fontText,
+                fontSize: "14px",
+                fontWeight: "bold"
+              }}
+            >
+              Aplicar Filtros
+            </button>
+          </div>
+          
+          {/* Contador de resultados */}
+          <div style={{ 
+            position: "absolute", 
+            top: "15px", 
+            right: "15px", 
+            fontSize: "14px", 
+            fontFamily: fontText,
+            color: "#666"
+          }}>
+            {filteredNames.length} / {allNames.length} músicas
+          </div>
+        </div>
+      )}
+
       {/* Elemento SVG onde o gráfico será desenhado */}
       <svg ref={svgRef}></svg>
       
@@ -648,7 +913,7 @@ const MidiHeatmapComparison = ({active}) => {
           borderRadius: "4px",
           boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
           marginBottom: "20px",
-          maxHeight: "300px", // Aumentando a altura máxima para acomodar mais informações
+          maxHeight: "300px",
           overflowY: "auto"
         }}>
           <h3 style={{ margin: "0 0 10px 0", fontFamily: fontText, color: "#CC5C25" }}>

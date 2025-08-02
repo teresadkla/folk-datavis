@@ -11,7 +11,12 @@ const ChordDiagramABC = () => {
   const [musicData, setMusicData] = useState([]);
   const [selected, setSelected] = useState(null);
   const [selectedPair, setSelectedPair] = useState(null);
-
+  const [selectedAttributes, setSelectedAttributes] = useState({
+    mode: true,
+    type: true,
+    meter: true
+  });
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     Papa.parse("/sets.csv", {
@@ -56,8 +61,13 @@ const ChordDiagramABC = () => {
           type: tuneA.type === tuneB.type,
           meter: tuneA.meter === tuneB.meter
         };
-        const matchingAttributes = Object.values(attributeMatches).filter(match => match).length;
-        const attributeSimilarity = matchingAttributes / 3;
+
+        // Calculate attribute similarity based on selected attributes
+        const selectedAttributesArray = Object.keys(selectedAttributes).filter(attr => selectedAttributes[attr]);
+        const selectedAttributeMatches = selectedAttributesArray.filter(attr => attributeMatches[attr]).length;
+        const attributeSimilarity = selectedAttributesArray.length > 0 
+          ? selectedAttributeMatches / selectedAttributesArray.length 
+          : 0;
 
         const combinedSimilarity = (noteSimilarity * 0.7) + (attributeSimilarity * 0.3);
         return {
@@ -71,7 +81,8 @@ const ChordDiagramABC = () => {
           uniqueNotesB: [...new Set(notesB)].length,
           noteSimilarity,
           attributeSimilarity,
-          attributeMatches
+          attributeMatches,
+          selectedAttributes: selectedAttributesArray
         };
       })
     );
@@ -165,11 +176,19 @@ const ChordDiagramABC = () => {
         const tuneA = musicData[sourceIdx];
         const tuneB = musicData[targetIdx];
 
-        const attributeInfo = `
-          <strong>Mode:</strong> ${tuneA.mode || 'N/A'} ${simData.attributeMatches.mode ? '✓' : '✗'} ${tuneB.mode || 'N/A'}<br/>
-          <strong>Type:</strong> ${tuneA.type || 'N/A'} ${simData.attributeMatches.type ? '✓' : '✗'} ${tuneB.type || 'N/A'}<br/>
-          <strong>Meter:</strong> ${tuneA.meter || 'N/A'} ${simData.attributeMatches.meter ? '✓' : '✗'} ${tuneB.meter || 'N/A'}
-        `;
+        // Show only selected attributes in tooltip
+        const attributeInfo = Object.keys(selectedAttributes)
+          .filter(attr => selectedAttributes[attr])
+          .map(attr => {
+            const match = simData.attributeMatches[attr] ? '✓' : '✗';
+            const valueA = tuneA[attr] || 'N/A';
+            const valueB = tuneB[attr] || 'N/A';
+            return `<strong>${attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong> ${valueA} ${match} ${valueB}`;
+          }).join('<br/>');
+
+        const selectedAttributesText = simData.selectedAttributes.length > 0 
+          ? simData.selectedAttributes.join(', ') 
+          : 'Nenhum';
 
         const tooltipContent = `
   <strong>${sourceName} ↔ ${targetName}</strong><br/>
@@ -177,7 +196,8 @@ const ChordDiagramABC = () => {
   <strong>Similaridade de Notas:</strong> ${(simData.noteSimilarity * 100).toFixed(1)}%<br/>
   <strong>Similaridade de Atributos:</strong> ${(simData.attributeSimilarity * 100).toFixed(1)}%<br/>
   <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
-  ${attributeInfo}<br/>
+  <strong>Atributos Selecionados:</strong> ${selectedAttributesText}<br/>
+  ${attributeInfo ? attributeInfo + '<br/>' : ''}
   <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
   <strong>Notas totais:</strong> ${simData.totalNotesA} ↔ ${simData.totalNotesB}<br/>
   <strong>Notas únicas:</strong> ${simData.uniqueNotesA} ↔ ${simData.uniqueNotesB}<br/>
@@ -202,10 +222,81 @@ const ChordDiagramABC = () => {
     return () => {
       d3.select("body").selectAll(".chord-tooltip").remove();
     };
-  }, [musicData]);
+  }, [musicData, selectedAttributes]);
+
+  const handleAttributeChange = (attribute) => {
+    setSelectedAttributes(prev => ({
+      ...prev,
+      [attribute]: !prev[attribute]
+    }));
+  };
+
+  const resetToDefault = () => {
+    setSelectedAttributes({
+      mode: true,
+      type: true,
+      meter: true
+    });
+  };
 
   return (
     <div>
+      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
+        </button>
+        
+        {showFilters && (
+          <div style={{ 
+            display: 'flex', 
+            gap: '15px', 
+            alignItems: 'center',
+            padding: '10px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '4px',
+            border: '1px solid #dee2e6'
+          }}>
+            <span style={{ fontWeight: 'bold' }}>Atributos para semelhança:</span>
+            
+            {Object.keys(selectedAttributes).map(attr => (
+              <label key={attr} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={selectedAttributes[attr]}
+                  onChange={() => handleAttributeChange(attr)}
+                />
+                <span style={{ textTransform: 'capitalize' }}>{attr}</span>
+              </label>
+            ))}
+            
+            <button 
+              onClick={resetToDefault}
+              style={{
+                padding: '4px 8px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Reset
+            </button>
+          </div>
+        )}
+      </div>
+
       <svg ref={svgRef} width={800} height={800} />
       {selected && (
         <div className="popup-overlay">
