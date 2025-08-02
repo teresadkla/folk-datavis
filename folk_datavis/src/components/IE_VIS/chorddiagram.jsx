@@ -2,14 +2,18 @@ import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
 import * as abcjs from "abcjs";
 import Papa from "papaparse";
+import ABCVisualizer from "./picthabc";
+import MidiComparison from "./melodicline"; 
+import "../../css/chord.css";
 
 const ChordDiagramABC = () => {
   const svgRef = useRef();
   const [musicData, setMusicData] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [selectedPair, setSelectedPair] = useState(null);
+
 
   useEffect(() => {
-    // Load CSV data
     Papa.parse("/sets.csv", {
       download: true,
       header: true,
@@ -24,105 +28,69 @@ const ChordDiagramABC = () => {
   useEffect(() => {
     if (musicData.length < 6) return;
 
-    // Function to extract just the musical notes from ABC notation
     const extractNotes = (abcText) => {
-      // Remove ornaments (~), triplets (3..), grace notes, and other symbols
       let cleaned = abcText
         .replace(/~+/g, '')           // Remove ornaments
         .replace(/\(\d+\.[^)]*\)/g, '') // Remove triplets like (3.g.f.e
         .replace(/[|:]/g, '')         // Remove bar lines and repeat marks
-        // .replace(/\d+/g, '')          // Remove numbers (durations)
+        .replace(/\d+/g, '')          // Remove numbers (durations)
         .replace(/[.,]/g, '')         // Remove dots and commas
         .replace(/[\s\n]/g, '');      // Remove whitespace and newlines
-      
-      // Extract only valid note letters (A-G, a-g)
       return cleaned.match(/[A-Ga-g]/g) || [];
     };
 
-    // Compute pairwise similarity with detailed info for 6 songs
     const similarity = Array.from({ length: 6 }, (_, i) =>
       Array.from({ length: 6 }, (_, j) => {
-        if (i === j) return { 
-          value: 1, 
-          shared: [], 
-          notesA: [], 
-          notesB: [], 
-          sharedNotes: [],
-          attributeMatches: { mode: true, type: true, meter: true }
-        };
-        
+        if (i === j) return { value: 1, shared: [], notesA: [], notesB: [], sharedNotes: [], attributeMatches: { mode: true, type: true, meter: true } };
         const notesA = extractNotes(musicData[i].abc);
         const notesB = extractNotes(musicData[j].abc);
-        
-        // Find shared notes
         const sharedNotes = notesA.filter(note => notesB.includes(note));
         const uniqueSharedNotes = [...new Set(sharedNotes)];
-        
-        // Calculate note similarity based on shared notes vs total unique notes
         const allUniqueNotes = [...new Set([...notesA, ...notesB])];
         const noteSimilarity = uniqueSharedNotes.length / allUniqueNotes.length;
-        
-        // Calculate attribute similarity
+
         const tuneA = musicData[i];
         const tuneB = musicData[j];
-        
         const attributeMatches = {
           mode: tuneA.mode === tuneB.mode,
           type: tuneA.type === tuneB.type,
           meter: tuneA.meter === tuneB.meter
         };
-        
-        // Count matching attributes (out of 3)
         const matchingAttributes = Object.values(attributeMatches).filter(match => match).length;
         const attributeSimilarity = matchingAttributes / 3;
-        
-        // Combined similarity: 70% notes, 30% attributes
+
         const combinedSimilarity = (noteSimilarity * 0.7) + (attributeSimilarity * 0.3);
-        
         return {
           value: combinedSimilarity,
           shared: uniqueSharedNotes,
-          notesA: notesA,
-          notesB: notesB,
-          sharedNotes: sharedNotes,
+          notesA, notesB, sharedNotes,
           totalNotesA: notesA.length,
           totalNotesB: notesB.length,
           sharedCount: sharedNotes.length,
           uniqueNotesA: [...new Set(notesA)].length,
           uniqueNotesB: [...new Set(notesB)].length,
-          noteSimilarity: noteSimilarity,
-          attributeSimilarity: attributeSimilarity,
-          attributeMatches: attributeMatches
+          noteSimilarity,
+          attributeSimilarity,
+          attributeMatches
         };
       })
     );
 
-    // Extract just values for the chord diagram
     const matrix = similarity.map(row => row.map(cell => cell.value));
-    
-    // Set diagonal to 0 to remove self-connections (100% similarity)
-    for (let i = 0; i < matrix.length; i++) {
-      matrix[i][i] = 0;
-    }
-    
-    const width = 500; // Reduced size
-    const height = 500; // Reduced size
-    const innerRadius = width / 2 - 50; // Adjusted for smaller size
-    const outerRadius = innerRadius + 15; // Slightly thinner arcs
+    for (let i = 0; i < matrix.length; i++) matrix[i][i] = 0;
+
+    const width = 500;
+    const height = 500;
+    const innerRadius = width / 2 - 50;
+    const outerRadius = innerRadius + 15;
 
     const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-    const chord = d3.chord().padAngle(0.05).sortSubgroups(d3.descending); // Increased padding for clarity
-
+    const chord = d3.chord().padAngle(0.05).sortSubgroups(d3.descending);
     const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
     const ribbon = d3.ribbon().radius(innerRadius);
-
     const chords = chord(matrix);
-
-    // Filter out ribbons that connect a node to itself (should be none now, but just in case)
     const filteredChords = chords.filter(d => d.source.index !== d.target.index);
 
-    // Create tooltip
     const tooltip = d3.select("body")
       .selectAll(".chord-tooltip")
       .data([0])
@@ -141,13 +109,11 @@ const ChordDiagramABC = () => {
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
-    
-    // Center the diagram in the larger SVG
     const svgWidth = 800;
     const svgHeight = 800;
     const translateX = (svgWidth - width) / 2 + width / 2;
     const translateY = (svgHeight - height) / 2 + height / 2;
-    
+
     svg
       .attr("viewBox", [0, 0, svgWidth, svgHeight])
       .append("g")
@@ -167,7 +133,9 @@ const ChordDiagramABC = () => {
       .attr("stroke", "#000")
       .attr("stroke-width", 1)
       .attr("d", arc)
-      .on("click", (event, d) => setSelected(musicData[d.index]));
+      .on("click", (event, d) => {
+        setSelected(musicData[d.index]);
+      });
 
     group
       .append("text")
@@ -177,7 +145,7 @@ const ChordDiagramABC = () => {
       .attr("dy", ".35em")
       .attr("transform", d => `rotate(${(d.angle * 180) / Math.PI - 90}) translate(${outerRadius + 8})${d.angle > Math.PI ? " rotate(180)" : ""}`)
       .attr("text-anchor", d => (d.angle > Math.PI ? "end" : "start"))
-      .attr("font-size", "11px") // Smaller font for better fit
+      .attr("font-size", "11px")
       .text(d => musicData[d.index].name);
 
     g.append("g")
@@ -192,73 +160,74 @@ const ChordDiagramABC = () => {
         const sourceIdx = d.source.index;
         const targetIdx = d.target.index;
         const simData = similarity[sourceIdx][targetIdx];
-        
         const sourceName = musicData[sourceIdx].name;
         const targetName = musicData[targetIdx].name;
-        
         const tuneA = musicData[sourceIdx];
         const tuneB = musicData[targetIdx];
-        
+
         const attributeInfo = `
           <strong>Mode:</strong> ${tuneA.mode || 'N/A'} ${simData.attributeMatches.mode ? '✓' : '✗'} ${tuneB.mode || 'N/A'}<br/>
           <strong>Type:</strong> ${tuneA.type || 'N/A'} ${simData.attributeMatches.type ? '✓' : '✗'} ${tuneB.type || 'N/A'}<br/>
           <strong>Meter:</strong> ${tuneA.meter || 'N/A'} ${simData.attributeMatches.meter ? '✓' : '✗'} ${tuneB.meter || 'N/A'}
         `;
-        
+
         const tooltipContent = `
-          <strong>${sourceName} ↔ ${targetName}</strong><br/>
-          <strong>Similaridade Total:</strong> ${(simData.value * 100).toFixed(1)}%<br/>
-          <strong>Similaridade de Notas:</strong> ${(simData.noteSimilarity * 100).toFixed(1)}%<br/>
-          <strong>Similaridade de Atributos:</strong> ${(simData.attributeSimilarity * 100).toFixed(1)}%<br/>
-          <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
-          ${attributeInfo}<br/>
-          <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
-          <strong>Notas totais:</strong> ${simData.totalNotesA} ↔ ${simData.totalNotesB}<br/>
-          <strong>Notas únicas:</strong> ${simData.uniqueNotesA} ↔ ${simData.uniqueNotesB}<br/>
-          <strong>Notas únicas partilhadas:</strong><br/>
-          ${simData.shared.join(', ')}<br/>
-          <small><em>Similaridade: 70% notas + 30% atributos</em></small>
-        `;
-        
+  <strong>${sourceName} ↔ ${targetName}</strong><br/>
+  <strong>Similaridade Total:</strong> ${(simData.value * 100).toFixed(1)}%<br/>
+  <strong>Similaridade de Notas:</strong> ${(simData.noteSimilarity * 100).toFixed(1)}%<br/>
+  <strong>Similaridade de Atributos:</strong> ${(simData.attributeSimilarity * 100).toFixed(1)}%<br/>
+  <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
+  ${attributeInfo}<br/>
+  <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
+  <strong>Notas totais:</strong> ${simData.totalNotesA} ↔ ${simData.totalNotesB}<br/>
+  <strong>Notas únicas:</strong> ${simData.uniqueNotesA} ↔ ${simData.uniqueNotesB}<br/>
+  <strong>Notas únicas partilhadas:</strong><br/>
+  ${simData.shared.join(', ') || 'Nenhuma'}<br/>
+   <small><em>Similaridade: 70% notas + 30% atributos</em></small>
+`;
+
         tooltip.html(tooltipContent)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 10) + "px")
-          .transition()
-          .duration(200)
-          .style("opacity", 1);
+          .transition().duration(200).style("opacity", 1);
       })
       .on("mousemove", (event) => {
-        tooltip
-          .style("left", (event.pageX + 10) + "px")
+        tooltip.style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 10) + "px");
       })
       .on("mouseout", () => {
-        tooltip.transition()
-          .duration(200)
-          .style("opacity", 0);
+        tooltip.transition().duration(200).style("opacity", 0);
       });
 
-    // Cleanup function
     return () => {
       d3.select("body").selectAll(".chord-tooltip").remove();
     };
   }, [musicData]);
 
-  useEffect(() => {
-    if (selected) {
-      abcjs.renderAbc("abc-output", selected.abc);
-      abcjs.renderMidi("midi-output", selected.abc, { responsive: "resize" });
-    }
-  }, [selected]);
-
   return (
     <div>
       <svg ref={svgRef} width={800} height={800} />
       {selected && (
-        <div>
-          <h3>{selected.name}</h3>
-          <div id="abc-output"></div>
-          <div id="midi-output"></div>
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <ABCVisualizer
+              abc={selected.abc}
+              name={selected.name}
+              onClose={() => setSelected(null)}
+            />
+          </div>
+        </div>
+      )}
+      {selectedPair && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <MidiComparison
+              pitchData={musicData}
+              nameA={selectedPair.nameA}
+              nameB={selectedPair.nameB}
+              onClose={() => setSelectedPair(null)}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -3,6 +3,11 @@ import * as d3 from "d3";
 import "../../css/spiral.css";
 import { act } from "react";
 
+// Carrega o script do Perlin noise a partir da pasta public (usado para animar linhas curvas)
+const script = document.createElement('script');
+script.src = '/perlin.js';
+document.head.appendChild(script);
+
 const SpiralVis = ({ active }) => {
   const svgRef = useRef();
   const tooltipRef = useRef();
@@ -86,7 +91,7 @@ const SpiralVis = ({ active }) => {
         .ease(d3.easeLinear)
         .attr("stroke-dashoffset", 0);
 
-      const leafspath = "M6.62,89.93S-16.49,41.54,27.12,14.23c9.39-5.88,20.03-9.42,31.03-10.74,11.23-1.35,28.8-3.19,39.41-2.96,0,0-15.92,42.18-34.38,57.22S6.26,76.17,6.62,89.93Z";
+      const leafspath = "M142.54,71.27c0,39.36-31.91,71.27-71.27,71.27S0,110.64,0,71.27,31.91,0,71.27,0s71.27,31.91,71.27,71.27Z";
 
       //Animação das folhas a aparecer em sequência
       g.selectAll(".custom-shape")
