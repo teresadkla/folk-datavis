@@ -9,6 +9,7 @@ import "../../css/chord.css";
 const ChordDiagramABC = () => {
   const svgRef = useRef();
   const [musicData, setMusicData] = useState([]);
+  const [allTunes, setAllTunes] = useState([]); // Guarda todas as músicas carregadas
   const [selected, setSelected] = useState(null);
   const [selectedPair, setSelectedPair] = useState(null);
   const [selectedAttributes, setSelectedAttributes] = useState({
@@ -18,14 +19,15 @@ const ChordDiagramABC = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
 
+  // Carrega todas as músicas apenas uma vez
   useEffect(() => {
     Papa.parse("/sets.csv", {
       download: true,
       header: true,
       complete: (result) => {
-        const allTunes = result.data.filter(d => d.name && d.abc);
-        const randomTunes = d3.shuffle(allTunes).slice(0, 6);
-        setMusicData(randomTunes);
+        const tunes = result.data.filter(d => d.name && d.abc);
+        setAllTunes(tunes);
+        setMusicData(d3.shuffle(tunes).slice(0, 6));
       }
     });
   }, []);
@@ -33,6 +35,7 @@ const ChordDiagramABC = () => {
   useEffect(() => {
     if (musicData.length < 6) return;
 
+    // Função para extrair notas de uma string ABC
     const extractNotes = (abcText) => {
       let cleaned = abcText
         .replace(/~+/g, '')           // Remove ornaments
@@ -44,6 +47,7 @@ const ChordDiagramABC = () => {
       return cleaned.match(/[A-Ga-g]/g) || [];
     };
 
+    // Calcula matriz de similaridade entre todas as músicas
     const similarity = Array.from({ length: 6 }, (_, i) =>
       Array.from({ length: 6 }, (_, j) => {
         if (i === j) return { value: 1, shared: [], notesA: [], notesB: [], sharedNotes: [], attributeMatches: { mode: true, type: true, meter: true } };
@@ -62,13 +66,14 @@ const ChordDiagramABC = () => {
           meter: tuneA.meter === tuneB.meter
         };
 
-        // Calculate attribute similarity based on selected attributes
+        // Calcula similaridade de atributos selecionados
         const selectedAttributesArray = Object.keys(selectedAttributes).filter(attr => selectedAttributes[attr]);
         const selectedAttributeMatches = selectedAttributesArray.filter(attr => attributeMatches[attr]).length;
         const attributeSimilarity = selectedAttributesArray.length > 0 
           ? selectedAttributeMatches / selectedAttributesArray.length 
           : 0;
 
+        // Combina similaridade de notas e atributos (70% notas, 30% atributos)
         const combinedSimilarity = (noteSimilarity * 0.7) + (attributeSimilarity * 0.3);
         return {
           value: combinedSimilarity,
@@ -87,14 +92,17 @@ const ChordDiagramABC = () => {
       })
     );
 
+    // Matriz para o diagrama de acordes (sem auto-ligações)
     const matrix = similarity.map(row => row.map(cell => cell.value));
     for (let i = 0; i < matrix.length; i++) matrix[i][i] = 0;
 
+    // Parâmetros do SVG e do diagrama
     const width = 500;
     const height = 500;
     const innerRadius = width / 2 - 50;
     const outerRadius = innerRadius + 15;
 
+    // Escalas e geradores D3
     const color = d3.scaleOrdinal(d3.schemeCategory10);
     const chord = d3.chord().padAngle(0.05).sortSubgroups(d3.descending);
     const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
@@ -102,6 +110,7 @@ const ChordDiagramABC = () => {
     const chords = chord(matrix);
     const filteredChords = chords.filter(d => d.source.index !== d.target.index);
 
+    // Tooltip D3 para mostrar informações ao passar o mouse
     const tooltip = d3.select("body")
       .selectAll(".chord-tooltip")
       .data([0])
@@ -118,6 +127,7 @@ const ChordDiagramABC = () => {
       .style("max-width", "350px")
       .style("z-index", "1000");
 
+    // Limpa SVG anterior e configura novo SVG
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
     const svgWidth = 800;
@@ -132,6 +142,7 @@ const ChordDiagramABC = () => {
 
     const g = svg.select("g");
 
+    // Desenha os arcos dos grupos (nós)
     const group = g
       .append("g")
       .selectAll("g")
@@ -140,14 +151,15 @@ const ChordDiagramABC = () => {
 
     group
       .append("path")
-      .attr("fill", d => color(d.index))
-      .attr("stroke", "#000")
+      .attr("fill", "#82813E") // Cor dos nós
+      .attr("stroke", "#82813E")
       .attr("stroke-width", 1)
       .attr("d", arc)
       .on("click", (event, d) => {
-        setSelected(musicData[d.index]);
+        setSelected(musicData[d.index]); // Mostra popup ao clicar no nó
       });
 
+    // Adiciona nomes dos grupos (músicas)
     group
       .append("text")
       .each(d => {
@@ -159,15 +171,27 @@ const ChordDiagramABC = () => {
       .attr("font-size", "11px")
       .text(d => musicData[d.index].name);
 
+    // Desenha as ligações (ribbons) entre os nós
     g.append("g")
       .attr("fill-opacity", 0.67)
       .selectAll("path")
       .data(filteredChords)
       .join("path")
       .attr("d", ribbon)
-      .attr("fill", d => color(d.target.index))
-      .attr("stroke", d => d3.rgb(color(d.target.index)).darker())
-      .on("mouseover", (event, d) => {
+      .attr("fill", "#82813E") // Cor das ligações
+      .attr("stroke", "#82813E") // Cor da borda das ligações
+      .style("cursor", "pointer") // Cursor pointer nas ligações
+      .attr("opacity", 1) // Opacidade padrão
+      .on("mouseover", function(event, d) {
+        // Destaca a ligação atual aumentando a opacidade
+        d3.select(this).attr("opacity", 1);
+        // Reduz a opacidade das outras ligações
+        d3.select(this.parentNode)
+          .selectAll("path")
+          .filter(function(e) { return e !== d; })
+          .attr("opacity", 0.3);
+
+        // Tooltip com informações detalhadas de similaridade
         const sourceIdx = d.source.index;
         const targetIdx = d.target.index;
         const simData = similarity[sourceIdx][targetIdx];
@@ -176,7 +200,7 @@ const ChordDiagramABC = () => {
         const tuneA = musicData[sourceIdx];
         const tuneB = musicData[targetIdx];
 
-        // Show only selected attributes in tooltip
+        // Mostra apenas atributos selecionados
         const attributeInfo = Object.keys(selectedAttributes)
           .filter(attr => selectedAttributes[attr])
           .map(attr => {
@@ -191,19 +215,19 @@ const ChordDiagramABC = () => {
           : 'Nenhum';
 
         const tooltipContent = `
-  <strong>${sourceName} ↔ ${targetName}</strong><br/>
-  <strong>Similaridade Total:</strong> ${(simData.value * 100).toFixed(1)}%<br/>
-  <strong>Similaridade de Notas:</strong> ${(simData.noteSimilarity * 100).toFixed(1)}%<br/>
-  <strong>Similaridade de Atributos:</strong> ${(simData.attributeSimilarity * 100).toFixed(1)}%<br/>
-  <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
-  <strong>Atributos Selecionados:</strong> ${selectedAttributesText}<br/>
-  ${attributeInfo ? attributeInfo + '<br/>' : ''}
-  <hr style="margin: 5px 0; border: 0.5px solid #ccc;">
-  <strong>Notas totais:</strong> ${simData.totalNotesA} ↔ ${simData.totalNotesB}<br/>
-  <strong>Notas únicas:</strong> ${simData.uniqueNotesA} ↔ ${simData.uniqueNotesB}<br/>
-  <strong>Notas únicas partilhadas:</strong><br/>
-  ${simData.shared.join(', ') || 'Nenhuma'}<br/>
-   <small><em>Similaridade: 70% notas + 30% atributos</em></small>
+<strong>${sourceName} ↔ ${targetName}</strong><br/>
+<strong>Similaridade Total:</strong> ${(simData.value * 100).toFixed(1)}%<br/>
+<strong>Similaridade de Notas:</strong> ${(simData.noteSimilarity * 100).toFixed(1)}%<br/>
+<strong>Similaridade de Atributos:</strong> ${(simData.attributeSimilarity * 100).toFixed(1)}%<br/>
+<hr style="margin: 5px 0; border: 0.5px solid #ccc;">
+<strong>Atributos Selecionados:</strong> ${selectedAttributesText}<br/>
+${attributeInfo ? attributeInfo + '<br/>' : ''}
+<hr style="margin: 5px 0; border: 0.5px solid #ccc;">
+<strong>Notas totais:</strong> ${simData.totalNotesA} ↔ ${simData.totalNotesB}<br/>
+<strong>Notas únicas:</strong> ${simData.uniqueNotesA} ↔ ${simData.uniqueNotesB}<br/>
+<strong>Notas únicas partilhadas:</strong><br/>
+${simData.shared.join(', ') || 'Nenhuma'}<br/>
+ <small><em>Similaridade: 70% notas + 30% atributos</em></small>
 `;
 
         tooltip.html(tooltipContent)
@@ -212,13 +236,19 @@ const ChordDiagramABC = () => {
           .transition().duration(200).style("opacity", 1);
       })
       .on("mousemove", (event) => {
+        // Atualiza posição do tooltip ao mover o mouse
         tooltip.style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 10) + "px");
       })
-      .on("mouseout", () => {
+      .on("mouseout", function() {
+        // Restaura a opacidade de todas as ligações
+        d3.select(this.parentNode)
+          .selectAll("path")
+          .attr("opacity", 1);
         tooltip.transition().duration(200).style("opacity", 0);
       });
 
+    // Remove tooltip ao desmontar componente
     return () => {
       d3.select("body").selectAll(".chord-tooltip").remove();
     };
@@ -239,9 +269,29 @@ const ChordDiagramABC = () => {
     });
   };
 
+  // Função para trocar as 6 músicas exibidas
+  const handleShuffleTunes = () => {
+    setMusicData(d3.shuffle(allTunes).slice(0, 6));
+  };
+
   return (
     <div>
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        {/* Botão para trocar as 6 músicas */}
+        <button
+          onClick={handleShuffleTunes}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Trocar músicas
+        </button>
+        {/* ...existing filter button and filters... */}
         <button 
           onClick={() => setShowFilters(!showFilters)}
           style={{
