@@ -7,7 +7,7 @@
 }
 
 .music-select {
-   font-family: var(--font-secondary);
+  font-family: var(--font-secondary);
   background-color: #f0f0f0;
   color: #333;
   border: 1px solid #ccc;
@@ -15,7 +15,7 @@
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease; 
+  transition: all 0.2s ease;
 }
 
 .tooltip {
@@ -23,4 +23,377 @@
   transition: opacity 0.2s ease;
   white-space: nowrap;
   z-index: 10;
+}
+
+/* Estilos para o componente MidiHeatmapComparison */
+
+.midi-chart-container {
+  /* Container principal já está no CSS global */
+}
+
+.controls-header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 5%;
+  align-items: center;
+}
+
+.no-results-container {
+  flex-grow: 1;
+  margin-right: 10px;
+  padding: 10px;
+  background: #fff3f0;
+  color: #CC5C25;
+  border: 1px solid #CC5C25;
+  border-radius: 4px;
+  font-family: var(--font-secondary);
+  font-size: 15px;
+  text-align: center;
+}
+
+.clear-filters-btn {
+  margin-top: 10px;
+  padding: 6px 15px;
+  background-color: #CC5C25;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+}
+
+.clear-filters-btn:hover {
+  background-color: #a04820;
+}
+
+.music-select {
+  margin-right: 10px;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  padding: 8px;
+  border: 1px solid #ccc;
+}
+
+.filter-toggle-btn {
+  padding: 5px 10px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.filter-toggle-btn.open {
+  background-color: #82813E;
+}
+
+.filter-toggle-btn.closed {
+  background-color: #CC5C25;
+}
+
+.filter-toggle-btn:hover {
+  opacity: 0.9;
+}
+
+.filter-icon {
+  margin-right: 5px;
+}
+
+.variations-count {
+  margin-left: 20px;
+  font-weight: bold;
+  font-family: var(--font-secondary);
+}
+
+.filter-menu {
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+  position: relative;
+  border: 1px solid #ccc;
+}
+
+.filter-menu h3 {
+  margin: 0 0 15px 0;
+  font-family: var(--font-secondary);
+  color: #333;
+}
+
+.filter-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.filter-category {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-category h4 {
+  margin: 0 0 8px 0;
+  font-family: var(--font-secondary);
+}
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+}
+
+.filter-option input {
+  margin-right: 8px;
+}
+
+.filter-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.filter-clear-btn {
+  padding: 6px 12px;
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+}
+
+.filter-clear-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.filter-apply-btn {
+  padding: 6px 15px;
+  background-color: #CC5C25;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.filter-apply-btn:hover {
+  background-color: #a04820;
+}
+
+.results-counter {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 14px;
+  font-family: var(--font-secondary);
+  color: #666;
+}
+
+.filtering-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 4px;
+}
+
+.filtering-text {
+  font-family: var(--font-secondary);
+  font-size: 18px;
+  color: #CC5C25;
+  font-weight: bold;
+}
+
+.zoom-instructions {
+  padding: 8px;
+  /* background: rgba(204, 92, 37, 0.1); */
+  border-radius: 4px;
+  margin-bottom: 10px;
+  width: 80%;
+}
+
+.zoom-instructions p {
+  margin: 0;
+  font-size: 14px;
+  text-align: left;
+
+}
+
+.minimap-container {
+  display: flex;
+  position: absolute;
+  top: 20%;
+  left: 45%;
+  width: fit-content;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.minimap-container h4 {
+  margin: 0 0 5px 0;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.zoom-reset-btn {
+  padding: 5px 15px;
+  background-color: #CC5C25;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 12px;
+  margin-right: 10px;
+}
+
+.zoom-reset-btn:hover {
+  background-color: #a04820;
+}
+
+.highlight-toggle-btn {
+  padding: 5px 15px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 12px;
+}
+
+.highlight-toggle-btn.active {
+  background-color: #82813E;
+}
+
+.highlight-toggle-btn.inactive {
+  background-color: #CC5C25;
+}
+
+.highlight-toggle-btn:hover {
+  opacity: 0.9;
+}
+
+.high-frequency-card {
+  padding: 15px;
+  background-color: #f8f8f8;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.high-frequency-card h3 {
+  margin: 0 0 10px 0;
+  font-family: var(--font-secondary);
+  color: #CC5C25;
+}
+
+.song-info {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(204, 92, 37, 0.1);
+  border-radius: 4px;
+  font-family: var(--font-secondary);
+}
+
+.frequency-description {
+  margin-bottom: 10px;
+  font-family: var(--font-secondary);
+}
+
+.frequency-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-secondary);
+}
+
+.frequency-table thead tr {
+  background-color: #eee;
+}
+
+.frequency-table th,
+.frequency-table td {
+  padding: 5px;
+  text-align: left;
+}
+
+.frequency-table tbody tr {
+  border-bottom: 1px solid #ddd;
+}
+
+.table-note {
+  margin-top: 10px;
+  font-style: italic;
+  text-align: center;
+  font-family: var(--font-secondary);
+}
+
+/* Tooltip styles */
+.midi-chart-tooltip {
+  position: absolute;
+  background: #fff;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1000;
+  font-size: 12px;
+  font-family: var(--font-secondary);
+}
+
+/* Heatmap specific styles */
+.heatmap-cell {
+  transition: opacity 0.2s ease;
+}
+
+.heatmap-cell.high-frequency {
+  /* Estilos específicos para células de alta frequência */
+}
+
+.minimap-cell {
+  opacity: 0.7;
+}
+
+.zoom-indicator {
+  cursor: move;
+}
+
+.resize-handle {
+  opacity: 0.8;
+}
+
+.resize-handle.left,
+.resize-handle.right {
+  cursor: ew-resize;
 }

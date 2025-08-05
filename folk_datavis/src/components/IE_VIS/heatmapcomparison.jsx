@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
 import "../../css/comparison.css";
 
-// Lê a variável CSS para a fonte secundária do tema atual
+
+
 const fontText = getComputedStyle(document.documentElement)
   .getPropertyValue('--font-secondary')
   .trim();
@@ -32,16 +33,17 @@ const MidiHeatmapComparison = ({active}) => {
     mode: [],
     type: []
   });
+  const [isFiltering, setIsFiltering] = useState(false); // Estado para controle de filtragem
 
   // Margens e dimensões do gráfico
-  const margin = { top: 50, right: 140, bottom: 50, left: 70 };
+  const margin = { top: 50, right: 280, bottom: 50, left: 70 }; // Aumentado de 140 para 280
   const width = 1500 - margin.left - margin.right;
   const height = 600 - margin.top - margin.bottom;
   
   // Dimensões do minimap
   const miniMapHeight = 80;
-  const miniMapMargin = { top: 10, right: 10, bottom: 20, left: 70 };
-  const miniMapWidth = width;
+  const miniMapMargin = { top: 10, right: 10, bottom: 20, left: 10 }; // Sem margem à esquerda
+  const miniMapWidth = width * 0.6; // Reduzido para 60% da largura original
 
   // Carrega os dados na primeira renderização
   useEffect(() => {
@@ -58,7 +60,7 @@ const MidiHeatmapComparison = ({active}) => {
       setAllNames(multiVersionNames);
       setFilteredNames(multiVersionNames); // Inicialmente, todos os nomes estão visíveis
       setPitchData(jsonData);
-    });
+    }); // FALTAVA PONTO E VÍRGULA AQUI
     
     // Carregar os dados de sets.csv
     d3.csv("sets.csv").then(csvData => {
@@ -74,54 +76,46 @@ const MidiHeatmapComparison = ({active}) => {
         mode: modes,
         type: types
       });
-    });
+    }); // FALTAVA PONTO E VÍRGULA AQUI
   }, []);
   
   // Efeito para selecionar o primeiro nome filtrado quando a lista filtrada muda
   useEffect(() => {
     if (filteredNames.length > 0) {
-      // Se o nome selecionado atual não está na lista filtrada, selecionar o primeiro
-      if (!selectedName || !filteredNames.includes(selectedName)) {
-        setSelectedName(filteredNames[0]);
-      }
+      setSelectedName(filteredNames[0]);
     } else if (allNames.length > 0) {
-      // Fallback para o primeiro nome da lista completa se a lista filtrada estiver vazia
       setSelectedName(allNames[0]);
     }
-  }, [filteredNames, selectedName, allNames]);
+  }, [filteredNames, allNames]);
 
   // Função para aplicar filtros
   const applyFilters = () => {
-    // Se não houver filtros selecionados, mostrar todos
-    if (
-      selectedFilters.meter.length === 0 && 
-      selectedFilters.mode.length === 0 && 
-      selectedFilters.type.length === 0
-    ) {
-      setFilteredNames(allNames);
-      return;
-    }
-    
-    // Filtrar os nomes baseado nos atributos selecionados
-    const filtered = allNames.filter(name => {
-      // Encontrar informações da música no conjunto de dados
-      const songInfo = setsData.find(d => d.name === name);
-      if (!songInfo) return false;
-      
-      // Verificar se a música atende a todos os critérios de filtro
-      const meterMatch = selectedFilters.meter.length === 0 || 
-                        selectedFilters.meter.includes(songInfo.meter);
-      const modeMatch = selectedFilters.mode.length === 0 || 
-                       selectedFilters.mode.includes(songInfo.mode);
-      const typeMatch = selectedFilters.type.length === 0 || 
-                       selectedFilters.type.includes(songInfo.type);
-      
-      return meterMatch && modeMatch && typeMatch;
-    });
-    
-    setFilteredNames(filtered);
-    // Fechar o menu após aplicar filtros
-    setShowFilterMenu(false);
+    setIsFiltering(true);
+    setTimeout(() => {
+      if (
+        selectedFilters.meter.length === 0 && 
+        selectedFilters.mode.length === 0 && 
+        selectedFilters.type.length === 0
+      ) {
+        setFilteredNames(allNames);
+        setIsFiltering(false);
+        return;
+      }
+      const filtered = allNames.filter(name => {
+        const songInfo = setsData.find(d => d.name === name);
+        if (!songInfo) return false;
+        const meterMatch = selectedFilters.meter.length === 0 || 
+                          selectedFilters.meter.includes(songInfo.meter);
+        const modeMatch = selectedFilters.mode.length === 0 || 
+                         selectedFilters.mode.includes(songInfo.mode);
+        const typeMatch = selectedFilters.type.length === 0 || 
+                         selectedFilters.type.includes(songInfo.type);
+        return meterMatch && modeMatch && typeMatch;
+      });
+      setFilteredNames(filtered);
+      setShowFilterMenu(false);
+      setIsFiltering(false);
+    }, 300);
   };
   
   // Função para limpar todos os filtros
@@ -239,7 +233,7 @@ const MidiHeatmapComparison = ({active}) => {
 
     // Define escala de cor baseada no máximo GLOBAL
     const color = d3.scaleLinear()
-      .domain([1, globalMaxCount / 2, globalMaxCount])
+      .domain([1, globalMaxCount])
       .range(["#82813E", "#CC5C25"])
       .interpolate(d3.interpolateLab);
 
@@ -410,7 +404,7 @@ const MidiHeatmapComparison = ({active}) => {
 
     // Retângulo da legenda com gradiente
     svg.append("g")
-      .attr("transform", `translate(${width + margin.left + 20}, ${margin.top})`)
+      .attr("transform", `translate(${width + margin.left + 200}, ${margin.top})`) // Aumentado de 20 para 40
       .append("rect")
       .attr("width", legendWidth)
       .attr("height", legendHeight)
@@ -418,7 +412,7 @@ const MidiHeatmapComparison = ({active}) => {
 
     // Eixo da legenda
     svg.append("g")
-      .attr("transform", `translate(${width + margin.left + 20 + legendWidth}, ${margin.top})`)
+      .attr("transform", `translate(${width + margin.left + 200 + legendWidth}, ${margin.top})`) // Aumentado de 20 para 40
       .call(legendAxis)
       .selectAll("text")
       .style("font-family", fontText)
@@ -426,7 +420,7 @@ const MidiHeatmapComparison = ({active}) => {
 
     // Título da legenda
     svg.append("text")
-      .attr("x", width + margin.left + 10)
+      .attr("x", width + margin.left + 170) // Aumentado de 10 para 30
       .attr("y", margin.top - 10)
       .text("Frequência")
       .style("font-family", fontText)
@@ -662,36 +656,33 @@ const MidiHeatmapComparison = ({active}) => {
   
   return (
     <div className="midi-chart-container">
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px", alignItems: "center" }}>
+      <div className="controls-header">
         {/* Dropdown de seleção de nome/música */}
-        <select
-          className="music-select"
-          onChange={(e) => setSelectedName(e.target.value)}
-          value={selectedName || ""}
-          style={{ flexGrow: 1, marginRight: "10px" }}
-        >
-          {filteredNames.map((name, idx) => (
-            <option key={idx} value={name}>{name}</option>
-          ))}
-        </select>
+        {filteredNames.length === 0 ? (
+          <div className="no-results-container">
+            Nenhum resultado encontrado para os filtros selecionados.<br />
+            <button className="clear-filters-btn" onClick={clearFilters}>
+              Limpar filtros
+            </button>
+          </div>
+        ) : (
+          <select
+            className="music-select"
+            onChange={(e) => setSelectedName(e.target.value)}
+            value={selectedName || ""}
+          >
+            {filteredNames.map((name, idx) => (
+              <option key={idx} value={name}>{name}</option>
+            ))}
+          </select>
+        )}
         
         {/* Botão para abrir/fechar menu de filtros */}
         <button
+          className={`filter-toggle-btn ${showFilterMenu ? 'open' : 'closed'}`}
           onClick={() => setShowFilterMenu(!showFilterMenu)}
-          style={{
-            padding: "5px 10px",
-            backgroundColor: showFilterMenu ? "#82813E" : "#CC5C25",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontFamily: fontText,
-            fontSize: "12px",
-            display: "flex",
-            alignItems: "center"
-          }}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" style={{ marginRight: "5px" }}>
+          <svg className="filter-icon" width="14" height="14" viewBox="0 0 24 24">
             <path 
               fill="white" 
               d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"
@@ -701,7 +692,7 @@ const MidiHeatmapComparison = ({active}) => {
         </button>
         
         {/* Número de variações disponíveis */}
-        <div style={{ marginLeft: "20px", fontWeight: "bold" }}>
+        <div className="variations-count">
           {selectedName && pitchData.length > 0 && (
             (() => {
               const variations = pitchData.filter(d => d.name === selectedName);
@@ -713,37 +704,20 @@ const MidiHeatmapComparison = ({active}) => {
       
       {/* Menu de filtros (pop-up) */}
       {showFilterMenu && (
-        <div style={{
-          padding: "15px",
-          backgroundColor: "#fff",
-          borderRadius: "4px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          marginBottom: "20px",
-          position: "relative",
-          border: "1px solid #ccc"
-        }}>
-          <h3 style={{ margin: "0 0 15px 0", fontFamily: fontText, color: "#333" }}>
-            Filtrar por atributos musicais
-          </h3>
+        <div className="filter-menu">
+          <h3>Filtrar por atributos musicais</h3>
           
-          <div style={{ display: "flex", flexWrap: "wrap", gap: "20px" }}>
+          <div className="filter-categories">
             {/* Filtro de Compasso (Meter) */}
-            <div style={{ flex: "1", minWidth: "200px" }}>
-              <h4 style={{ margin: "0 0 8px 0", fontFamily: fontText }}>Compasso (Meter)</h4>
-              <div style={{ display: "flex", flexDirection: "column", maxHeight: "150px", overflowY: "auto" }}>
+            <div className="filter-category">
+              <h4>Compasso (Meter)</h4>
+              <div className="filter-options">
                 {availableFilters.meter.map((meter, idx) => (
-                  <label key={idx} style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    marginBottom: "5px",
-                    fontFamily: fontText,
-                    fontSize: "14px"
-                  }}>
+                  <label key={idx} className="filter-option">
                     <input
                       type="checkbox"
                       checked={selectedFilters.meter.includes(meter)}
                       onChange={() => toggleFilter("meter", meter)}
-                      style={{ marginRight: "8px" }}
                     />
                     {meter}
                   </label>
@@ -752,22 +726,15 @@ const MidiHeatmapComparison = ({active}) => {
             </div>
             
             {/* Filtro de Modo (Mode) */}
-            <div style={{ flex: "1", minWidth: "200px" }}>
-              <h4 style={{ margin: "0 0 8px 0", fontFamily: fontText }}>Modo Musical (Mode)</h4>
-              <div style={{ display: "flex", flexDirection: "column", maxHeight: "150px", overflowY: "auto" }}>
+            <div className="filter-category">
+              <h4>Modo Musical (Mode)</h4>
+              <div className="filter-options">
                 {availableFilters.mode.map((mode, idx) => (
-                  <label key={idx} style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    marginBottom: "5px",
-                    fontFamily: fontText,
-                    fontSize: "14px"
-                  }}>
+                  <label key={idx} className="filter-option">
                     <input
                       type="checkbox"
                       checked={selectedFilters.mode.includes(mode)}
                       onChange={() => toggleFilter("mode", mode)}
-                      style={{ marginRight: "8px" }}
                     />
                     {mode}
                   </label>
@@ -776,22 +743,15 @@ const MidiHeatmapComparison = ({active}) => {
             </div>
             
             {/* Filtro de Tipo (Type) */}
-            <div style={{ flex: "1", minWidth: "200px" }}>
-              <h4 style={{ margin: "0 0 8px 0", fontFamily: fontText }}>Tipo (Type)</h4>
-              <div style={{ display: "flex", flexDirection: "column", maxHeight: "150px", overflowY: "auto" }}>
+            <div className="filter-category">
+              <h4>Tipo (Type)</h4>
+              <div className="filter-options">
                 {availableFilters.type.map((type, idx) => (
-                  <label key={idx} style={{ 
-                    display: "flex", 
-                    alignItems: "center", 
-                    marginBottom: "5px",
-                    fontFamily: fontText,
-                    fontSize: "14px"
-                  }}>
+                  <label key={idx} className="filter-option">
                     <input
                       type="checkbox"
                       checked={selectedFilters.type.includes(type)}
                       onChange={() => toggleFilter("type", type)}
-                      style={{ marginRight: "8px" }}
                     />
                     {type}
                   </label>
@@ -800,106 +760,57 @@ const MidiHeatmapComparison = ({active}) => {
             </div>
           </div>
           
-          <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end", gap: "10px" }}>
-            <button
-              onClick={clearFilters}
-              style={{
-                padding: "6px 12px",
-                backgroundColor: "#f0f0f0",
-                color: "#333",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontFamily: fontText,
-                fontSize: "14px"
-              }}
-            >
+          <div className="filter-buttons">
+            <button className="filter-clear-btn" onClick={clearFilters}>
               Limpar Filtros
             </button>
-            <button
-              onClick={applyFilters}
-              style={{
-                padding: "6px 15px",
-                backgroundColor: "#CC5C25",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-                fontFamily: fontText,
-                fontSize: "14px",
-                fontWeight: "bold"
-              }}
-            >
+            <button className="filter-apply-btn" onClick={applyFilters}>
               Aplicar Filtros
             </button>
           </div>
           
           {/* Contador de resultados */}
-          <div style={{ 
-            position: "absolute", 
-            top: "15px", 
-            right: "15px", 
-            fontSize: "14px", 
-            fontFamily: fontText,
-            color: "#666"
-          }}>
+          <div className="results-counter">
             {filteredNames.length} / {allNames.length} músicas
           </div>
+          
+          {/* Indicador de carregamento */}
+          {isFiltering && (
+            <div className="filtering-overlay">
+              <span className="filtering-text">
+                Filtrando músicas...
+              </span>
+            </div>
+          )}
         </div>
       )}
 
       {/* Elemento SVG onde o gráfico será desenhado */}
       <svg ref={svgRef}></svg>
       
-      {/* Instruções para o zoom */}
-      <div style={{ 
-        padding: "8px", 
-        background: "rgba(204, 92, 37, 0.1)", 
-        borderRadius: "4px", 
-        marginBottom: "10px" 
-      }}>
-        <p style={{ margin: "0", fontFamily: fontText, fontSize: "14px" }}>
-          <strong>Dicas de zoom:</strong> Arraste no gráfico principal para criar uma seleção e ampliar essa área.
-          Ou use o minimap abaixo para ajustar a visualização: arraste a área destacada ou use as alças laterais para redimensionar.
-        </p>
-      </div>
+      
       
       {/* Minimap para visualização geral e controle de zoom */}
-      <div style={{ marginBottom: "15px" }}>
-        <h4 style={{ margin: "0 0 5px 0", fontFamily: fontText }}>Visualização geral:</h4>
+      <div className="minimap-container">
+        <h4>Visualização geral:</h4>
         <svg ref={miniMapRef}></svg>
+        {/* Instruções para o zoom */}
+      <div className="zoom-instructions">
+        <p>
+          <strong>Dicas de zoom:</strong> Arraste no gráfico principal para criar uma seleção e ampliar essa área.
+        Para ajustar a visualização use este minimap: arraste a área destacada ou use as alças laterais para redimensionar.
+        </p>
+      </div>
       </div>
       
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-        <button
-          onClick={() => setZoomRange([0, 100])}
-          style={{
-            padding: "5px 15px",
-            backgroundColor: "#CC5C25",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontFamily: fontText,
-            fontSize: "12px",
-            marginRight: "10px"
-          }}
-        >
-          Visualizar tudo (Reset)
+      <div className="action-buttons">
+        <button className="zoom-reset-btn" onClick={() => setZoomRange([0, 100])}>
+          Zoom Reset
         </button>
         
         <button
+          className={`highlight-toggle-btn ${highlightHighFrequency ? 'active' : 'inactive'}`}
           onClick={() => setHighlightHighFrequency(!highlightHighFrequency)}
-          style={{
-            padding: "5px 15px",
-            backgroundColor: highlightHighFrequency ? "#82813E" : "#CC5C25",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-            fontFamily: fontText,
-            fontSize: "12px"
-          }}
         >
           {highlightHighFrequency ? "Mostrar todos os bins" : "Destacar bins de alta frequência"}
         </button>
@@ -907,57 +818,41 @@ const MidiHeatmapComparison = ({active}) => {
       
       {/* Card de informações sobre bins de alta frequência */}
       {highlightHighFrequency && highFrequencyInfo.length > 0 && (
-        <div style={{
-          padding: "15px",
-          backgroundColor: "#f8f8f8",
-          borderRadius: "4px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-          marginBottom: "20px",
-          maxHeight: "300px",
-          overflowY: "auto"
-        }}>
-          <h3 style={{ margin: "0 0 10px 0", fontFamily: fontText, color: "#CC5C25" }}>
-            Bins de Alta Frequência ({highFrequencyInfo.length})
-          </h3>
+        <div className="high-frequency-card">
+          <h3>Bins de Alta Frequência ({highFrequencyInfo.length})</h3>
           
           {/* Informações sobre meter e mode */}
           {highFrequencyInfo.length > 0 && (
-            <div style={{ 
-              marginBottom: "15px", 
-              padding: "10px", 
-              backgroundColor: "rgba(204, 92, 37, 0.1)", 
-              borderRadius: "4px",
-              fontFamily: fontText
-            }}>
+            <div className="song-info">
               <strong>Informações da música:</strong><br/>
               Compasso (meter): {highFrequencyInfo[0].meter}<br/>
               Modo musical (mode): {highFrequencyInfo[0].mode}
             </div>
           )}
           
-          <p style={{ marginBottom: "10px", fontFamily: fontText }}>
+          <p className="frequency-description">
             Os seguintes padrões aparecem com alta frequência nas variações desta música:
           </p>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: fontText }}>
+          <table className="frequency-table">
             <thead>
-              <tr style={{ backgroundColor: "#eee" }}>
-                <th style={{ padding: "5px", textAlign: "left" }}>Tempo (X)</th>
-                <th style={{ padding: "5px", textAlign: "left" }}>Pitch (Y)</th>
-                <th style={{ padding: "5px", textAlign: "left" }}>Frequência</th>
+              <tr>
+                <th>Tempo (X)</th>
+                <th>Pitch (Y)</th>
+                <th>Frequência</th>
               </tr>
             </thead>
             <tbody>
               {highFrequencyInfo.slice(0, 10).map((bin, idx) => (
-                <tr key={idx} style={{ borderBottom: "1px solid #ddd" }}>
-                  <td style={{ padding: "5px" }}>{bin.x}</td>
-                  <td style={{ padding: "5px" }}>{bin.y}</td>
-                  <td style={{ padding: "5px" }}>{bin.count}</td>
+                <tr key={idx}>
+                  <td>{bin.x}</td>
+                  <td>{bin.y}</td>
+                  <td>{bin.count}</td>
                 </tr>
               ))}
             </tbody>
           </table>
           {highFrequencyInfo.length > 10 && (
-            <p style={{ marginTop: "10px", fontStyle: "italic", textAlign: "center" }}>
+            <p className="table-note">
               Mostrando os 10 bins mais frequentes de {highFrequencyInfo.length} totais.
             </p>
           )}
