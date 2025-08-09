@@ -73,7 +73,8 @@ export default function VisIE() {
                         </p>
                     </div>
                     <div id="heatmap-comparison-section" className="heatmap-comparison">
-                        {currentVis === 3 && <MidiHeatmapComparison />}
+                        {/* {currentVis >= 2 && <MidiHeatmapComparison />}  */}
+                          {currentVis === 3 && <MidiHeatmapComparison />} 
                     </div>
                 </div>
 
@@ -81,8 +82,10 @@ export default function VisIE() {
                 {/* VIS 4 */}
                 <div className="vis4" style={{ display: currentVis === 4 ? "grid" : "none" }}>
                     <div className="pitch-abc-description">
-                        <h2 className="pitch-abc-title">The ABCs of Irish Folk</h2>
-                        <p className="pitch-abc-text"></p>
+                        <h2 className="pitch-abc-title">Strings of Connection</h2>
+                        <p className="pitch-abc-text">Irish folk songs often share more than just a cultural heritage — they echo one another in notes, rhythms, and style. 
+                            This chord diagram maps those relationships, linking melodies by their similarities in pitch, meter, type, and mode.
+                            The result is a tapestry of connections that shows how individual songs weave together into a larger musical tradition.</p>
                         </div>
                     <div id="picth-section" className="pitch-abc">
                         {currentVis === 4 && <ChordDiagramABC />}

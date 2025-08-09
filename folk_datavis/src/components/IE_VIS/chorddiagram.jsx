@@ -18,16 +18,39 @@ const ChordDiagramABC = () => {
     meter: true
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Estado de carregamento
+  const [loadingText, setLoadingText] = useState("Carregando dados..."); // Texto do loading
 
   // Carrega todas as músicas apenas uma vez
   useEffect(() => {
+    setIsLoading(true);
+    setLoadingText("Carregando músicas...");
+    
     Papa.parse("/sets.csv", {
       download: true,
       header: true,
       complete: (result) => {
-        const tunes = result.data.filter(d => d.name && d.abc);
-        setAllTunes(tunes);
-        setMusicData(d3.shuffle(tunes).slice(0, 6));
+        setLoadingText("Processando dados musicais...");
+        
+        setTimeout(() => {
+          const tunes = result.data.filter(d => d.name && d.abc);
+          setAllTunes(tunes);
+          setMusicData(d3.shuffle(tunes).slice(0, 6));
+          
+          setLoadingText("Finalizando...");
+          
+          // Pequeno delay para mostrar que terminou
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 500);
+        }, 300);
+      },
+      error: (error) => {
+        console.error("Erro ao carregar dados:", error);
+        setLoadingText("Erro ao carregar dados");
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
       }
     });
   }, []);
@@ -271,42 +294,71 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
 
   // Função para trocar as 6 músicas exibidas
   const handleShuffleTunes = () => {
-    setMusicData(d3.shuffle(allTunes).slice(0, 6));
+    setIsLoading(true);
+    setLoadingText("Selecionando novas músicas...");
+    
+    setTimeout(() => {
+      setMusicData(d3.shuffle(allTunes).slice(0, 6));
+      setLoadingText("Calculando similaridades...");
+      
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 800);
+    }, 300);
   };
 
   return (
-    <div>
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      {/* Loading overlay - agora cobre toda a página */}
+      {isLoading && (
+        <div className="loading-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 9999
+        }}>
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <div className="loading-text">{loadingText}</div>
+          </div>
+        </div>
+      )}
+
       <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Botão para trocar as 6 músicas */}
         <button
           onClick={handleShuffleTunes}
+          disabled={isLoading}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#28a745',
+            backgroundColor: isLoading ? '#ccc' : '#28a745',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: isLoading ? 'not-allowed' : 'pointer'
           }}
         >
-          Trocar músicas
+          {isLoading ? 'Carregando...' : 'Trocar músicas'}
         </button>
-        {/* ...existing filter button and filters... */}
+        
         <button 
           onClick={() => setShowFilters(!showFilters)}
+          disabled={isLoading}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#007bff',
+            backgroundColor: isLoading ? '#ccc' : '#007bff',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
-            cursor: 'pointer'
+            cursor: isLoading ? 'not-allowed' : 'pointer'
           }}
         >
           {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
         </button>
         
-        {showFilters && (
+        {showFilters && !isLoading && (
           <div style={{ 
             display: 'flex', 
             gap: '15px', 
@@ -348,6 +400,7 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
       </div>
 
       <svg ref={svgRef} width={800} height={800} />
+      
       {selected && (
         <div className="popup-overlay">
           <div className="popup-content">

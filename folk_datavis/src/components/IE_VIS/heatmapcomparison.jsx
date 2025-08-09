@@ -8,7 +8,7 @@ const fontText = getComputedStyle(document.documentElement)
   .getPropertyValue('--font-secondary')
   .trim();
 
-const MidiHeatmapComparison = ({active}) => {
+const MidiHeatmapComparison = ({ active }) => {
   const svgRef = useRef(); // Referência ao elemento SVG
   const miniMapRef = useRef(); // Referência para o minimap
   const [allNames, setAllNames] = useState([]); // Lista com os nomes com múltiplas versões
@@ -20,7 +20,9 @@ const MidiHeatmapComparison = ({active}) => {
   const [highlightHighFrequency, setHighlightHighFrequency] = useState(false); // Estado para destacar bins de alta frequência
   const [setsData, setSetsData] = useState([]); // Dados do arquivo sets.csv
   const [highFrequencyInfo, setHighFrequencyInfo] = useState([]); // Informações sobre os bins de alta frequência
-  
+  const [isLoading, setIsLoading] = useState(true); // Estado de carregamento
+  const [loadingText, setLoadingText] = useState("Carregando dados..."); // Texto do loading
+
   // Estados para filtros
   const [showFilterMenu, setShowFilterMenu] = useState(false);
   const [availableFilters, setAvailableFilters] = useState({
@@ -39,7 +41,7 @@ const MidiHeatmapComparison = ({active}) => {
   const margin = { top: 50, right: 280, bottom: 50, left: 70 }; // Aumentado de 140 para 280
   const width = 1500 - margin.left - margin.right;
   const height = 600 - margin.top - margin.bottom;
-  
+
   // Dimensões do minimap
   const miniMapHeight = 80;
   const miniMapMargin = { top: 10, right: 10, bottom: 20, left: 10 }; // Sem margem à esquerda
@@ -47,6 +49,9 @@ const MidiHeatmapComparison = ({active}) => {
 
   // Carrega os dados na primeira renderização
   useEffect(() => {
+    setIsLoading(true);
+    setLoadingText("Carregando dados de pitch...");
+    
     // Carregar os dados de pitch
     d3.json("pitch_compressed.json").then(jsonData => {
       // Conta quantas vezes cada nome aparece
@@ -60,25 +65,40 @@ const MidiHeatmapComparison = ({active}) => {
       setAllNames(multiVersionNames);
       setFilteredNames(multiVersionNames); // Inicialmente, todos os nomes estão visíveis
       setPitchData(jsonData);
-    }); // FALTAVA PONTO E VÍRGULA AQUI
-    
-    // Carregar os dados de sets.csv
-    d3.csv("sets.csv").then(csvData => {
-      setSetsData(csvData);
       
+      setLoadingText("Carregando informações musicais...");
+      
+      // Carregar os dados de sets.csv
+      return d3.csv("sets.csv");
+    }).then(csvData => {
+      setSetsData(csvData);
+
       // Extrair valores únicos para cada filtro
       const meters = [...new Set(csvData.map(item => item.meter).filter(Boolean))];
       const modes = [...new Set(csvData.map(item => item.mode).filter(Boolean))];
       const types = [...new Set(csvData.map(item => item.type).filter(Boolean))];
-      
+
       setAvailableFilters({
         meter: meters,
         mode: modes,
         type: types
       });
-    }); // FALTAVA PONTO E VÍRGULA AQUI
+      
+      setLoadingText("Finalizando...");
+      
+      // Pequeno delay para mostrar que terminou
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    }).catch(error => {
+      console.error("Erro ao carregar dados:", error);
+      setLoadingText("Erro ao carregar dados");
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 2000);
+    });
   }, []);
-  
+
   // Efeito para selecionar o primeiro nome filtrado quando a lista filtrada muda
   useEffect(() => {
     if (filteredNames.length > 0) {
@@ -93,8 +113,8 @@ const MidiHeatmapComparison = ({active}) => {
     setIsFiltering(true);
     setTimeout(() => {
       if (
-        selectedFilters.meter.length === 0 && 
-        selectedFilters.mode.length === 0 && 
+        selectedFilters.meter.length === 0 &&
+        selectedFilters.mode.length === 0 &&
         selectedFilters.type.length === 0
       ) {
         setFilteredNames(allNames);
@@ -104,12 +124,12 @@ const MidiHeatmapComparison = ({active}) => {
       const filtered = allNames.filter(name => {
         const songInfo = setsData.find(d => d.name === name);
         if (!songInfo) return false;
-        const meterMatch = selectedFilters.meter.length === 0 || 
-                          selectedFilters.meter.includes(songInfo.meter);
-        const modeMatch = selectedFilters.mode.length === 0 || 
-                         selectedFilters.mode.includes(songInfo.mode);
-        const typeMatch = selectedFilters.type.length === 0 || 
-                         selectedFilters.type.includes(songInfo.type);
+        const meterMatch = selectedFilters.meter.length === 0 ||
+          selectedFilters.meter.includes(songInfo.meter);
+        const modeMatch = selectedFilters.mode.length === 0 ||
+          selectedFilters.mode.includes(songInfo.mode);
+        const typeMatch = selectedFilters.type.length === 0 ||
+          selectedFilters.type.includes(songInfo.type);
         return meterMatch && modeMatch && typeMatch;
       });
       setFilteredNames(filtered);
@@ -117,7 +137,7 @@ const MidiHeatmapComparison = ({active}) => {
       setIsFiltering(false);
     }, 300);
   };
-  
+
   // Função para limpar todos os filtros
   const clearFilters = () => {
     setSelectedFilters({
@@ -128,11 +148,11 @@ const MidiHeatmapComparison = ({active}) => {
     setFilteredNames(allNames);
     setShowFilterMenu(false);
   };
-  
+
   // Função para alternar seleção de filtro
   const toggleFilter = (category, value) => {
     setSelectedFilters(prev => {
-      const newFilters = {...prev};
+      const newFilters = { ...prev };
       if (newFilters[category].includes(value)) {
         // Remover o valor se já estiver selecionado
         newFilters[category] = newFilters[category].filter(item => item !== value);
@@ -165,15 +185,15 @@ const MidiHeatmapComparison = ({active}) => {
   // Outros cálculos memorizados
   const { xMax, yExtent, filteredHeatmapData } = useMemo(() => {
     if (heatmapData.length === 0) return { xMax: 0, yExtent: [0, 0], filteredHeatmapData: [] };
-    
+
     const xMax = d3.max(heatmapData, d => d.x);
     const yExtent = d3.extent(heatmapData, d => d.y);
-    
+
     const xStart = Math.floor((zoomRange[0] / 100) * xMax);
     const xEnd = Math.ceil((zoomRange[1] / 100) * xMax);
-    
+
     const filteredData = heatmapData.filter(d => d.x >= xStart && d.x <= xEnd);
-    
+
     return { xMax, yExtent, filteredHeatmapData: filteredData };
   }, [heatmapData, zoomRange]);
 
@@ -216,7 +236,7 @@ const MidiHeatmapComparison = ({active}) => {
     // MODIFICADO: Ajustar o número de bins desejados baseado no zoom
     const zoomRatio = (xEnd - xStart) / xMax; // Proporção da área visível
     const baseDesiredBinCount = 200; // Valor base para visualização completa
-    const desiredBinCount = Math.max(100, Math.round(baseDesiredBinCount * (1/zoomRatio)));
+    const desiredBinCount = Math.max(100, Math.round(baseDesiredBinCount * (1 / zoomRatio)));
     const binSizeX = Math.max(1, Math.floor(xMax / desiredBinCount));
     const binSizeY = 1;
 
@@ -255,10 +275,10 @@ const MidiHeatmapComparison = ({active}) => {
     // Identificar bins de alta frequência baseado no máximo GLOBAL
     const highFrequencyThreshold = globalMaxCount * 0.75;
     const highFrequencyBins = density.filter(d => d.count >= highFrequencyThreshold);
-    
+
     // Ordenar por contagem (do maior para o menor)
     highFrequencyBins.sort((a, b) => b.count - a.count);
-    
+
     // Encontrar meter e mode para o nome selecionado no sets.csv
     let meterAndMode = { meter: "Desconhecido", mode: "Desconhecido" };
 
@@ -298,15 +318,15 @@ const MidiHeatmapComparison = ({active}) => {
       .style("font-size", "12px");
 
     // ============ CRIAÇÃO DA LAYER DE INTERAÇÃO ============
-  
+
     // Primeiro: criar um grupo para a camada de brush
     const brushLayer = g.append("g")
       .attr("class", "brush-layer");
-    
+
     // Segundo: criar um grupo para os elementos visuais
     const vizLayer = g.append("g")
       .attr("class", "viz-layer");
-  
+
     // Desenha os retângulos do heatmap na camada de visualização
     vizLayer.selectAll("rect.heatmap-cell")
       .data(density)
@@ -322,7 +342,7 @@ const MidiHeatmapComparison = ({active}) => {
       .attr("fill", d => color(d.count))
       .attr("stroke", d => d.count >= highFrequencyThreshold && highlightHighFrequency ? "#fff" : "none")
       .attr("stroke-width", d => d.count >= highFrequencyThreshold && highlightHighFrequency ? 1 : 0)
-      .style("opacity", d => highlightHighFrequency ? 
+      .style("opacity", d => highlightHighFrequency ?
         (d.count >= highFrequencyThreshold ? 1 : 0.3) : 1)
       .on("mouseover", (event, d) => {
         tooltip
@@ -428,7 +448,7 @@ const MidiHeatmapComparison = ({active}) => {
       .style("font-weight", "bold");
 
     // ============ FUNCIONALIDADE DE BRUSH/ZOOM DIRETO NO GRÁFICO ============
-    
+
     // Brush para seleção de área - agora na camada de brush
     const brush = d3.brushX()
       .extent([[0, 0], [width, height]])
@@ -448,7 +468,7 @@ const MidiHeatmapComparison = ({active}) => {
       // Esconde o tooltip durante o brushing para evitar conflito visual
       tooltip.style("opacity", 0);
     }
-    
+
     function brushing() {
       // Mantém a flag ativa durante o brushing
       isBrushing = true;
@@ -459,23 +479,23 @@ const MidiHeatmapComparison = ({active}) => {
       setTimeout(() => {
         isBrushing = false;
       }, 300);
-      
+
       if (!event.selection) return; // Se não houver seleção, não faz nada
-      
+
       // Converte a seleção de pixels para o domínio de dados
       const [x0, x1] = event.selection.map(x => xScale.invert(x));
-      
+
       // Converte para percentagens do total
       const newStart = Math.max(0, Math.round((x0 / xMax) * 100));
       const newEnd = Math.min(100, Math.round((x1 / xMax) * 100));
-      
+
       // Atualiza o estado de zoom
       setZoomRange([newStart, newEnd]);
-      
+
       // Reset do brush após uso
       brushLayer.call(brush.move, null);
     }
-    
+
     // Atualiza os handlers de eventos do tooltip para verificar se estamos brushing
     vizLayer.selectAll("rect.heatmap-cell")
       .on("mouseover", (event, d) => {
@@ -489,44 +509,44 @@ const MidiHeatmapComparison = ({active}) => {
             );
         }
       });
-  
+
   }, [selectedName, pitchData, zoomRange, highlightHighFrequency, setsData]);
 
   // Efeito para criar e atualizar o minimap
   useEffect(() => {
     if (!selectedName || heatmapData.length === 0) return;
-    
+
     // Seleciona o SVG do minimap e configura
     const svg = d3.select(miniMapRef.current)
       .attr("width", miniMapWidth + miniMapMargin.left + miniMapMargin.right)
       .attr("height", miniMapHeight + miniMapMargin.top + miniMapMargin.bottom);
-    
+
     svg.selectAll("*").remove(); // Limpa o minimap antes de redesenhar
-    
+
     const g = svg.append("g")
       .attr("transform", `translate(${miniMapMargin.left}, ${miniMapMargin.top})`);
-    
+
     // Define escalas para o minimap
     const xScale = d3.scaleLinear()
       .domain([0, xMax])
       .range([0, miniMapWidth]);
-    
+
     const yExtent = d3.extent(heatmapData, d => d.y);
     const yScale = d3.scaleLinear()
       .domain([yExtent[0], yExtent[1] + 1])
       .range([miniMapHeight - miniMapMargin.bottom, 0]);
-    
+
     // Simplifica os dados para o minimap (menos detalhes)
     const binSizeX = Math.max(1, Math.floor(xMax / 100));
     const binSizeY = 1;
-    
+
     const bins = d3.rollup(
       heatmapData,
       v => v.length,
       d => Math.floor(d.x / binSizeX),
       d => Math.floor(d.y / binSizeY)
     );
-    
+
     const miniDensity = [];
     for (let [xBin, yMap] of bins.entries()) {
       for (let [yBin, count] of yMap.entries()) {
@@ -537,7 +557,7 @@ const MidiHeatmapComparison = ({active}) => {
         });
       }
     }
-    
+
     // Escala de cor simplificada para o minimap
     const maxCount = d3.max(miniDensity, d => d.count);
     const color = d3.scaleLinear()
@@ -547,7 +567,7 @@ const MidiHeatmapComparison = ({active}) => {
 
     // Obter referência ao tooltip existente
     const tooltip = d3.select(".midi-chart-tooltip");
-    
+
     // Desenha os retângulos do minimap
     g.selectAll("rect.minimap-cell")
       .data(miniDensity)
@@ -579,7 +599,7 @@ const MidiHeatmapComparison = ({active}) => {
       .on("mouseout", () => {
         tooltip.style("opacity", 0);
       });
-  
+
     // Eixo X do minimap
     g.append("g")
       .attr("transform", `translate(0, ${miniMapHeight - miniMapMargin.bottom})`)
@@ -587,11 +607,11 @@ const MidiHeatmapComparison = ({active}) => {
       .selectAll("text")
       .style("font-family", fontText)
       .style("font-size", "10px");
-    
+
     // Retângulo indicador da área com zoom
     const zoomLeft = (zoomRange[0] / 100) * miniMapWidth;
     const zoomRight = (zoomRange[1] / 100) * miniMapWidth;
-    
+
     const zoomIndicator = g.append("rect")
       .attr("class", "zoom-indicator")
       .attr("x", zoomLeft)
@@ -607,14 +627,14 @@ const MidiHeatmapComparison = ({active}) => {
         .on("drag", dragged)
         .on("end", () => setIsDragging(false))
       );
-    
+
     // Alças de redimensionamento nas bordas do indicador
     const handleWidth = 8;
-    
+
     // Alça esquerda
     g.append("rect")
       .attr("class", "resize-handle left")
-      .attr("x", zoomLeft - handleWidth/2)
+      .attr("x", zoomLeft - handleWidth / 2)
       .attr("y", 0)
       .attr("width", handleWidth)
       .attr("height", miniMapHeight - miniMapMargin.bottom)
@@ -622,11 +642,11 @@ const MidiHeatmapComparison = ({active}) => {
       .attr("opacity", 0.8)
       .style("cursor", "ew-resize")
       .call(d3.drag().on("drag", draggedLeft));
-    
+
     // Alça direita
     g.append("rect")
       .attr("class", "resize-handle right")
-      .attr("x", zoomRight - handleWidth/2)
+      .attr("x", zoomRight - handleWidth / 2)
       .attr("y", 0)
       .attr("width", handleWidth)
       .attr("height", miniMapHeight - miniMapMargin.bottom)
@@ -634,28 +654,38 @@ const MidiHeatmapComparison = ({active}) => {
       .attr("opacity", 0.8)
       .style("cursor", "ew-resize")
       .call(d3.drag().on("drag", draggedRight));
-    
+
     // Funções para manipulação dos elementos de zoom
     function dragged(event) {
       const zoomWidth = zoomRange[1] - zoomRange[0];
       const newLeft = Math.max(0, Math.min(100 - zoomWidth, (event.x / miniMapWidth) * 100));
       setZoomRange([newLeft, newLeft + zoomWidth]);
     }
-    
+
     function draggedLeft(event) {
       const newStart = Math.max(0, Math.min(zoomRange[1] - 1, (event.x / miniMapWidth) * 100));
       setZoomRange([newStart, zoomRange[1]]);
     }
-    
+
     function draggedRight(event) {
       const newEnd = Math.max(zoomRange[0] + 1, Math.min(100, (event.x / miniMapWidth) * 100));
       setZoomRange([zoomRange[0], newEnd]);
     }
-    
+
   }, [selectedName, heatmapData, zoomRange, xMax]);
-  
+
   return (
     <div className="midi-chart-container">
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="loading-overlay">
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <div className="loading-text">{loadingText}</div>
+          </div>
+        </div>
+      )}
+
       <div className="controls-header">
         {/* Dropdown de seleção de nome/música */}
         {filteredNames.length === 0 ? (
@@ -676,21 +706,21 @@ const MidiHeatmapComparison = ({active}) => {
             ))}
           </select>
         )}
-        
+
         {/* Botão para abrir/fechar menu de filtros */}
         <button
           className={`filter-toggle-btn ${showFilterMenu ? 'open' : 'closed'}`}
           onClick={() => setShowFilterMenu(!showFilterMenu)}
         >
           <svg className="filter-icon" width="14" height="14" viewBox="0 0 24 24">
-            <path 
-              fill="white" 
+            <path
+              fill="white"
               d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"
             />
           </svg>
           {showFilterMenu ? "Fechar Filtros" : "Filtrar Músicas"}
         </button>
-        
+
         {/* Número de variações disponíveis */}
         <div className="variations-count">
           {selectedName && pitchData.length > 0 && (
@@ -700,13 +730,17 @@ const MidiHeatmapComparison = ({active}) => {
             })()
           )}
         </div>
+        <button className={`highlight-toggle-btn ${highlightHighFrequency ? 'active' : 'inactive'}`}
+          onClick={() => setHighlightHighFrequency(!highlightHighFrequency)}>
+          {highlightHighFrequency ? "Mostrar todos os bins" : "Destacar bins de alta frequência"}
+        </button>
       </div>
-      
+
       {/* Menu de filtros (pop-up) */}
       {showFilterMenu && (
         <div className="filter-menu">
           <h3>Filtrar por atributos musicais</h3>
-          
+
           <div className="filter-categories">
             {/* Filtro de Compasso (Meter) */}
             <div className="filter-category">
@@ -724,7 +758,7 @@ const MidiHeatmapComparison = ({active}) => {
                 ))}
               </div>
             </div>
-            
+
             {/* Filtro de Modo (Mode) */}
             <div className="filter-category">
               <h4>Modo Musical (Mode)</h4>
@@ -741,7 +775,7 @@ const MidiHeatmapComparison = ({active}) => {
                 ))}
               </div>
             </div>
-            
+
             {/* Filtro de Tipo (Type) */}
             <div className="filter-category">
               <h4>Tipo (Type)</h4>
@@ -759,7 +793,7 @@ const MidiHeatmapComparison = ({active}) => {
               </div>
             </div>
           </div>
-          
+
           <div className="filter-buttons">
             <button className="filter-clear-btn" onClick={clearFilters}>
               Limpar Filtros
@@ -768,12 +802,12 @@ const MidiHeatmapComparison = ({active}) => {
               Aplicar Filtros
             </button>
           </div>
-          
+
           {/* Contador de resultados */}
           <div className="results-counter">
             {filteredNames.length} / {allNames.length} músicas
           </div>
-          
+
           {/* Indicador de carregamento */}
           {isFiltering && (
             <div className="filtering-overlay">
@@ -787,49 +821,43 @@ const MidiHeatmapComparison = ({active}) => {
 
       {/* Elemento SVG onde o gráfico será desenhado */}
       <svg ref={svgRef}></svg>
-      
-      
-      
+
+
+
       {/* Minimap para visualização geral e controle de zoom */}
       <div className="minimap-container">
         <h4>Visualização geral:</h4>
         <svg ref={miniMapRef}></svg>
         {/* Instruções para o zoom */}
-      <div className="zoom-instructions">
-        <p>
-          <strong>Dicas de zoom:</strong> Arraste no gráfico principal para criar uma seleção e ampliar essa área.
-        Para ajustar a visualização use este minimap: arraste a área destacada ou use as alças laterais para redimensionar.
-        </p>
-      </div>
-      </div>
-      
-      <div className="action-buttons">
+        <div className="zoom-instructions">
+          <p>
+            <strong>Dicas de zoom:</strong> Arraste no gráfico principal para criar uma seleção e ampliar essa área.
+            Para ajustar a visualização use este minimap: arraste a área destacada ou use as alças laterais para redimensionar.
+          </p>
+        </div>
+         <div className="action-buttons">
         <button className="zoom-reset-btn" onClick={() => setZoomRange([0, 100])}>
           Zoom Reset
         </button>
-        
-        <button
-          className={`highlight-toggle-btn ${highlightHighFrequency ? 'active' : 'inactive'}`}
-          onClick={() => setHighlightHighFrequency(!highlightHighFrequency)}
-        >
-          {highlightHighFrequency ? "Mostrar todos os bins" : "Destacar bins de alta frequência"}
-        </button>
       </div>
-      
+      </div>
+
+     
+
       {/* Card de informações sobre bins de alta frequência */}
       {highlightHighFrequency && highFrequencyInfo.length > 0 && (
         <div className="high-frequency-card">
           <h3>Bins de Alta Frequência ({highFrequencyInfo.length})</h3>
-          
+
           {/* Informações sobre meter e mode */}
           {highFrequencyInfo.length > 0 && (
             <div className="song-info">
-              <strong>Informações da música:</strong><br/>
-              Compasso (meter): {highFrequencyInfo[0].meter}<br/>
+              <strong>Informações da música:</strong><br />
+              Compasso (meter): {highFrequencyInfo[0].meter}<br />
               Modo musical (mode): {highFrequencyInfo[0].mode}
             </div>
           )}
-          
+
           <p className="frequency-description">
             Os seguintes padrões aparecem com alta frequência nas variações desta música:
           </p>

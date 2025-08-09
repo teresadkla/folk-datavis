@@ -19,6 +19,7 @@ const DotPlotTypes = () => {
   const [startIndex, setStartIndex] = useState(0); // Índice inicial para paginação
   const [filterActive, setFilterActive] = useState(false); // Filtro de músicas com mais de um tipo
   const [isLoading, setIsLoading] = useState(true); // Estado de carregamento
+  const [loadingText, setLoadingText] = useState("Carregando dados..."); // Texto do loading
   // Add a new state to track the animation mode
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const [showLegend, setShowLegend] = useState(false); // Estado para mostrar/ocultar legenda
@@ -26,9 +27,28 @@ const DotPlotTypes = () => {
   // Carrega e processa os dados CSV ao montar o componente
   useEffect(() => {
     setIsLoading(true);
+    setLoadingText("Carregando dados musicais...");
+    
     d3.csv("sets.csv")
-      .then(setData)
-      .finally(() => setIsLoading(false));
+      .then(csvData => {
+        setLoadingText("Processando informações...");
+        
+        setTimeout(() => {
+          setData(csvData);
+          setLoadingText("Finalizando...");
+          
+          setTimeout(() => {
+            setIsLoading(false);
+          }, 500);
+        }, 300);
+      })
+      .catch(error => {
+        console.error("Erro ao carregar dados:", error);
+        setLoadingText("Erro ao carregar dados");
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 2000);
+      });
   }, []);
 
   // Memoriza nomes, tipos e countMap
@@ -208,38 +228,117 @@ const DotPlotTypes = () => {
     }
   };
 
+  // Função para lidar com mudança de filtro
+  const handleFilterToggle = () => {
+    setIsLoading(true);
+    setLoadingText("Aplicando filtro...");
+    
+    setTimeout(() => {
+      setFilterActive((prev) => !prev);
+      setStartIndex(0); // Reset para primeira página
+      setLoadingText("Atualizando visualização...");
+      
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 500);
+    }, 200);
+  };
+
+  // Função para lidar com navegação
+  const handleNavigation = (direction) => {
+    setIsLoading(true);
+    setLoadingText("Carregando página...");
+    setShouldAnimate(false);
+    
+    setTimeout(() => {
+      if (direction === 'up') {
+        setStartIndex((prev) => Math.max(prev - pageSize, 0));
+      } else {
+        const currentNames = filterActive ? getFilteredNames() : names;
+        if (startIndex + pageSize < currentNames.length) {
+          setStartIndex((prev) => prev + pageSize);
+        }
+      }
+      
+      setTimeout(() => {
+        setIsLoading(false);
+      }, 300);
+    }, 200);
+  };
+
   return (
-    <div className="DotPlotTypes-container">
+    <div className="DotPlotTypes-container" style={{ position: 'relative', minHeight: '100vh' }}>
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="loading-overlay" style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          zIndex: 9999
+        }}>
+          <div className="loading-content">
+            <div className="loading-spinner"></div>
+            <div className="loading-text">{loadingText}</div>
+          </div>
+        </div>
+      )}
+
       <div className="controls">
         {/* Botão para ativar/desativar filtro de músicas com mais de um tipo */}
-        <button onClick={() => setFilterActive((prev) => !prev)} id="filter-multi-type" >
+        <button 
+          onClick={handleFilterToggle}
+          disabled={isLoading}
+          id="filter-multi-type"
+          style={{
+            opacity: isLoading ? 0.6 : 1,
+            cursor: isLoading ? 'not-allowed' : 'pointer'
+          }}
+        >
           {filterActive ? "Mostrar todas as músicas" : "Mostrar apenas músicas com mais de um tipo"}
         </button>
         {/* Botão para navegar para cima na paginação */}
-        <button id="nav-up" onClick={() => {
-          setShouldAnimate(false);
-          setStartIndex((prev) => Math.max(prev - pageSize, 0));
-        }} >
+        <button 
+          id="nav-up" 
+          onClick={() => handleNavigation('up')}
+          disabled={isLoading || startIndex === 0}
+          style={{
+            opacity: isLoading || startIndex === 0 ? 0.6 : 1,
+            cursor: isLoading || startIndex === 0 ? 'not-allowed' : 'pointer'
+          }}
+        >
           ↑
         </button>
         {/* Botão para navegar para baixo na paginação */}
-        <button id="nav-down" onClick={() => {
-          setShouldAnimate(false);
-          const currentNames = filterActive ? getFilteredNames() : names;
-          if (startIndex + pageSize < currentNames.length) {
-            setStartIndex((prev) => prev + pageSize);
-          }
-        }}>
+        <button 
+          id="nav-down" 
+          onClick={() => handleNavigation('down')}
+          disabled={isLoading}
+          style={{
+            opacity: isLoading ? 0.6 : 1,
+            cursor: isLoading ? 'not-allowed' : 'pointer'
+          }}
+        >
           ↓
         </button>
-        
       </div>
+      
       {/* Botão para mostrar/ocultar legenda */}
-        <button className="legend-btn-types" onClick={() => setShowLegend((prev) => !prev)}>
-          {showLegend ? "Ocultar Legenda" : "Ver Legenda"}
-        </button>
+      <button 
+        className="legend-btn-types" 
+        onClick={() => setShowLegend((prev) => !prev)}
+        disabled={isLoading}
+        style={{
+          opacity: isLoading ? 0.6 : 1,
+          cursor: isLoading ? 'not-allowed' : 'pointer'
+        }}
+      >
+        {showLegend ? "Ocultar Legenda" : "Ver Legenda"}
+      </button>
+
       {/* Modal da Legenda */}
-      {showLegend && (
+      {showLegend && !isLoading && (
         <div className="legend-modal">
           <div className="legend-content">
             <h3>Legenda do Gráfico</h3>

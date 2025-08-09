@@ -25,7 +25,6 @@ const ABCVisualizer = ({ abc, name, onClose }) => {
     if (synthControl) synthControl.pause();
 
     const newSynthControl = new ABCJS.synth.SynthController();
-    newSynthControl.load("#audio-controls", null, { displayLoop: false });
     setSynthControl(newSynthControl);
 
     const synth = new ABCJS.synth.CreateSynth();
@@ -66,7 +65,9 @@ const ABCVisualizer = ({ abc, name, onClose }) => {
 
     const angleStep = (2 * Math.PI) / midiValues.length;
     const radiusScale = d3.scaleLinear().domain([-24, 24]).range([40, 250]);
-    const colorScale = d3.scaleSequential(d3.interpolatePlasma).domain(d3.extent(midiValues));
+    const colorScale = d3.scaleLinear()
+      .domain(d3.extent(midiValues))
+      .range(["#82813E", "#5193AE"]);
 
     const pitchLevels = [-24, -12, 0, 12, 24];
     g.selectAll("circle.axis")
@@ -118,7 +119,6 @@ const ABCVisualizer = ({ abc, name, onClose }) => {
       <button onClick={onClose}>x</button>
       <h3>{name}</h3>
       <svg ref={svgRef} width="600" height="600"></svg>
-      <div id="audio-controls" />
       <div className="controls-abc">
         <button onClick={() => synthControl?.play()}>Play</button>
         <button onClick={() => synthControl?.pause()}>Pause</button>
