@@ -49,6 +49,7 @@
 
 /*Nav superior*/
 .nav-container {
+  top: 0;
   position: fixed;
   display: flex;
   width: 100%;

@@ -419,7 +419,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
               className="legenda-close-button" 
               onClick={() => setMostrarLegenda(false)}
             >
-              ✕
+              ×
             </button>
             
             <h3 className="legenda-titulo">Legenda do Gráfico</h3>

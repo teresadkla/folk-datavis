@@ -56,12 +56,19 @@
 }
 
 .pitch-abc {
-  width: fit-content;
-  height: fit-content;
-  grid-column: 1/ span 7;
-  grid-row: 12/ span 2;
+ width: fit-content;
+    height: fit-content;
+    grid-column: 6 / span 7;
+    grid-row: 10 / span 2;
 }
 
+.pitch-abc-description {
+  grid-column: 1 / span 3;
+  grid-row: 10 / span 2;
+  text-align: left;
+  width: fit-content;
+  height: fit-content;
+}
 
 .roots-title-IE,
 .Types-title,

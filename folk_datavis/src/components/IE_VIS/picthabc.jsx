@@ -7,6 +7,7 @@ import "../../css/abc.css";
 const ABCVisualizer = ({ abc, name, onClose }) => {
   const [synthControl, setSynthControl] = useState(null);
   const [visualObj, setVisualObj] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const svgRef = useRef();
   const noteElements = useRef(null);
 
@@ -114,14 +115,33 @@ const ABCVisualizer = ({ abc, name, onClose }) => {
     });
   };
 
+  const togglePlayPause = () => {
+    if (isPlaying) {
+      synthControl?.pause();
+      setIsPlaying(false);
+    } else {
+      synthControl?.play();
+      setIsPlaying(true);
+    }
+  };
+
   return (
     <div className="abc-popup">
-      <button onClick={onClose}>x</button>
+      <button className="close-abc" onClick={onClose}>×</button>
       <h3>{name}</h3>
       <svg ref={svgRef} width="600" height="600"></svg>
       <div className="controls-abc">
-        <button onClick={() => synthControl?.play()}>Play</button>
-        <button onClick={() => synthControl?.pause()}>Pause</button>
+        <button className="play-pause-btn" onClick={togglePlayPause}>
+          {isPlaying ? (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          )}
+        </button>
       </div>
     </div>
   );

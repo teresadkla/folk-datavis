@@ -340,8 +340,12 @@ const DotPlotTypes = () => {
       {/* Modal da Legenda */}
       {showLegend && !isLoading && (
         <div className="legend-modal">
+           
           <div className="legend-content">
-            <h3>Legenda do Gráfico</h3>
+             <button className="legend-close" onClick={() => setShowLegend(false)}>
+              ×
+            </button>
+            <h3>Legenda do gráfico</h3>
             <div className="legend-section">
               <h4>Sobre o Gráfico:</h4>
               <p>Este é um <strong>Dot Plot</strong> que mostra a relação entre músicas folclóricas e seus tipos musicais.</p>
@@ -371,7 +375,7 @@ const DotPlotTypes = () => {
                   <span>Muitas variações</span>
                 </div>
               </div>
-            </div>
+           
             <div className="legend-section">
               <h4>Controles:</h4>
               <ul>
@@ -380,9 +384,8 @@ const DotPlotTypes = () => {
                 <li><strong>Hover:</strong> Passe o mouse sobre os círculos para ver detalhes</li>
               </ul>
             </div>
-            <button className="legend-close" onClick={() => setShowLegend(false)}>
-              Fechar
-            </button>
+          
+             </div>
           </div>
         </div>
       )}

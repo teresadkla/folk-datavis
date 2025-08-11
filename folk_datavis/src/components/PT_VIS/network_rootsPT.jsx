@@ -268,7 +268,7 @@ const NetworkDiagram = () => {
             >
               ×
             </button>
-            <h3>Legenda</h3>
+            <h3>Legenda do gráfico</h3>
             <ul style={{ listStyle: "none", padding: 0 }}>
               <li>
                 <span style={{
