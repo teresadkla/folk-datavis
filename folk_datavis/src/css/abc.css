@@ -26,7 +26,7 @@
   margin: 2rem auto;
   background: #f9f9f9;
   border-radius: 10px;
-    position: relative;
+  position: relative;
 }
 
 .abc-container {
@@ -57,8 +57,8 @@
   background: #f0f0f0;
   border: 1px solid #ccc;
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,8 +67,11 @@
   transition: background-color 0.2s ease;
 }
 
-
-
 .play-pause-btn:active {
   transform: scale(0.95);
+}
+
+.play-pause-svg {
+  width: 30px;
+  height: 30px;
 }

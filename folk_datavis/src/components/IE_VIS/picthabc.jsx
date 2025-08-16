@@ -115,6 +115,14 @@ const ABCVisualizer = ({ abc, name, onClose }) => {
     });
   };
 
+  const handleClose = () => {
+    if (synthControl && isPlaying) {
+      synthControl.pause();
+      setIsPlaying(false);
+    }
+    onClose();
+  };
+
   const togglePlayPause = () => {
     if (isPlaying) {
       synthControl?.pause();
@@ -127,17 +135,17 @@ const ABCVisualizer = ({ abc, name, onClose }) => {
 
   return (
     <div className="abc-popup">
-      <button className="close-abc" onClick={onClose}>×</button>
+      <button className="close-abc" onClick={handleClose}>×</button>
       <h3>{name}</h3>
       <svg ref={svgRef} width="600" height="600"></svg>
       <div className="controls-abc">
         <button className="play-pause-btn" onClick={togglePlayPause}>
           {isPlaying ? (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="play-pause-svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
               <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
             </svg>
           ) : (
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg className="play-pause-svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
             </svg>
           )}

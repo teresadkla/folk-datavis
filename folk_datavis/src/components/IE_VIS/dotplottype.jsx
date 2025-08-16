@@ -28,15 +28,15 @@ const DotPlotTypes = () => {
   useEffect(() => {
     setIsLoading(true);
     setLoadingText("Carregando dados musicais...");
-    
+
     d3.csv("sets.csv")
       .then(csvData => {
         setLoadingText("Processando informações...");
-        
+
         setTimeout(() => {
           setData(csvData);
           setLoadingText("Finalizando...");
-          
+
           setTimeout(() => {
             setIsLoading(false);
           }, 500);
@@ -79,13 +79,13 @@ const DotPlotTypes = () => {
   // Função principal de renderização do heatmap
   const renderDotPlotTypes = () => {
     const svg = d3.select(svgRef.current);
-    
+
     // Clear any existing content regardless of animation setting
     svg.selectAll("g").remove();
-    
+
     // Create new chart immediately
     createNewChart();
-    
+
     // Reset animation flag for future renders
     if (!shouldAnimate) {
       // Use setTimeout to avoid batching with current render
@@ -201,7 +201,7 @@ const DotPlotTypes = () => {
             .on("mouseout", function () {
               tooltip.transition().duration(200).style("opacity", 0);
             });
-          
+
           if (shouldAnimate) {
             circles.push(circle);
           }
@@ -214,7 +214,7 @@ const DotPlotTypes = () => {
         g.transition()
           .duration(700)
           .style("opacity", 1);
-          
+
         // Animação dos círculos com delay escalonado
         circles.forEach((circle, index) => {
           circle
@@ -232,12 +232,12 @@ const DotPlotTypes = () => {
   const handleFilterToggle = () => {
     setIsLoading(true);
     setLoadingText("Aplicando filtro...");
-    
+
     setTimeout(() => {
       setFilterActive((prev) => !prev);
       setStartIndex(0); // Reset para primeira página
       setLoadingText("Atualizando visualização...");
-      
+
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
@@ -249,7 +249,7 @@ const DotPlotTypes = () => {
     setIsLoading(true);
     setLoadingText("Carregando página...");
     setShouldAnimate(false);
-    
+
     setTimeout(() => {
       if (direction === 'up') {
         setStartIndex((prev) => Math.max(prev - pageSize, 0));
@@ -259,7 +259,7 @@ const DotPlotTypes = () => {
           setStartIndex((prev) => prev + pageSize);
         }
       }
-      
+
       setTimeout(() => {
         setIsLoading(false);
       }, 300);
@@ -287,7 +287,7 @@ const DotPlotTypes = () => {
 
       <div className="controls">
         {/* Botão para ativar/desativar filtro de músicas com mais de um tipo */}
-        <button 
+        <button
           onClick={handleFilterToggle}
           disabled={isLoading}
           id="filter-multi-type"
@@ -299,8 +299,8 @@ const DotPlotTypes = () => {
           {filterActive ? "Mostrar todas as músicas" : "Mostrar apenas músicas com mais de um tipo"}
         </button>
         {/* Botão para navegar para cima na paginação */}
-        <button 
-          id="nav-up" 
+        <button
+          id="nav-up"
           onClick={() => handleNavigation('up')}
           disabled={isLoading || startIndex === 0}
           style={{
@@ -311,8 +311,8 @@ const DotPlotTypes = () => {
           ↑
         </button>
         {/* Botão para navegar para baixo na paginação */}
-        <button 
-          id="nav-down" 
+        <button
+          id="nav-down"
           onClick={() => handleNavigation('down')}
           disabled={isLoading}
           style={{
@@ -323,9 +323,9 @@ const DotPlotTypes = () => {
           ↓
         </button>
       </div>
-      
+
       {/* Botão para mostrar/ocultar legenda */}
-      <button 
+      {/* <button 
         className="legend-btn-types" 
         onClick={() => setShowLegend((prev) => !prev)}
         disabled={isLoading}
@@ -335,14 +335,14 @@ const DotPlotTypes = () => {
         }}
       >
         {showLegend ? "Ocultar Legenda" : "Ver Legenda"}
-      </button>
+      </button> */}
 
       {/* Modal da Legenda */}
       {showLegend && !isLoading && (
         <div className="legend-modal">
-           
+
           <div className="legend-content">
-             <button className="legend-close" onClick={() => setShowLegend(false)}>
+            <button className="legend-close" onClick={() => setShowLegend(false)}>
               ×
             </button>
             <h3>Legenda do gráfico</h3>
@@ -363,33 +363,33 @@ const DotPlotTypes = () => {
               <h4>Cores:</h4>
               <div className="color-legend">
                 <div className="color-item">
-                  <div className="color-box" style={{backgroundColor: '#0d0887'}}></div>
+                  <div className="color-box" style={{ backgroundColor: '#0d0887' }}></div>
                   <span>Poucas variações</span>
                 </div>
                 <div className="color-item">
-                  <div className="color-box" style={{backgroundColor: '#7e03a8'}}></div>
+                  <div className="color-box" style={{ backgroundColor: '#7e03a8' }}></div>
                   <span>Variações médias</span>
                 </div>
                 <div className="color-item">
-                  <div className="color-box" style={{backgroundColor: '#f0f921'}}></div>
+                  <div className="color-box" style={{ backgroundColor: '#f0f921' }}></div>
                   <span>Muitas variações</span>
                 </div>
               </div>
-           
-            <div className="legend-section">
-              <h4>Controles:</h4>
-              <ul>
-                <li><strong>Filtro:</strong> Mostra apenas músicas com múltiplos tipos</li>
-                <li><strong>Navegação (↑/↓):</strong> Navega entre páginas do gráfico</li>
-                <li><strong>Hover:</strong> Passe o mouse sobre os círculos para ver detalhes</li>
-              </ul>
+
+              <div className="legend-section">
+                <h4>Controles:</h4>
+                <ul>
+                  <li><strong>Filtro:</strong> Mostra apenas músicas com múltiplos tipos</li>
+                  <li><strong>Navegação (↑/↓):</strong> Navega entre páginas do gráfico</li>
+                  <li><strong>Hover:</strong> Passe o mouse sobre os círculos para ver detalhes</li>
+                </ul>
+              </div>
+
             </div>
-          
-             </div>
           </div>
         </div>
       )}
-      
+
       {/* SVG onde o heatmap é desenhado */}
       <svg className="DotPlotTypessvg" ref={svgRef} width={1500} height={900} />
     </div>

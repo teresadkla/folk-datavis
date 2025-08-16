@@ -404,13 +404,13 @@ const GraficoTemasPorRegiao = ({ active }) => {
         <svg ref={svgRef} width={1200} height={1000} />
         <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
         
-        {/* Botão para mostrar a legenda */}
+        {/* Botão para mostrar a legenda
         <button 
           className="legenda-btn" 
           onClick={() => setMostrarLegenda(true)}
         >
           Ver Legenda
-        </button>
+        </button> */}
         
         {/* Pop-up da legenda */}
         {mostrarLegenda && (

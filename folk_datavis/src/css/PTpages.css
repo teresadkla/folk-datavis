@@ -147,3 +147,18 @@
 .nav-btn:hover {
   background-color: #444;
 }
+
+/*Legenda*/
+.legend-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  position: absolute;
+  /* right: 34%;
+  bottom: 50%; */
+  transition: all 0.2s ease
+}

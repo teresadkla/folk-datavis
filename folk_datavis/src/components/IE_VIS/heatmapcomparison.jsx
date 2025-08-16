@@ -687,6 +687,20 @@ const MidiHeatmapComparison = ({ active }) => {
       )}
 
       <div className="controls-header">
+        {/* Botão para abrir/fechar menu de filtros — agora antes do select */}
+        <button
+          className={`filter-toggle-btn ${showFilterMenu ? 'open' : 'closed'}`}
+          onClick={() => setShowFilterMenu(!showFilterMenu)}
+        >
+          <svg className="filter-icon" width="14" height="14" viewBox="0 0 24 24">
+            <path
+              fill="white"
+              d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"
+            />
+          </svg>
+          {showFilterMenu ? "Fechar Filtros" : "Filtrar Músicas"}
+        </button>
+
         {/* Dropdown de seleção de nome/música */}
         {filteredNames.length === 0 ? (
           <div className="no-results-container">
@@ -706,20 +720,6 @@ const MidiHeatmapComparison = ({ active }) => {
             ))}
           </select>
         )}
-
-        {/* Botão para abrir/fechar menu de filtros */}
-        <button
-          className={`filter-toggle-btn ${showFilterMenu ? 'open' : 'closed'}`}
-          onClick={() => setShowFilterMenu(!showFilterMenu)}
-        >
-          <svg className="filter-icon" width="14" height="14" viewBox="0 0 24 24">
-            <path
-              fill="white"
-              d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39c.51-.66.04-1.61-.79-1.61H5.04c-.83 0-1.3.95-.79 1.61z"
-            />
-          </svg>
-          {showFilterMenu ? "Fechar Filtros" : "Filtrar Músicas"}
-        </button>
 
         {/* Número de variações disponíveis */}
         <div className="variations-count">
