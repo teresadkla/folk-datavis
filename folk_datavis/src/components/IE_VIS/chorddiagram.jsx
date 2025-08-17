@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import * as abcjs from "abcjs";
 import Papa from "papaparse";
 import ABCVisualizer from "./picthabc";
-import MidiComparison from "./melodicline"; 
+import MidiComparison from "./melodicline";
 import "../../css/chord.css";
 
 const ChordDiagramABC = () => {
@@ -25,20 +25,20 @@ const ChordDiagramABC = () => {
   useEffect(() => {
     setIsLoading(true);
     setLoadingText("Carregando músicas...");
-    
+
     Papa.parse("/sets.csv", {
       download: true,
       header: true,
       complete: (result) => {
         setLoadingText("Processando dados musicais...");
-        
+
         setTimeout(() => {
           const tunes = result.data.filter(d => d.name && d.abc);
           setAllTunes(tunes);
           setMusicData(d3.shuffle(tunes).slice(0, 6));
-          
+
           setLoadingText("Finalizando...");
-          
+
           // Pequeno delay para mostrar que terminou
           setTimeout(() => {
             setIsLoading(false);
@@ -92,8 +92,8 @@ const ChordDiagramABC = () => {
         // Calcula similaridade de atributos selecionados
         const selectedAttributesArray = Object.keys(selectedAttributes).filter(attr => selectedAttributes[attr]);
         const selectedAttributeMatches = selectedAttributesArray.filter(attr => attributeMatches[attr]).length;
-        const attributeSimilarity = selectedAttributesArray.length > 0 
-          ? selectedAttributeMatches / selectedAttributesArray.length 
+        const attributeSimilarity = selectedAttributesArray.length > 0
+          ? selectedAttributeMatches / selectedAttributesArray.length
           : 0;
 
         // Combina similaridade de notas e atributos (70% notas, 30% atributos)
@@ -205,13 +205,13 @@ const ChordDiagramABC = () => {
       .attr("stroke", "#82813E") // Cor da borda das ligações
       .style("cursor", "pointer") // Cursor pointer nas ligações
       .attr("opacity", 1) // Opacidade padrão
-      .on("mouseover", function(event, d) {
+      .on("mouseover", function (event, d) {
         // Destaca a ligação atual aumentando a opacidade
         d3.select(this).attr("opacity", 1);
         // Reduz a opacidade das outras ligações
         d3.select(this.parentNode)
           .selectAll("path")
-          .filter(function(e) { return e !== d; })
+          .filter(function (e) { return e !== d; })
           .attr("opacity", 0.3);
 
         // Tooltip com informações detalhadas de similaridade
@@ -233,8 +233,8 @@ const ChordDiagramABC = () => {
             return `<strong>${attr.charAt(0).toUpperCase() + attr.slice(1)}:</strong> ${valueA} ${match} ${valueB}`;
           }).join('<br/>');
 
-        const selectedAttributesText = simData.selectedAttributes.length > 0 
-          ? simData.selectedAttributes.join(', ') 
+        const selectedAttributesText = simData.selectedAttributes.length > 0
+          ? simData.selectedAttributes.join(', ')
           : 'Nenhum';
 
         const tooltipContent = `
@@ -263,7 +263,7 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
         tooltip.style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 10) + "px");
       })
-      .on("mouseout", function() {
+      .on("mouseout", function () {
         // Restaura a opacidade de todas as ligações
         d3.select(this.parentNode)
           .selectAll("path")
@@ -296,11 +296,11 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
   const handleShuffleTunes = () => {
     setIsLoading(true);
     setLoadingText("Selecionando novas músicas...");
-    
+
     setTimeout(() => {
       setMusicData(d3.shuffle(allTunes).slice(0, 6));
       setLoadingText("Calculando similaridades...");
-      
+
       setTimeout(() => {
         setIsLoading(false);
       }, 800);
@@ -308,17 +308,10 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
   };
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* Loading overlay - agora cobre toda a página */}
+    <div className="chord-diagram-container">
+      {/* Loading overlay */}
       {isLoading && (
-        <div className="loading-overlay" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100vw',
-          height: '100vh',
-          zIndex: 9999
-        }}>
+        <div className="loading-overlay">
           <div className="loading-content">
             <div className="loading-spinner"></div>
             <div className="loading-text">{loadingText}</div>
@@ -326,81 +319,52 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
         </div>
       )}
 
-      <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="controls-container">
         {/* Botão para trocar as 6 músicas */}
         <button
           onClick={handleShuffleTunes}
           disabled={isLoading}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: isLoading ? '#ccc' : '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer'
-          }}
+          className={`shuffle-button ${isLoading ? 'disabled' : ''}`}
         >
-          {isLoading ? 'Carregando...' : 'Trocar músicas'}
+          🔀 {isLoading ? 'Carregando...' : 'Trocar Músicas'}
         </button>
-        
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          disabled={isLoading}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: isLoading ? '#ccc' : '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {showFilters ? 'Ocultar Filtros' : 'Mostrar Filtros'}
-        </button>
-        
-        {showFilters && !isLoading && (
-          <div style={{ 
-            display: 'flex', 
-            gap: '15px', 
-            alignItems: 'center',
-            padding: '10px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '4px',
-            border: '1px solid #dee2e6'
-          }}>
-            <span style={{ fontWeight: 'bold' }}>Atributos para semelhança:</span>
-            
-            {Object.keys(selectedAttributes).map(attr => (
-              <label key={attr} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
-                <input
-                  type="checkbox"
-                  checked={selectedAttributes[attr]}
-                  onChange={() => handleAttributeChange(attr)}
-                />
-                <span style={{ textTransform: 'capitalize' }}>{attr}</span>
-              </label>
-            ))}
-            
-            <button 
-              onClick={resetToDefault}
-              style={{
-                padding: '4px 8px',
-                backgroundColor: '#6c757d',
-                color: 'white',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer',
-                fontSize: '12px'
-              }}
-            >
-              Reset
-            </button>
-          </div>
-        )}
+
+        <div className="filters-wrapper">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            disabled={isLoading}
+            className={`filters-button ${isLoading ? 'disabled' : ''}`}
+          >
+            Atributos de similaridade {showFilters ? '▲' : '▼'}
+          </button>
+
+          {showFilters && !isLoading && (
+            <div className="filters-dropdown">
+              {Object.keys(selectedAttributes).map(attr => (
+                <label key={attr} className="attribute-label">
+                  <input
+                    type="checkbox"
+                    checked={selectedAttributes[attr]}
+                    onChange={() => handleAttributeChange(attr)}
+                    className="attribute-checkbox"
+                  />
+                  <span className="attribute-text">{attr}</span>
+                </label>
+              ))}
+
+              <button
+                onClick={resetToDefault}
+                className="clear-filters-button"
+              >
+                Limpar filtros
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <svg ref={svgRef} width={800} height={800} />
-      
+
       {selected && (
         <div className="popup-overlay">
           <div className="popup-content">

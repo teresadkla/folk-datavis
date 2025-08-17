@@ -162,3 +162,6 @@
   bottom: 50%; */
   transition: all 0.2s ease
 }
+.legend-modal {
+  position: relative
+}

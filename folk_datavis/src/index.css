@@ -1,18 +1,20 @@
-@import url('https://fonts.googleapis.com/css2?family=Almendra+SC&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Beth+Ellen&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 :root {
   /* Fonte principal (padrão) */
-  font-family: 'Old Claude LP Regular';
+  font-family: 'Crimson Pro', serif;
   line-height: 1.5;
   font-weight: 400;
 
   /* Variáveis para facilitar o uso */
-  --font-primary: 'Almendra SC', serif;
-  --font-secondary: 'Old Claude LP Regular', system-ui, sans-serif;
+  --font-primary: 'Beth Ellen', cursive;
+  --font-secondary: 'Crimson Pro', serif;
 
   /* Variáveis de cor */
   --color-text: #34372C;
   --color-background: #EBE7D4;
+  --color-White: #f0f0f0;
 
 
   /* Variáveis de cor Portugal */
@@ -31,8 +33,8 @@
 
   /* Variáveis de cor Irlanda */
   --color-Green1-IE: #82813E;
-  --color-Green1-IE: #B4B38B;
-  --color-Green1-IE: #DAD9C5;
+  --color-Green2-IE: #B4B38B;
+  --color-Green3-IE: #DAD9C5;
 
   --color-Blue1-IE: #5193AE;
   --color-Blue2-IE: #97BECE;

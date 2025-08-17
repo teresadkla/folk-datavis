@@ -826,8 +826,8 @@ const MidiHeatmapComparison = ({ active }) => {
 
       {/* Minimap para visualização geral e controle de zoom */}
       <div className="minimap-container">
-        <h4>Visualização geral:</h4>
-        <svg ref={miniMapRef}></svg>
+        {/* <h4>Visualização geral:</h4>
+        <svg ref={miniMapRef}></svg> */}
         {/* Instruções para o zoom */}
         <div className="zoom-instructions">
           <p>
