@@ -51,7 +51,7 @@ const MidiHeatmapComparison = ({ active }) => {
   useEffect(() => {
     setIsLoading(true);
     setLoadingText("Carregando dados de pitch...");
-    
+
     // Carregar os dados de pitch
     d3.json("pitch_compressed.json").then(jsonData => {
       // Conta quantas vezes cada nome aparece
@@ -65,9 +65,9 @@ const MidiHeatmapComparison = ({ active }) => {
       setAllNames(multiVersionNames);
       setFilteredNames(multiVersionNames); // Inicialmente, todos os nomes estão visíveis
       setPitchData(jsonData);
-      
+
       setLoadingText("Carregando informações musicais...");
-      
+
       // Carregar os dados de sets.csv
       return d3.csv("sets.csv");
     }).then(csvData => {
@@ -83,9 +83,9 @@ const MidiHeatmapComparison = ({ active }) => {
         mode: modes,
         type: types
       });
-      
+
       setLoadingText("Finalizando...");
-      
+
       // Pequeno delay para mostrar que terminou
       setTimeout(() => {
         setIsLoading(false);
@@ -821,10 +821,8 @@ const MidiHeatmapComparison = ({ active }) => {
 
       {/* Elemento SVG onde o gráfico será desenhado */}
       <svg ref={svgRef}></svg>
-
-
-
-      {/* Minimap para visualização geral e controle de zoom */}
+      
+{/* Minimap para visualização geral e controle de zoom */}
       <div className="minimap-container">
         {/* <h4>Visualização geral:</h4>
         <svg ref={miniMapRef}></svg> */}
@@ -835,14 +833,12 @@ const MidiHeatmapComparison = ({ active }) => {
             Para ajustar a visualização use este minimap: arraste a área destacada ou use as alças laterais para redimensionar.
           </p>
         </div>
-         <div className="action-buttons">
-        <button className="zoom-reset-btn" onClick={() => setZoomRange([0, 100])}>
-          Zoom Reset
-        </button>
+        <div className="action-buttons">
+          <button className="zoom-reset-btn" onClick={() => setZoomRange([0, 100])}>
+            Zoom Reset
+          </button>
+        </div>
       </div>
-      </div>
-
-     
 
       {/* Card de informações sobre bins de alta frequência */}
       {highlightHighFrequency && highFrequencyInfo.length > 0 && (
