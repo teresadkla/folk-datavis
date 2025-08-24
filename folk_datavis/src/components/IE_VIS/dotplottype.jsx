@@ -120,10 +120,12 @@ const DotPlotTypes = () => {
         .range([0, height])
         .padding(0.1);
 
-      // Escala de cor baseada na contagem
-      const colorScale = d3
-        .scaleSequential(d3.interpolatePlasma)
-        .domain([1, d3.max(Array.from(countMap.values(), (m) => d3.max(m.values())))]);
+      // Escala de tamanho baseada na contagem (substituindo a escala de cor)
+      const maxCount = d3.max(Array.from(countMap.values(), (m) => d3.max(m.values())));
+      const sizeScale = d3
+        .scaleLinear()
+        .domain([1, maxCount])
+        .range([6, 24]); // Tamanho mínimo 3px, máximo 12px
 
       // Eixo Y (nomes)
       g.append("g").call(d3.axisLeft(yScale))
@@ -182,14 +184,19 @@ const DotPlotTypes = () => {
       for (const [name, typeMap] of countMap) {
         if (!visibleNames.includes(name)) continue;
         for (const [type, count] of typeMap) {
+          const finalRadius = sizeScale(count);
           const circle = g.append("circle")
             .attr("cx", xScale(type) + xScale.bandwidth() / 2)
             .attr("cy", yScale(name) + yScale.bandwidth() / 2)
-            .attr("r", shouldAnimate ? 0 : 5) // Start with final size if not animating
-            .attr("fill", colorScale(count))
-            .attr("stroke", "none")
-            .style("opacity", shouldAnimate ? 0 : 1) // Start visible if not animating
+            .attr("r", shouldAnimate ? 0 : finalRadius) // Start with final size if not animating
+            .attr("fill", "#4a90e2") // Cor fixa azul
+            .attr("stroke", "#2c5aa0") // Borda azul mais escura
+            .attr("stroke-width", 0.5)
+            .style("opacity", shouldAnimate ? 0 : 0.8) // Start visible if not animating
             .on("mouseover", function (event) {
+              d3.select(this)
+                .attr("stroke-width", 2)
+                .style("opacity", 1);
               tooltip.transition().duration(100).style("opacity", 1);
               tooltip.html(`<strong>${name}</strong><br>${type}: <b>${count}</b> variações`);
             })
@@ -199,11 +206,14 @@ const DotPlotTypes = () => {
                 .style("top", event.pageY - 20 + "px");
             })
             .on("mouseout", function () {
+              d3.select(this)
+                .attr("stroke-width", 0.5)
+                .style("opacity", 0.8);
               tooltip.transition().duration(200).style("opacity", 0);
             });
 
           if (shouldAnimate) {
-            circles.push(circle);
+            circles.push({ circle, finalRadius });
           }
         }
       }
@@ -216,13 +226,13 @@ const DotPlotTypes = () => {
           .style("opacity", 1);
 
         // Animação dos círculos com delay escalonado
-        circles.forEach((circle, index) => {
+        circles.forEach(({ circle, finalRadius }, index) => {
           circle
             .transition()
             .delay(200 + index * 10) // Delay escalonado para efeito em cascata
             .duration(700)
-            .attr("r", 5) // Cresce até o tamanho final
-            .style("opacity", 1); // Fade in
+            .attr("r", finalRadius) // Cresce até o tamanho final baseado na contagem
+            .style("opacity", 0.8); // Fade in
         });
       }
     }
@@ -356,22 +366,40 @@ const DotPlotTypes = () => {
                 <li><strong>Eixo Vertical (Y):</strong> Nomes das músicas</li>
                 <li><strong>Eixo Horizontal (X):</strong> Tipos de música</li>
                 <li><strong>Círculos:</strong> Indicam que uma música pertence a um tipo específico</li>
-                <li><strong>Cor dos Círculos:</strong> Intensidade da cor representa o número de variações da música nesse tipo</li>
+                <li><strong>Tamanho dos Círculos:</strong> Círculos maiores representam mais variações da música nesse tipo</li>
               </ul>
             </div>
             <div className="legend-section">
-              <h4>Cores:</h4>
-              <div className="color-legend">
-                <div className="color-item">
-                  <div className="color-box" style={{ backgroundColor: '#0d0887' }}></div>
+              <h4>Tamanhos:</h4>
+              <div className="size-legend">
+                <div className="size-item">
+                  <div className="size-circle small" style={{ 
+                    width: '6px', 
+                    height: '6px', 
+                    backgroundColor: '#4a90e2',
+                    borderRadius: '50%',
+                    border: '1px solid #2c5aa0'
+                  }}></div>
                   <span>Poucas variações</span>
                 </div>
-                <div className="color-item">
-                  <div className="color-box" style={{ backgroundColor: '#7e03a8' }}></div>
+                <div className="size-item">
+                  <div className="size-circle medium" style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    backgroundColor: '#4a90e2',
+                    borderRadius: '50%',
+                    border: '1px solid #2c5aa0'
+                  }}></div>
                   <span>Variações médias</span>
                 </div>
-                <div className="color-item">
-                  <div className="color-box" style={{ backgroundColor: '#f0f921' }}></div>
+                <div className="size-item">
+                  <div className="size-circle large" style={{ 
+                    width: '24px', 
+                    height: '24px', 
+                    backgroundColor: '#4a90e2',
+                    borderRadius: '50%',
+                    border: '1px solid #2c5aa0'
+                  }}></div>
                   <span>Muitas variações</span>
                 </div>
               </div>

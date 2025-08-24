@@ -253,6 +253,25 @@ const GraficoTemasPorRegiao = ({ active }) => {
     const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
     const imagesGroup = g.selectAll("g.images").data([null]).join("g").attr("class", "images");
 
+    // Criar ou selecionar o elemento tooltip
+    let tooltip = d3.select("body").select(".dotplot-tooltip");
+    if (tooltip.empty()) {
+      tooltip = d3.select("body")
+        .append("div")
+        .attr("class", "dotplot-tooltip")
+        .style("position", "absolute")
+        .style("padding", "10px")
+        .style("background", "white")
+        .style("color", "white")
+        .style("border-radius", "5px")
+        .style("pointer-events", "none")
+        .style("opacity", 0)
+        .style("font-family", fontText)
+        .style("font-size", "12px")
+        .style("box-shadow", "0 2px 5px rgba(0,0,0,0.3)")
+        .style("z-index", "1000");
+    }
+
     const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([20, 60]);
 
     const regioesVisiveis = todasRegioes.slice(paginaRegiao * regioesPorPagina, (paginaRegiao + 1) * regioesPorPagina);
@@ -332,13 +351,95 @@ const GraficoTemasPorRegiao = ({ active }) => {
         });
     }
 
+    // Função para criar conteúdo do tooltip
+    const createTooltipContent = (d) => {
+      const labelModo = modoVisualizacao.charAt(0).toUpperCase() + modoVisualizacao.slice(1, -1);
+      
+      let content = `
+        <div style="margin-bottom: 5px;">
+          <strong>${labelModo}:</strong> ${d.tema}
+        </div>
+        <div style="margin-bottom: 5px;">
+          <strong>Região:</strong> ${d.regiao}
+        </div>
+        <div style="margin-bottom: 5px;">
+          <strong>Ocorrências:</strong> ${d.count}
+        </div>
+      `;
+
+      // Adicionar categoria se relevante
+      if (modoVisualizacao === 'temas' || modoVisualizacao === 'instrumentos') {
+        if (d.categoria) {
+          content += `
+            <div style="margin-bottom: 5px;">
+              <strong>Categoria:</strong> ${d.categoria}
+            </div>
+          `;
+        }
+      }
+
+      // Adicionar instrumentos se relevante
+      if (d.instrumentos && d.instrumentos.length > 0 && modoVisualizacao !== 'instrumentos') {
+        const instrumentosLimitados = d.instrumentos.slice(0, 3);
+        const instrumentosTexto = instrumentosLimitados.join(", ");
+        const maisInstrumentos = d.instrumentos.length > 3 ? ` (+${d.instrumentos.length - 3} mais)` : "";
+        
+        content += `
+          <div style="margin-bottom: 5px;">
+            <strong>Instrumentos:</strong> ${instrumentosTexto}${maisInstrumentos}
+          </div>
+        `;
+      }
+
+      return content;
+    };
+
     const enterPaths = paths.enter()
       .append("path")
       .attr("class", "flower1")
       .attr("d", "M142.54,71.27c0,39.36-31.91,71.27-71.27,71.27S0,110.64,0,71.27,31.91,0,71.27,0s71.27,31.91,71.27,71.27Z")
       .style("fill", "#474E95")
       .style("cursor", "pointer")
+      .on("mouseover", function(event, d) {
+        // Destacar o elemento
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style("fill", "#6A5ACD")
+          .style("opacity", 0.9);
+
+        // Mostrar tooltip
+        tooltip
+          .html(createTooltipContent(d))
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px")
+          .transition()
+          .duration(200)
+          .style("opacity", 1);
+      })
+      .on("mousemove", function(event) {
+        tooltip
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        // Restaurar aparência original
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style("fill", "#474E95")
+          .style("opacity", 1);
+
+        // Esconder tooltip
+        tooltip
+          .transition()
+          .duration(200)
+          .style("opacity", 0);
+      })
       .on("click", (event, d) => {
+        // Esconder tooltip ao clicar
+        tooltip.style("opacity", 0);
+        
         const artistas = filteredData
           .filter(item => {
             switch (modoVisualizacao) {
@@ -404,10 +505,49 @@ const GraficoTemasPorRegiao = ({ active }) => {
         });
       });
 
-    enterPaths.append("title").text(d => `${d.tema} (${d.regiao}): ${d.count}`);
+    // Aplicar os mesmos event handlers aos paths existentes
+    paths
+      .on("mouseover", function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style("fill", "#6A5ACD")
+          .style("opacity", 0.9);
+
+        tooltip
+          .html(createTooltipContent(d))
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px")
+          .transition()
+          .duration(200)
+          .style("opacity", 1);
+      })
+      .on("mousemove", function(event) {
+        tooltip
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY - 10) + "px");
+      })
+      .on("mouseout", function(event, d) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .style("fill", "#474E95")
+          .style("opacity", 1);
+
+        tooltip
+          .transition()
+          .duration(200)
+          .style("opacity", 0);
+      });
+
+    // Remover qualquer title antigo se existir
+    enterPaths.selectAll("title").remove();
+    paths.selectAll("title").remove();
+
     animatePaths(enterPaths, true);
     setPrevActive(true);
 
+    // ...rest of existing code for grids and axes...
     g.selectAll(".x-grid").remove();
     g.selectAll(".y-grid").remove();
 

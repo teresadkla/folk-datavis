@@ -26,15 +26,15 @@ export default function VisIE() {
         return (
             <div className="legend-overlay" onClick={() => setShowLegend(false)}>
                 <div className="legend-modal" onClick={(e) => e.stopPropagation()}>
-                   
+
                     {currentVis === 1 && (
                         <div className="legend-content">
-                             <button
-                        className="legend-close"
-                        onClick={() => setShowLegend(false)}
-                    >
-                        ×
-                    </button>
+                            <button
+                                className="legend-close"
+                                onClick={() => setShowLegend(false)}
+                            >
+                                ×
+                            </button>
                             {/* Conteúdo da legenda do NetworkDiagram */}
                             <h3>Legenda</h3>
                             <ul style={{ listStyle: "none", padding: 0 }}>
@@ -80,17 +80,17 @@ export default function VisIE() {
                     )}
                     {currentVis === 2 && (
                         <div className="legend-content">
-                             <button
-                        className="legend-close"
-                        onClick={() => setShowLegend(false)}
-                    >
-                        ×
-                    </button>
+                            <button
+                                className="legend-close"
+                                onClick={() => setShowLegend(false)}
+                            >
+                                ×
+                            </button>
                             {/* Conteúdo da legenda do DotPlotTypes */}
                             <h3>Legenda do gráfico</h3>
                             <div className="legend-section">
                                 <h4>Sobre o Gráfico:</h4>
-                                <p>Este é um <strong>Dot Plot</strong> que mostra a relação entre músicas folclóricas e seus tipos musicais.</p>
+                                <p>Este é um <strong>Dot Plot</strong> que mostra a relação entre músicas folk e seus tipos musicais.</p>
                             </div>
                             <div className="legend-section">
                                 <h4>Como Ler:</h4>
@@ -98,22 +98,40 @@ export default function VisIE() {
                                     <li><strong>Eixo Vertical (Y):</strong> Nomes das músicas</li>
                                     <li><strong>Eixo Horizontal (X):</strong> Tipos de música</li>
                                     <li><strong>Círculos:</strong> Indicam que uma música pertence a um tipo específico</li>
-                                    <li><strong>Cor dos Círculos:</strong> Intensidade da cor representa o número de variações da música nesse tipo</li>
+                                    <li><strong>Tamanho dos Círculos:</strong> Círculos maiores representam mais variações da música nesse tipo</li>
                                 </ul>
                             </div>
                             <div className="legend-section">
-                                <h4>Cores:</h4>
-                                <div className="color-legend">
-                                    <div className="color-item">
-                                        <div className="color-box" style={{ backgroundColor: '#0d0887' }}></div>
+                                <h4>Tamanhos:</h4>
+                                <div className="size-legend">
+                                    <div className="size-item">
+                                        <div className="size-circle small" style={{
+                                            width: '6px',
+                                            height: '6px',
+                                            backgroundColor: '#4a90e2',
+                                            borderRadius: '50%',
+                                            border: '1px solid #2c5aa0'
+                                        }}></div>
                                         <span>Poucas variações</span>
                                     </div>
-                                    <div className="color-item">
-                                        <div className="color-box" style={{ backgroundColor: '#7e03a8' }}></div>
+                                    <div className="size-item">
+                                        <div className="size-circle medium" style={{
+                                            width: '16px',
+                                            height: '16px',
+                                            backgroundColor: '#4a90e2',
+                                            borderRadius: '50%',
+                                            border: '1px solid #2c5aa0'
+                                        }}></div>
                                         <span>Variações médias</span>
                                     </div>
-                                    <div className="color-item">
-                                        <div className="color-box" style={{ backgroundColor: '#f0f921' }}></div>
+                                    <div className="size-item">
+                                        <div className="size-circle large" style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            backgroundColor: '#4a90e2',
+                                            borderRadius: '50%',
+                                            border: '1px solid #2c5aa0'
+                                        }}></div>
                                         <span>Muitas variações</span>
                                     </div>
                                 </div>
@@ -132,28 +150,124 @@ export default function VisIE() {
                     )}
                     {currentVis === 3 && (
                         <div className="legend-content">
-                             <button
-                        className="legend-close"
-                        onClick={() => setShowLegend(false)}
-                    >
-                        ×
-                    </button>
+                            <button
+                                className="legend-close"
+                                onClick={() => setShowLegend(false)}
+                            >
+                                ×
+                            </button>
                             {/* Conteúdo da legenda do MidiHeatmapComparison */}
                             <h3>Legenda - Heat of the Melody</h3>
-                            <p>Descrição da legenda para o heatmap...</p>
+
+                            {/* Legenda de cores */}
+                            <div className="legend-section">
+                                <h4>Legenda de Cores</h4>
+                                <div className="color-legend">
+                                    <div className="color-bar">
+                                        <div className="color-gradient"></div>
+                                    </div>
+                                    <div className="color-labels">
+                                        <span>Baixa frequência</span>
+                                        <span>Alta frequência</span>
+                                    </div>
+                                </div>
+                                <p>As cores representam quantas vezes cada combinação de tempo (X) e pitch (Y) aparece nas variações da música.</p>
+                            </div>
+
+                            {/* Explicação do heatmap */}
+                            <div className="legend-section">
+                                <h4>O que é o Heatmap?</h4>
+                                <p>
+                                    Este heatmap mostra a densidade de pitches (notas musicais) ao longo do tempo para todas as variações de uma música.
+                                    Cada célula representa uma combinação específica de momento temporal (eixo X) e altura do som (eixo Y).
+                                </p>
+                            </div>
+
+                            {/* Instruções de uso */}
+                            <div className="legend-section">
+                                <h4>Como Usar</h4>
+                                <ul>
+                                    <li><strong>Zoom:</strong> Arraste uma área no gráfico principal para ampliá-la</li>
+                                    <li><strong>Navegação:</strong> Use o minimap para ajustar a área visualizada</li>
+                                    <li><strong>Filtros:</strong> Filtre músicas por compasso, modo ou tipo musical</li>
+                                    <li><strong>Alta frequência:</strong> Destaque os padrões mais comuns da música</li>
+                                    <li><strong>Tooltip:</strong> Passe o rato sobre as células para ver detalhes</li>
+                                </ul>
+                            </div>
                         </div>
                     )}
                     {currentVis === 4 && (
                         <div className="legend-content">
-                             <button
-                        className="legend-close"
-                        onClick={() => setShowLegend(false)}
-                    >
-                        ×
-                    </button>
+                            <button
+                                className="legend-close"
+                                onClick={() => setShowLegend(false)}
+                            >
+                                ×
+                            </button>
                             {/* Conteúdo da legenda do ChordDiagramABC */}
+
                             <h3>Legenda - Strings of Connection</h3>
-                            <p>Descrição da legenda para o chord diagram...</p>
+            
+            {/* Explicação geral */}
+            <div className="legend-section">
+              <h4>O que é um Chord Diagram?</h4>
+              <p>
+                O Chord Diagram mostra as relações de similaridade entre 6 músicas folk irlandesas. 
+                Cada música é representada por um arco, e as ligações mostram o quão similares são entre si.
+              </p>
+            </div>
+
+            {/* Elementos visuais */}
+            <div className="legend-section">
+              <h4>Elementos Visuais</h4>
+              <div className="legend-item">
+                <div className="legend-symbol arc-symbol"></div>
+                <div className="legend-text">
+                  <strong>Arcos (nós):</strong> Cada arco representa uma música folk. 
+                  Clique num arco para ver a partitura da música.
+                </div>
+              </div>
+              
+              <div className="legend-item">
+                <div className="legend-symbol ribbon-symbol"></div>
+                <div className="legend-text">
+                  <strong>Ligações (ribbons):</strong> Mostram a similaridade entre duas músicas. 
+                  Ligações mais grossas = maior similaridade.
+                </div>
+              </div>
+            </div>
+
+            {/* Como interpretar */}
+            <div className="legend-section">
+              <h4>Como Interpretar a Similaridade</h4>
+              <p>A similaridade é calculada com base em:</p>
+              <ul>
+                <li><strong>70% Notas Musicais:</strong> Notas comuns entre as melodias</li>
+                <li><strong>30% Atributos:</strong> Modo, tipo e compasso (meter)</li>
+              </ul>
+            </div>
+
+            {/* Interações */}
+            <div className="legend-section">
+              <h4>Interações</h4>
+              <ul>
+                <li><strong>Hover sobre ligações:</strong> Vê detalhes da similaridade</li>
+                <li><strong>Clique nos arcos:</strong> Abre a partitura musical</li>
+                <li><strong>Filtros de atributos:</strong> Personaliza o cálculo da similaridade</li>
+                <li><strong>Trocar músicas:</strong> Seleciona 6 novas músicas aleatórias</li>
+              </ul>
+            </div>
+
+            {/* Cores */}
+            <div className="legend-section">
+              <h4>Cores</h4>
+              <div className="legend-item">
+                <div className="legend-color" style={{backgroundColor: '#82813E'}}></div>
+                <span>Cor principal para arcos e ligações</span>
+              </div>
+            </div>
+
+                            
                         </div>
                     )}
                 </div>
