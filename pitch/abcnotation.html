@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sonificação da notação</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/abcjs@6.0.0-beta.38/dist/abcjs-audio.css">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/abcjs@6.0.0-beta.38/dist/abcjs-basic-min.js"></script>
+  <style>
+    #paper { margin-bottom: 20px; }
+    button { margin: 5px; }
+  </style>
+</head>
+<body>
+  <h1>Visualizador de Partituras ABC</h1>
+  <h3 id="musicName"></h3>
+  
+  <div>
+    <!-- <button id="exportPitchBtn">Exportar Pitch MIDI</button> -->
+     <button id="prevBtn">◀ Anterior</button> 
+    <button id="playBtn">▶ Play</button>
+     <button id="pauseBtn">⏸ Pause</button>
+    <button id="nextBtn">Próximo ▶</button>  
+    <select id="musicSelect">
+    </select>
+    <button id="downloadMidiBtn" onclick="saveMidiValuesToJson()">Download MIDI Values</button>
+  </div>
+  <div id="allVariations"></div>
+  <div id="container"></div>
+
+
+  <h2 id="musicName"></h2>
+<svg id="radialPlot" width="600" height="600"></svg>
+
+<svg id="histogram" width="500" height="300"></svg>
+
+
+
+  <div id="notation" style="display: none;"></div>
+  <div id="audio-controls"></div> <!-- player de áudio renderiza aqui -->
+
+  <!-- <svg width="960" height="600"></svg> -->
+  <script src="pitch_vis.js"></script>
+  <!-- <script src="pitch.js"></script> -->
+</body>
+</html>

@@ -1,0 +1,498 @@
+.midi-chart-container {
+  /* width: 100%;
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: sans-serif; */
+}
+
+
+.tooltip {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+/* Estilos para o componente MidiHeatmapComparison */
+
+.midi-chart-container {
+  /* Container principal já está no CSS global */
+}
+
+.controls-header {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 2%;
+  align-items: center;
+  gap: 0; /* encosta os dois elementos */
+}
+
+.no-results-container {
+  flex-grow: 1;
+  margin-right: 10px;
+  padding: 10px;
+  background: #fff3f0;
+  color: #CC5C25;
+  border: 1px solid #CC5C25;
+  border-radius: 4px;
+  font-size: 15px;
+  text-align: center;
+}
+
+.clear-filters-btn {
+  margin-top: 10px;
+  padding: 6px 14px;
+  background-color: #CC5C25;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.clear-filters-btn:hover {
+  background-color: #a04820;
+}
+
+.variations-count {
+  margin-left: 20px;
+  /* font-weight: bold; */
+}
+
+.filter-menu {
+  width: 50vw;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  margin-bottom: 20px;
+  position: relative;
+  border: 1px solid #ccc;
+}
+
+.filter-menu h3 {
+  margin: 0 0 15px 0;
+  /* font-family: var(--font-secondary); */
+  color: #333;
+  text-align: left;
+} 
+
+.filter-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+/* .filter-category {
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-category h4 {
+  margin: 0 0 8px 0;
+  font-family: var(--font-secondary);
+} */
+
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  max-height: 150px;
+  overflow-y: scroll; /* Mudança de 'auto' para 'scroll' */
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+.filter-option input {
+  margin-right: 8px;
+}
+
+.filter-buttons {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.filter-clear-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-Orange2-IE);
+  font-family: var(--font-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 6px 14px;
+  text-align: left;
+  transition: color .15s ease, opacity .15s ease;
+  opacity: 0.95;
+}
+
+.filter-clear-btn:hover {
+  color: var(--color-Orange1-IE);
+  opacity: 1;
+}
+
+.filter-apply-btn {
+  padding: 6px 14px;
+  background: var(--color-Orange2-IE);
+  color: #ffffff;
+  border: 1px solid var(--color-Orange2-IE);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 6px 18px rgba(204,92,37,0.12);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+  white-space: nowrap;
+}
+
+/* .filter-apply-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(204,92,37,0.14);
+}
+
+.filter-apply-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(204,92,37,0.10);
+}
+
+.filter-apply-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+} */
+
+.results-counter {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 14px;
+  font-family: var(--font-secondary);
+  color: #666;
+}
+
+.filtering-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 4px;
+}
+
+.filtering-text {
+  font-family: var(--font-secondary);
+  font-size: 18px;
+  color: #CC5C25;
+  /* font-weight: bold; */
+}
+
+.zoom-instructions {
+  padding: 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  width: 80%;
+}
+
+.zoom-instructions p {
+  margin: 0;
+  font-size: 14px;
+  text-align: left;
+}
+
+.minimap-container {
+  display: flex;
+  /* position: absolute; */
+  top: 20%;
+  left: 45%;
+ width: fit-content;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+.minimap-container h4 {
+  margin: 0 0 5px 0;
+}
+
+.action-buttons {
+  width: 75%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.zoom-reset-btn {
+  padding: 6px 14px;
+  background-color: transparent;
+  color: var(--color-Orange2-IE);
+  border: 2px solid var(--color-Orange2-IE);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 16px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+}
+
+.zoom-reset-btn:hover {
+  /* background-color: var(--color-Orange3-IE); */
+  border-color: var(--color-Orange1-IE);
+  color: var(--color-Orange1-IE);
+}
+
+.highlight-toggle-btn {
+  padding: 6px 14px;
+  color: var(--color-Green1-IE);
+  background-color: var(--color-Green3-IE);
+  border: 1px solid var(--color-Green2-IE);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  margin-left: 30%;
+}
+
+/* .highlight-toggle-btn.active {
+  background-color: var(--color-Green2-IE);
+  border-color: var(--color-Green1-IE);
+  color: var(--color-Green1-IE);
+}
+
+.highlight-toggle-btn.inactive {
+  background-color: var(--color-Green3-IE);
+  border-color: var(--color-Green2-IE);
+  color: var(--color-Green1-IE);
+} */
+/* 
+.highlight-toggle-btn:hover {
+  background-color: var(--color-Green2-IE);
+  border-color: var(--color-Green1-IE);
+  opacity: 1;
+} */
+
+.high-frequency-card {
+  padding: 15px;
+  background-color: var(--color-White);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.high-frequency-card h3 {
+  margin: 0 0 10px 0;
+  font-family: var(--font-secondary);
+  color: #CC5C25;
+}
+
+.song-info {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(204, 92, 37, 0.1);
+  border-radius: 4px;
+  font-family: var(--font-secondary);
+}
+
+.frequency-description {
+  margin-bottom: 10px;
+  font-family: var(--font-secondary);
+}
+
+.frequency-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-secondary);
+}
+
+.frequency-table thead tr {
+  background-color: #eee;
+}
+
+.frequency-table th,
+.frequency-table td {
+  padding: 5px;
+  text-align: left;
+}
+
+.frequency-table tbody tr {
+  border-bottom: 1px solid #ddd;
+}
+
+.table-note {
+  margin-top: 10px;
+  font-style: italic;
+  text-align: center;
+  font-family: var(--font-secondary);
+}
+
+/* Tooltip for MIDI chart */
+.midi-chart-tooltip {
+  position: absolute;
+  background: #fff;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 1000;
+  font-size: 12px;
+  font-family: var(--font-secondary);
+}
+
+/* Heatmap specific styles */
+.heatmap-cell {
+  transition: opacity 0.2s ease;
+}
+
+.heatmap-cell.high-frequency {
+  /* Estilos específicos para células de alta frequência */
+}
+
+.minimap-cell {
+  opacity: 0.7;
+}
+
+.zoom-indicator {
+  cursor: move;
+}
+
+.resize-handle {
+  opacity: 0.8;
+}
+
+.resize-handle.left,
+.resize-handle.right {
+  cursor: ew-resize;
+}
+
+/* Loading overlay styles */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #CC5C25;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-family: var(--font-secondary);
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* --- Pill Filter + Music Select (estilo do mock) --- */
+.controls-header > .filter-toggle-btn,
+.controls-header > .music-select {
+  margin: 0;
+  height: 40px;
+}
+
+/* Botão de filtro (lado esquerdo) */
+.filter-toggle-btn {
+  padding: 6px 14px;
+  color: #3f3f3f;
+  background-color: #E4E3C9;
+  border: 2px solid #D6D6D8;
+  border-right: none; /* une com o select */
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  /* font-weight: 500; */
+  transition: background-color .15s ease, filter .15s ease;
+}
+
+
+
+.filter-icon {
+  margin-right: 0; /* já usamos gap */
+  color: #515151;
+  font-size: 22px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Dropdown (lado direito) */
+.music-select {
+  /* -webkit-appearance: none;
+  -moz-appearance: none;*/
+  appearance: none; 
+  background-color: #F1F1F1;
+  color: #3c3c3c;
+  border: 2px solid #D6D6D8;
+  /* border-left: none; */
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+/* padding: 12px 44px 12px 22px; */ 
+    padding-left: 12px;
+  font-family: var(--font-secondary);
+  font-size: 16px;
+  margin: 0;
+  cursor: pointer;
+  transition: background-color .15s ease, filter .15s ease;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23505050' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+}
+
+/* Container para as ações dos filtros (se ainda não existir) */
+.filters-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding-top: 8px;
+}
+
+
+
+
+

@@ -1,0 +1,96 @@
+.tooltip_roots {
+  z-index: 1000;
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 5px;
+  pointer-events: none;
+  font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  display: none;
+}
+
+.node text {
+  pointer-events: none;
+  font-size: 12px;
+}
+
+/*Ireland Vis*/
+.tooltipIE {
+  position: absolute;
+  background: white;
+  padding: 5px;
+  border: 1px solid #ccc;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+/*Botão de legenda (standard para todos)*/
+
+/* .legend-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  position: absolute;
+  right: 34%;
+  bottom: 50%;
+  transition: all 0.2s ease
+} */
+
+
+
+/*Pop-up para a legenda (standard para todos)*/
+.legend-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.legend-popup-content {
+  background: #fff;
+  padding: 24px 32px;
+  border-radius: 10px;
+  text-align: left;
+  min-width: 320px;
+  max-width: 90vw;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+
+.legend-popup-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #333;
+}
+
+/*Ramification IE*/
+.legend-btn-IE {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 6px 14px;
+  font-size: 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  position: absolute;
+  left: 1%;
+  bottom: 55%;
+  transition: all 0.2s ease
+}
