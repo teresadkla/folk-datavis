@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE";
 import DotPlotTypes from "../components/IE_VIS/dotplottype";
 import MidiHeatmapComparison from "../components/IE_VIS/heatmapcomparison";
@@ -12,12 +13,34 @@ export default function VisIE() {
     const [currentVis, setCurrentVis] = useState(1);
     const [showLegend, setShowLegend] = useState(false);
 
+    const location = useLocation();
+    const navigate = useNavigate();
+
+    // Sincroniza currentVis com o query param ?vis=
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const visParam = parseInt(params.get("vis"), 10);
+        if (!isNaN(visParam) && visParam >= 1 && visParam <= 4) {
+            setCurrentVis(visParam);
+        } else {
+            setCurrentVis(1);
+        }
+    }, [location.search]);
+
     const handleNext = () => {
-        if (currentVis < 4) setCurrentVis(currentVis + 1);
+        if (currentVis < 4) {
+            const newVis = currentVis + 1;
+            setCurrentVis(newVis);
+            navigate(`/irish?vis=${newVis}`);
+        }
     };
 
     const handlePrev = () => {
-        if (currentVis > 1) setCurrentVis(currentVis - 1);
+        if (currentVis > 1) {
+            const newVis = currentVis - 1;
+            setCurrentVis(newVis);
+            navigate(`/irish?vis=${newVis}`);
+        }
     };
 
     const renderLegend = () => {

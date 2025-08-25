@@ -288,8 +288,8 @@ const GraficoTemasPorRegiao = ({ active }) => {
     const range = maxCount - minCount;
 
     const intervalos = [
-      minCount + range * 0.33,  // 33% do range
-      minCount + range * 0.67   // 67% do range
+      minCount + range * 0.25,  // 33% do range
+      minCount + range * 0.75   // 67% do range
     ];
 
     const getFlowerTypeIntervalos = (count, intervalos) => {
@@ -299,7 +299,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
       return 'flower5';                                  // Alto
     };
 
-    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([30, 100]);
+    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([30, 70]);
 
     const regioesVisiveis = todasRegioes.slice(paginaRegiao * regioesPorPagina, (paginaRegiao + 1) * regioesPorPagina);
     const temasVisiveis = itensEixoY.slice(paginaTema * temasPorPagina, (paginaTema + 1) * temasPorPagina);

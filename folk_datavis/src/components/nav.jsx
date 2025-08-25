@@ -63,23 +63,103 @@ const NavigationBar = () => {
               </div>
 
             <div className="context-section">
-              <h2>Portuguese Geographical FolkData</h2>
+              <h2 
+                onClick={() => {
+                  navigate('/portuguese')
+                  setIsContextOpen(false)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                Portuguese Geographical FolkData
+              </h2>
               <ol>
-                <li>Portuguese Musical Roots</li>
-                <li>Echoes across the Land</li>
-                <li>Wandering Melodies</li>
-                <li>The Spiral of time</li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/portuguese', search: '?vis=1' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Portuguese Musical Roots
+                </li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/portuguese', search: '?vis=2' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Echoes across the Land
+                </li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/portuguese', search: '?vis=3' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Wandering Melodies
+                </li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/portuguese', search: '?vis=4' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  The Spiral of time
+                </li>
               </ol>
 
             </div>
             <div className="context-section">
-              <h2>Irish Musical FolkData</h2>
+              <h2 
+                onClick={() => {
+                  navigate('/irish')
+                  setIsContextOpen(false)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                Irish Musical FolkData
+              </h2>
 
               <ol>
-                <li>Irish Musical Roots</li>
-                <li>Types of Irish Folk</li>
-                <li>Heat of the Melody</li>
-                <li>Strings of Connections</li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/irish', search: '?vis=1' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Irish Musical Roots
+                </li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/irish', search: '?vis=2' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Types of Irish Folk
+                </li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/irish', search: '?vis=3' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Heat of the Melody
+                </li>
+                <li 
+                  onClick={() => {
+                    navigate({ pathname: '/irish', search: '?vis=4' })
+                    setIsContextOpen(false)
+                  }}
+                  style={{ cursor: 'pointer' }}
+                >
+                  Strings of Connections
+                </li>
               </ol>
             </div>
           </div>
