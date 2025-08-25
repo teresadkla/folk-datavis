@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import NetworkDiagram from "../components/PT_VIS/network_rootsPT";
-import PortugalMap from "../components/PT_VIS/map";
-import TemaRegiaoVis from "../components/PT_VIS/dotplotPT";
-import SpiralVis from "../components/PT_VIS/spiral";
-import NavigationBar from "../components/nav";
+import NetworkDiagram from "../components/PT_VIS/network_rootsPT.jsx";
+import PortugalMap from "../components/PT_VIS/map.jsx";
+import TemaRegiaoVis from "../components/PT_VIS/dotplotPT.jsx";
+import SpiralVis from "../components/PT_VIS/spiral.jsx";
+import NavigationBar from "../components/nav.jsx";
 import "../css/PTpages.css";
 
 export default function VisPT() {

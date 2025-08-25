@@ -1,8 +1,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import NavigationBar from './components/nav'
-import Vis1PT from './pages/Vis1PT'
-import VisIE from './pages/VisIE' 
-import Home from './pages/Home'
+import NavigationBar from './components/nav.jsx'
+import Vis1PT from './pages/Vis1PT.jsx'
+import VisIE from './pages/VisIE.jsx' 
+import Home from './pages/Home.jsx'
 import './App.css'
 
 function App() {

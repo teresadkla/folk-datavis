@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE";
-import DotPlotTypes from "../components/IE_VIS/dotplottype";
-import MidiHeatmapComparison from "../components/IE_VIS/heatmapcomparison";
-// import ABCVisualizer from "../components/IE_VIS/pitchabc";
-import ChordDiagramABC from "../components/IE_VIS/chorddiagram";
-import NavigationBar from "../components/nav";
-import VerticalNav from "../components/verticalnav";
+import NetworkDiagramIE from "../components/IE_VIS/network_rootsIE.jsx";
+import DotPlotTypes from "../components/IE_VIS/dotplottype.jsx";
+import MidiHeatmapComparison from "../components/IE_VIS/heatmapcomparison.jsx";
+// import ABCVisualizer from "../components/IE_VIS/pitchabc.jsx";
+import ChordDiagramABC from "../components/IE_VIS/chorddiagram.jsx";
+import NavigationBar from "../components/nav.jsx";
+import VerticalNav from "../components/verticalnav.jsx";
 import "../css/IEpages.css";
 
 export default function VisIE() {
