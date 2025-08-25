@@ -43,8 +43,15 @@ const SpiralVis = ({ active }) => {
       );
 
       const uniqueYears = Array.from(new Set(filteredData.map(d => d.ano))).sort((a, b) => a - b);
-      const colorPalette = d3.schemeTableau10.concat(d3.schemeSet3).slice(0, 17);
-      const yearColor = d3.scaleOrdinal().domain(uniqueYears).range(colorPalette);
+      
+      // Nova paleta de cores dividida em grupos de três anos
+      const colors = ["#C33512", "#474E95", "#E09D2C"];  // Vermelho, Azul, Amarelo
+      
+      // Função para obter a cor baseada no ano
+      const yearColor = (ano) => {
+        const yearIndex = uniqueYears.indexOf(ano);
+        return colors[yearIndex % colors.length];
+      };
 
       const a = 5;
       const b = 10;
@@ -91,7 +98,7 @@ const SpiralVis = ({ active }) => {
         .ease(d3.easeLinear)
         .attr("stroke-dashoffset", 0);
 
-      const leafspath = "M142.54,71.27c0,39.36-31.91,71.27-71.27,71.27S0,110.64,0,71.27,31.91,0,71.27,0s71.27,31.91,71.27,71.27Z";
+      const leafspath = "M22.31.51C10.72.94-.51,29.44.57,30.05c.38.21,1.47-3.48,6.15-7.74,8.75-7.95,16.98-5.9,20.5-12.89.24-.47,2.29-4.63.52-7.08-1.44-1.99-4.68-1.86-5.43-1.84Z";
 
       //Animação das folhas a aparecer em sequência
       g.selectAll(".custom-shape")
@@ -102,11 +109,20 @@ const SpiralVis = ({ active }) => {
         .attr("d", leafspath)
         .attr("fill", (d) => yearColor(d.ano))
         .attr("opacity", 0)
-        .attr("transform", (d) => {
-          const scale = 0.15;
-          const offsetX = -6.62;
-          const offsetY = -89.93;
-          return `translate(${d.x}, ${d.y}) scale(${scale}) translate(${offsetX}, ${offsetY})`;
+        .attr("transform", (d, i) => {
+          const scale = 0.8;
+          // Use the actual bottom point coordinates of the leaf (0.57, 30.05)
+          const offsetX = 0.57;
+          const offsetY = -30.05;
+          
+          // Calcula o ângulo da espiral para orientar a folha
+          const angle = Math.atan2(d.y, d.x);
+          
+          // Alterna a orientação: par aponta para fora, ímpar para dentro com maior separação
+          const baseAngle = angle * 180 / Math.PI;
+          const rotation = i % 2 === 0 ? baseAngle - 140 : baseAngle + 80;
+          
+          return `translate(${d.x}, ${d.y}) rotate(${rotation}) scale(${scale}) translate(${offsetX}, ${offsetY})`;
         })
         .transition()
         .delay((d, i) => i * 5)
@@ -175,7 +191,7 @@ const SpiralVis = ({ active }) => {
         .attr("x", (d) => d.x + 15)
         .attr("y", (d) => d.y)
         .text((d) => d.ano)
-        .attr("font-size", "12px")
+        .attr("font-size", "14px")
         .attr("fill", "#444")
         .attr("alignment-baseline", "middle")
         .attr("opacity", 0)

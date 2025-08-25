@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as d3 from "d3";
-// import "../../css/mapstyles.css";
 import "../../css/dotplotPT.css";
 
 const fontText = getComputedStyle(document.documentElement)
@@ -14,21 +13,19 @@ const GraficoTemasPorRegiao = ({ active }) => {
   const svgRef = useRef();
   const [dadosProcessados, setDadosProcessados] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
-  const [todosTemas, setTodosTemas] = useState([]);
   const [todasRegioes, setTodasRegioes] = useState([]);
   const [paginaTema, setPaginaTema] = useState(0);
   const [paginaRegiao, setPaginaRegiao] = useState(0);
   const [prevActive, setPrevActive] = useState(false);
   const [prevPaginaTema, setPrevPaginaTema] = useState(0);
   const [prevPaginaRegiao, setPrevPaginaRegiao] = useState(0);
-  const [mostrarLegenda, setMostrarLegenda] = useState(false);
 
   const [todosInstrumentos, setTodosInstrumentos] = useState([]);
   const [instrumentosSelecionados, setInstrumentosSelecionados] = useState([]);
   const [dadosFiltrados, setDadosFiltrados] = useState([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const [modoVisualizacao, setModoVisualizacao] = useState('temas'); // 'temas', 'categorias', 'instrumentos'
+  const [modoVisualizacao, setModoVisualizacao] = useState('temas');
   const [todasCategorias, setTodasCategorias] = useState([]);
   const [categoriasSelecionadas, setCategoriasSelecionadas] = useState([]);
   const [isDropdownCategoriaOpen, setIsDropdownCategoriaOpen] = useState(false);
@@ -36,7 +33,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
   const [itensEixoY, setItensEixoY] = useState([]);
 
   const totalPaginasTemas = Math.ceil(itensEixoY.length / temasPorPagina);
-  const totalPaginasRegioes = Math.ceil(todasRegioes.length / regioesPorPagina);
 
   const processarDadosPorCategoria = (dados) => {
     const expandedData = [];
@@ -177,7 +173,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
       setDadosProcessados(processed);
       setDadosFiltrados(processed);
       setDadosVisualizacao(processed);
-      setTodosTemas(Array.from(new Set(processed.map(d => d.tema))).sort(d3.ascending));
       setTodasRegioes(Array.from(new Set(processed.map(d => d.regiao))).sort(d3.ascending));
       setItensEixoY(Array.from(new Set(processed.map(d => d.tema))).sort(d3.ascending));
     });
@@ -253,7 +248,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
     const eixoYGroup = g.selectAll("g.y-axis").data([null]).join("g").attr("class", "y-axis");
     const imagesGroup = g.selectAll("g.images").data([null]).join("g").attr("class", "images");
 
-    // Criar ou selecionar o elemento tooltip
     let tooltip = d3.select("body").select(".dotplot-tooltip");
     if (tooltip.empty()) {
       tooltip = d3.select("body")
@@ -272,15 +266,13 @@ const GraficoTemasPorRegiao = ({ active }) => {
         .style("z-index", "1000");
     }
 
-    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([20, 60]);
+    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([30, 70]);
 
     const regioesVisiveis = todasRegioes.slice(paginaRegiao * regioesPorPagina, (paginaRegiao + 1) * regioesPorPagina);
     const temasVisiveis = itensEixoY.slice(paginaTema * temasPorPagina, (paginaTema + 1) * temasPorPagina);
 
     const xScale = d3.scalePoint().domain(regioesVisiveis).range([0, innerWidth]).padding(0.5);
     const yScale = d3.scalePoint().domain(temasVisiveis).range([0, innerHeight]).padding(0.5);
-
-    eixoYGroup.call(d3.axisLeft(yScale));
 
     const visiveis = dadosVisualizacao.filter(
       d => temasVisiveis.includes(d.tema) && regioesVisiveis.includes(d.regiao)
@@ -351,7 +343,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
         });
     }
 
-    // Função para criar conteúdo do tooltip
     const createTooltipContent = (d) => {
       const labelModo = modoVisualizacao.charAt(0).toUpperCase() + modoVisualizacao.slice(1, -1);
       
@@ -367,7 +358,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
         </div>
       `;
 
-      // Adicionar categoria se relevante
       if (modoVisualizacao === 'temas' || modoVisualizacao === 'instrumentos') {
         if (d.categoria) {
           content += `
@@ -378,7 +368,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
         }
       }
 
-      // Adicionar instrumentos se relevante
       if (d.instrumentos && d.instrumentos.length > 0 && modoVisualizacao !== 'instrumentos') {
         const instrumentosLimitados = d.instrumentos.slice(0, 3);
         const instrumentosTexto = instrumentosLimitados.join(", ");
@@ -397,18 +386,16 @@ const GraficoTemasPorRegiao = ({ active }) => {
     const enterPaths = paths.enter()
       .append("path")
       .attr("class", "flower1")
-      .attr("d", "M142.54,71.27c0,39.36-31.91,71.27-71.27,71.27S0,110.64,0,71.27,31.91,0,71.27,0s71.27,31.91,71.27,71.27Z")
+      .attr("d", "M15.76,18.41C13.6,7.72,22.87.65,22.87.65c9.63,8.91,6.69,19.16,6.69,19.16,14.29-4.3,14.77,7.6,14.77,7.6-13.94-5.61-12.89,14.95-12.89,14.95,1.32,19.04-8.1,17.44-8.1,17.44-7.1.83-8.35-16.82-8.35-16.82C13.29,22,1.04,25.04,1.04,25.04c6.57-11.1,14.72-6.63,14.72-6.63Z")
       .style("fill", "#474E95")
       .style("cursor", "pointer")
       .on("mouseover", function(event, d) {
-        // Destacar o elemento
         d3.select(this)
           .transition()
           .duration(200)
           .style("fill", "#6A5ACD")
           .style("opacity", 0.9);
 
-        // Mostrar tooltip
         tooltip
           .html(createTooltipContent(d))
           .style("left", (event.pageX + 10) + "px")
@@ -422,22 +409,19 @@ const GraficoTemasPorRegiao = ({ active }) => {
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 10) + "px");
       })
-      .on("mouseout", function(event, d) {
-        // Restaurar aparência original
+      .on("mouseout", function() {
         d3.select(this)
           .transition()
           .duration(200)
           .style("fill", "#474E95")
           .style("opacity", 1);
 
-        // Esconder tooltip
         tooltip
           .transition()
           .duration(200)
           .style("opacity", 0);
       })
       .on("click", (event, d) => {
-        // Esconder tooltip ao clicar
         tooltip.style("opacity", 0);
         
         const artistas = filteredData
@@ -505,7 +489,6 @@ const GraficoTemasPorRegiao = ({ active }) => {
         });
       });
 
-    // Aplicar os mesmos event handlers aos paths existentes
     paths
       .on("mouseover", function(event, d) {
         d3.select(this)
@@ -527,7 +510,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 10) + "px");
       })
-      .on("mouseout", function(event, d) {
+      .on("mouseout", function() {
         d3.select(this)
           .transition()
           .duration(200)
@@ -540,14 +523,12 @@ const GraficoTemasPorRegiao = ({ active }) => {
           .style("opacity", 0);
       });
 
-    // Remover qualquer title antigo se existir
     enterPaths.selectAll("title").remove();
     paths.selectAll("title").remove();
 
     animatePaths(enterPaths, true);
     setPrevActive(true);
 
-    // ...rest of existing code for grids and axes...
     g.selectAll(".x-grid").remove();
     g.selectAll(".y-grid").remove();
 
