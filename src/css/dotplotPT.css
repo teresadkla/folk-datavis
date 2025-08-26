@@ -1,9 +1,128 @@
+.dotplotPT-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    font-family: var(--font-secondary);
+}
+
 .dotplotPT-info {
     display: flex;
     flex-direction: row;
     width: 100%;
     flex-wrap: nowrap;
+    margin-top: 80px;
+}
 
+#categoria-info {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    max-width: 500px;
+    max-height: 70vh;
+    overflow-y: auto;
+    display: none;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #666;
+}
+
+.card {
+    padding: 30px 20px 20px 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.regiao {
+    background-color: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.section {
+    margin-bottom: 15px;
+}
+
+.section ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.section li {
+    margin-bottom: 3px;
+    font-size: 13px;
+}
+
+.dotplotPT-controls {
+    position: absolute;
+    /* top: 0px; */
+    left: 50%;
+    /* right: -150%; */
+    /* display: flex
+; */
+    gap: 10px;
+    /* align-items: center; */
+    z-index: 100;
+    ;
+}
+
+.dotplotPT-controls div {
+    display: flex;
+    align-items: center;
+}
+
+.dotplotPT-controls button {
+
+    background-color: #f0f0f0;
+    color: #333;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dotplotPT-controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.dotplotPT-controls button:hover:not(:disabled) {
+    background-color: var(--color-Blue2-PT);
+    transform: scale(1.1);
+}
+
+.dotplotPT-controls span {
+    font-size: 14px;
+    color: var(--color-text);
+    white-space: nowrap;
+    min-width: 120px;
+    text-align: center;
+}
+
+.dotplot-tooltip {
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
 }
 
 #categoria-info {
@@ -21,8 +140,6 @@
     overflow-y: auto;
     padding-top: 2%;
 }
-
-
 
 #categoria-info .header {
     display: flex;
@@ -55,8 +172,7 @@
     margin-bottom: 4px;
 }
 
-
-.dotplotPT-controls {
+/* .dotplotPT-controls {
     margin-left: 10%;
     display: flex;
     flex-direction: row;
@@ -66,9 +182,9 @@
 }
 
 .dotplotPT-controls button {
-    background-color: #f0f0f0;
-    color: #333;
-    border: 1px solid #ccc;
+    background-color: var(--color-Blue3-PT);
+    color: var(--color-Blue1-PT);
+    border: 1px solid var(--color-Blue2-PT);
     border-radius: 20px;
     padding: 6px 14px;
     font-size: 14px;
@@ -76,11 +192,16 @@
     transition: all 0.2s ease;
 }
 
+.dotplotPT-controls button:hover:not(:disabled) {
+    background-color: var(--color-Blue2-PT);
+    color: white;
+} */
+
 /* Estilos para o botão de legenda */
 .legenda-btn {
-    background-color: #f0f0f0;
-    color: #333;
-    border: 1px solid #ccc;
+    background-color: var(--color-Yellow3-PT);
+    color: var(--color-Yellow1-PT);
+    border: 1px solid var(--color-Yellow2-PT);
     padding: 6px 14px;
     font-size: 14px;
     border-radius: 20px;
@@ -88,9 +209,13 @@
     position: absolute;
     left: 1%;
     top: 40%;
-    transition: all 0.2s ease
+    transition: all 0.2s ease;
 }
 
+.legenda-btn:hover {
+    background-color: var(--color-Yellow2-PT);
+    color: white;
+}
 
 /* Estilos para o popup da legenda do dotplot */
 .legenda-popup {
@@ -120,10 +245,9 @@
     transition: color 0.2s;
 }
 
-
 .legenda-titulo {
     margin-top: 0;
-    color: #474e95;
+    color: var(--color-Blue1-PT);
     margin-bottom: 15px;
 }
 
@@ -151,7 +275,7 @@
 }
 
 .legenda-flor-exemplo {
-    fill: #474e95;
+    fill: var(--color-Blue1-PT);
 }
 
 .legenda-texto-exemplo {
@@ -159,10 +283,12 @@
 }
 
 .dotplotPT-filters {
+    position: absolute;
+    /* top: 20px; */
+    left: 10%;
     display: flex;
-    justify-content: flex-start;
-    margin-bottom: 20px;
-    position: relative;
+    gap: 15px;
+    z-index: 10;
 }
 
 .instrumento-filter {
@@ -171,7 +297,7 @@
 }
 
 .filter-button {
-    background-color: #474e95;
+    background-color: var(--color-Blue1-PT);
     color: white;
     padding: 8px 15px;
     border: none;
@@ -181,7 +307,7 @@
 }
 
 .filter-button:hover {
-    background-color: #363c75;
+    background-color: var(--color-Blue2-PT);
 }
 
 .dropdown-menu {
@@ -200,14 +326,21 @@
 .dropdown-header {
     display: flex;
     justify-content: space-between;
-    padding: 10px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
     border-bottom: 1px solid #eee;
+}
+
+.dropdown-header span {
+    font-weight: 600;
+    color: #333;
 }
 
 .select-all-button {
     background: none;
     border: none;
-    color: #474e95;
+    color: var(--color-Blue1-PT);
     cursor: pointer;
     font-size: 14px;
 }
@@ -215,8 +348,13 @@
 .close-dropdown {
     background: none;
     border: none;
+    font-size: 18px;
     cursor: pointer;
-    font-size: 14px;
+    color: #666;
+}
+
+.close-dropdown:hover {
+    color: #333;
 }
 
 .instrumento-list {
@@ -243,4 +381,225 @@
     padding: 20px;
     font-style: italic;
     color: #666;
+}
+
+.visualizar-container {
+    position: relative;
+}
+
+.visualizar-select {
+    background-color: var(--color-Yellow3-PT);
+    border: 1px solid var(--color-Yellow2-PT);
+    border-radius: 25px;
+    padding: 6px 14px;
+    font-family: var(--font-secondary);
+    font-size: 14px;
+    color: var(--color-text);
+    cursor: pointer;
+    appearance: none;
+    min-width: 200px;
+    position: relative;
+    text-align: center;
+}
+
+.visualizar-select:hover {
+    background-color: var(--color-Yellow2-PT);
+    color: white;
+}
+
+.filtrar-container {
+    position: relative;
+}
+
+.filtrar-button {
+    background-color: var(--color-Blue3-PT);
+    border: 1px solid var(--color-Blue2-PT);
+    border-radius: 25px;
+    padding: 6px 14px;
+    font-size: 14px;
+    color: var(--color-text);
+    cursor: pointer;
+    min-width: 150px;
+}
+
+.filtrar-button:hover {
+    background-color: var(--color-Blue2-PT);
+    color: white;
+}
+
+.filtrar-dropdown {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 600px;
+    max-width: 800px;
+    z-index: 1000;
+    padding: 20px;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.dropdown-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-header span {
+    font-weight: 600;
+    color: #333;
+}
+
+.close-dropdown {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-dropdown:hover {
+    color: #333;
+}
+
+.filtrar-sections {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 20px;
+    max-height: 350px;
+    overflow: hidden;
+}
+
+.filtrar-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.filtrar-section h4 {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    color: var(--color-Blue1-PT);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.filtrar-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 10px;
+    flex: 1;
+}
+
+/* Estilo personalizado para scrollbar */
+.filtrar-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.filtrar-grid::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.filtrar-grid::-webkit-scrollbar-thumb {
+    background: var(--color-Blue2-PT);
+    border-radius: 3px;
+}
+
+.filtrar-grid::-webkit-scrollbar-thumb:hover {
+    background: var(--color-Blue1-PT);
+}
+
+.filtrar-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    flex-shrink: 0;
+}
+
+.filtrar-item:hover {
+    background-color: var(--color-Blue3-PT);
+}
+
+.filtrar-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--color-Blue1-PT);
+    flex-shrink: 0;
+}
+
+.filtrar-item span {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.dropdown-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    flex-shrink: 0;
+}
+
+.limpar-filtros {
+    background-color: transparent;
+    border: 1px solid var(--color-Red2-PT);
+    color: var(--color-Red1-PT);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.limpar-filtros:hover {
+    background-color: var(--color-Red3-PT);
+    border-color: var(--color-Red1-PT);
+}
+
+.aplicar-filtros {
+    background-color: var(--color-Red2-PT);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.aplicar-filtros:hover {
+    background-color: var(--color-Red1-PT);
+}
+
+/* Remover estilos antigos */
+.modo-visualizacao,
+.modo-select,
+.categoria-filter,
+.instrumento-filter,
+.filter-button,
+.dropdown-menu,
+.dropdown-header,
+.instrumento-list,
+.instrumento-item,
+.select-all-button {
+    display: none;
 }

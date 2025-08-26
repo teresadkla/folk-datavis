@@ -327,9 +327,15 @@ const GraficoTemasPorRegiao = ({ active }) => {
       .duration(isPageChange ? 0 : 300)
       .style("opacity", 0)
       .attr("transform", d => {
-        const x = xScale(d.regiao) - rScale(d.count) / 2;
-        const y = yScale(d.tema) - rScale(d.count) / 2;
-        return `translate(${x}, ${y}) scale(0)`;
+        const x = xScale(d.regiao) || 0;
+        const y = yScale(d.tema) || 0;
+        const rValue = rScale(d.count) || 0;
+        
+        if (isNaN(x) || isNaN(y) || isNaN(rValue) || !isFinite(x) || !isFinite(y) || !isFinite(rValue)) {
+          return `translate(0, 0) scale(0)`;
+        }
+        
+        return `translate(${x - rValue / 2}, ${y - rValue / 2}) scale(0)`;
       })
       .remove();
 
@@ -337,10 +343,17 @@ const GraficoTemasPorRegiao = ({ active }) => {
       if (isPageChange) {
         selection
           .attr("transform", d => {
-            const x = xScale(d.regiao) - rScale(d.count) / 2;
-            const y = yScale(d.tema) - rScale(d.count) / 2;
-            const scale = rScale(d.count) / 170; // Diminuir este número aumenta o tamanho geral
-            return `translate(${x}, ${y}) scale(${scale})`;
+            const x = xScale(d.regiao) || 0;
+            const y = yScale(d.tema) || 0;
+            const rValue = rScale(d.count) || 0;
+            const scale = rValue / 170;
+            
+            // Verificar se todos os valores são válidos
+            if (isNaN(x) || isNaN(y) || isNaN(scale) || !isFinite(x) || !isFinite(y) || !isFinite(scale)) {
+              return `translate(0, 0) scale(0)`;
+            }
+            
+            return `translate(${x - rValue / 2}, ${y - rValue / 2}) scale(${scale})`;
           })
           .style("opacity", 1);
         return;
@@ -348,9 +361,16 @@ const GraficoTemasPorRegiao = ({ active }) => {
 
       selection
         .attr("transform", d => {
-          const x = xScale(d.regiao) - rScale(d.count) / 2;
-          const y = yScale(d.tema) - rScale(d.count) / 2;
-          return `translate(${x}, ${y}) scale(0)`;
+          const x = xScale(d.regiao) || 0;
+          const y = yScale(d.tema) || 0;
+          const rValue = rScale(d.count) || 0;
+          
+          // Verificar se todos os valores são válidos
+          if (isNaN(x) || isNaN(y) || isNaN(rValue) || !isFinite(x) || !isFinite(y) || !isFinite(rValue)) {
+            return `translate(0, 0) scale(0)`;
+          }
+          
+          return `translate(${x - rValue / 2}, ${y - rValue / 2}) scale(0)`;
         })
         .style("opacity", 0);
 
@@ -359,10 +379,17 @@ const GraficoTemasPorRegiao = ({ active }) => {
         .duration(700)
         .ease(d3.easeBackOut)
         .attr("transform", d => {
-          const x = xScale(d.regiao) - rScale(d.count) / 2;
-          const y = yScale(d.tema) - rScale(d.count) / 2;
-          const scale = rScale(d.count) / 170; // Diminuir este número aumenta o tamanho geral
-          return `translate(${x}, ${y}) scale(${scale})`;
+          const x = xScale(d.regiao) || 0;
+          const y = yScale(d.tema) || 0;
+          const rValue = rScale(d.count) || 0;
+          const scale = rValue / 170;
+          
+          // Verificar se todos os valores são válidos
+          if (isNaN(x) || isNaN(y) || isNaN(scale) || !isFinite(x) || !isFinite(y) || !isFinite(scale)) {
+            return `translate(0, 0) scale(0)`;
+          }
+          
+          return `translate(${x - rValue / 2}, ${y - rValue / 2}) scale(${scale})`;
         })
         .style("opacity", 1);
     };
@@ -372,10 +399,17 @@ const GraficoTemasPorRegiao = ({ active }) => {
     } else {
       paths
         .attr("transform", d => {
-          const x = xScale(d.regiao) - rScale(d.count) / 2;
-          const y = yScale(d.tema) - rScale(d.count) / 2;
-          const scale = rScale(d.count) / 170; // Diminuir este número aumenta o tamanho geral
-          return `translate(${x}, ${y}) scale(${scale})`;
+          const x = xScale(d.regiao) || 0;
+          const y = yScale(d.tema) || 0;
+          const rValue = rScale(d.count) || 0;
+          const scale = rValue / 170;
+          
+          // Verificar se todos os valores são válidos
+          if (isNaN(x) || isNaN(y) || isNaN(scale) || !isFinite(x) || !isFinite(y) || !isFinite(scale)) {
+            return `translate(0, 0) scale(0)`;
+          }
+          
+          return `translate(${x - rValue / 2}, ${y - rValue / 2}) scale(${scale})`;
         });
     }
 
@@ -628,141 +662,136 @@ const GraficoTemasPorRegiao = ({ active }) => {
 
   return (
     <div className="dotplotPT-container">
+      
       <div className="dotplotPT-filters">
-        <div className="modo-visualizacao">
-          <label>Eixo Y - Visualizar por:</label>
+        <div className="visualizar-container">
           <select
             value={modoVisualizacao}
             onChange={(e) => setModoVisualizacao(e.target.value)}
-            className="modo-select"
+            className="visualizar-select"
           >
-            <option value="temas">Temas</option>
-            <option value="categorias">Categorias</option>
-            <option value="instrumentos">Instrumentos</option>
+            <option value="temas"> Visualizar por Temas</option>
+            <option value="categorias"> Visualizar por Categorias</option>
+            <option value="instrumentos"> Visualizar por Instrumentos</option>
           </select>
         </div>
 
-        {modoVisualizacao !== 'categorias' && (
-          <div className="categoria-filter">
-            <button
-              className="filter-button"
-              onClick={() => setIsDropdownCategoriaOpen(!isDropdownCategoriaOpen)}
-            >
-              {categoriasSelecionadas.length === 0
-                ? "Filtrar por Categoria"
-                : `${categoriasSelecionadas.length} categoria(s) selecionada(s)`}
-            </button>
+        <div className="filtrar-container">
+          <button
+            className="filtrar-button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          >
+          Filtrar por 
+          </button>
 
-            {isDropdownCategoriaOpen && (
-              <div className="dropdown-menu">
-                <div className="dropdown-header">
-                  <button
-                    className="select-all-button"
-                    onClick={() => {
-                      if (categoriasSelecionadas.length === todasCategorias.length) {
-                        setCategoriasSelecionadas([]);
-                      } else {
-                        setCategoriasSelecionadas([...todasCategorias]);
-                      }
-                    }}
-                  >
-                    {categoriasSelecionadas.length === todasCategorias.length
-                      ? "Desselecionar Todos"
-                      : "Selecionar Todos"}
-                  </button>
-                  <button
-                    className="close-dropdown"
-                    onClick={() => setIsDropdownCategoriaOpen(false)}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="instrumento-list">
-                  {todasCategorias.map(categoria => (
-                    <label key={categoria} className="instrumento-item">
-                      <input
-                        type="checkbox"
-                        checked={categoriasSelecionadas.includes(categoria)}
-                        onChange={() => {
-                          if (categoriasSelecionadas.includes(categoria)) {
-                            setCategoriasSelecionadas(
-                              categoriasSelecionadas.filter(c => c !== categoria)
-                            );
-                          } else {
-                            setCategoriasSelecionadas([...categoriasSelecionadas, categoria]);
-                          }
-                        }}
-                      />
-                      {categoria}
-                    </label>
-                  ))}
-                </div>
+          {isDropdownOpen && (
+            <div className="filtrar-dropdown">
+              <div className="dropdown-header">
+                <span>Filtrar Temas por:</span>
+                <button
+                  className="close-dropdown"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  ✕
+                </button>
               </div>
-            )}
-          </div>
-        )}
 
-        {modoVisualizacao !== 'instrumentos' && (
-          <div className="instrumento-filter">
-            <button
-              className="filter-button"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              {instrumentosSelecionados.length === 0
-                ? "Filtrar por Instrumento"
-                : `${instrumentosSelecionados.length} instrumento(s) selecionado(s)`}
-            </button>
+               <div className="filtrar-sections">
+                {modoVisualizacao !== 'categorias' && (
+                  <div className="filtrar-section">
+                    <h4>Categoria</h4>
+                    <div className="filtrar-grid">
+                      {todasCategorias.map(categoria => (
+                        <label key={categoria} className="filtrar-item">
+                          <input
+                            type="checkbox"
+                            checked={categoriasSelecionadas.includes(categoria)}
+                            onChange={() => {
+                              if (categoriasSelecionadas.includes(categoria)) {
+                                setCategoriasSelecionadas(
+                                  categoriasSelecionadas.filter(c => c !== categoria)
+                                );
+                              } else {
+                                setCategoriasSelecionadas([...categoriasSelecionadas, categoria]);
+                              }
+                            }}
+                          />
+                          <span>{categoria}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {isDropdownOpen && (
-              <div className="dropdown-menu">
-                <div className="dropdown-header">
-                  <button
-                    className="select-all-button"
-                    onClick={() => {
-                      if (instrumentosSelecionados.length === todosInstrumentos.length) {
-                        setInstrumentosSelecionados([]);
-                      } else {
-                        setInstrumentosSelecionados([...todosInstrumentos]);
-                      }
-                    }}
-                  >
-                    {instrumentosSelecionados.length === todosInstrumentos.length
-                      ? "Desselecionar Todos"
-                      : "Selecionar Todos"}
-                  </button>
-                  <button
-                    className="close-dropdown"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="instrumento-list">
-                  {todosInstrumentos.map(instrumento => (
-                    <label key={instrumento} className="instrumento-item">
-                      <input
-                        type="checkbox"
-                        checked={instrumentosSelecionados.includes(instrumento)}
-                        onChange={() => {
-                          if (instrumentosSelecionados.includes(instrumento)) {
-                            setInstrumentosSelecionados(
-                              instrumentosSelecionados.filter(i => i !== instrumento)
-                            );
-                          } else {
-                            setInstrumentosSelecionados([...instrumentosSelecionados, instrumento]);
-                          }
-                        }}
-                      />
-                      {instrumento}
-                    </label>
-                  ))}
-                </div>
+                {modoVisualizacao !== 'instrumentos' && (
+                  <div className="filtrar-section">
+                    <h4>Instrumento</h4>
+                    <div className="filtrar-grid">
+                      {todosInstrumentos.map(instrumento => (
+                        <label key={instrumento} className="filtrar-item">
+                          <input
+                            type="checkbox"
+                            checked={instrumentosSelecionados.includes(instrumento)}
+                            onChange={() => {
+                              if (instrumentosSelecionados.includes(instrumento)) {
+                                setInstrumentosSelecionados(
+                                  instrumentosSelecionados.filter(i => i !== instrumento)
+                                );
+                              } else {
+                                setInstrumentosSelecionados([...instrumentosSelecionados, instrumento]);
+                              }
+                            }}
+                          />
+                          <span>{instrumento}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        )}
+
+              <div className="dropdown-actions">
+                <button
+                  className="limpar-filtros"
+                  onClick={() => {
+                    setCategoriasSelecionadas([]);
+                    setInstrumentosSelecionados([]);
+                  }}
+                >
+                  Limpar filtros
+                </button>
+                <button
+                  className="aplicar-filtros"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  Aplicar filtros
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+       <div className="dotplotPT-controls">
+        <div>
+          <button 
+            onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} 
+            disabled={paginaTema === 0}
+            title="Página anterior"
+          >
+            ↑
+          </button>
+          <span>
+            {modoVisualizacao.charAt(0).toUpperCase() + modoVisualizacao.slice(1, -1)} {paginaTema + 1} de {totalPaginasTemas}
+          </span>
+          <button
+            onClick={() => setPaginaTema((p) => Math.min(p + 1, totalPaginasTemas - 1))}
+            disabled={paginaTema >= totalPaginasTemas - 1}
+            title="Próxima página"
+          >
+            ↓
+          </button>
+        </div>
       </div>
 
       <div className="dotplotPT-info">
@@ -770,22 +799,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
         <div id="categoria-info" style={{ marginTop: "1rem", fontSize: "14px" }}></div>
       </div>
 
-      <div className="dotplotPT-controls">
-        <div>
-          <button onClick={() => setPaginaTema((p) => Math.max(p - 1, 0))} disabled={paginaTema === 0}>
-            ↑
-          </button>
-          <span style={{ margin: "0 10px" }}>
-            {modoVisualizacao.charAt(0).toUpperCase() + modoVisualizacao.slice(1, -1)} {paginaTema + 1}
-          </span>
-          <button
-            onClick={() => setPaginaTema((p) => Math.min(p + 1, totalPaginasTemas - 1))}
-            disabled={paginaTema >= totalPaginasTemas - 1}
-          >
-            ↓
-          </button>
-        </div>
-      </div>
+     
     </div>
   );
 };
