@@ -92,7 +92,7 @@ export default function VisPT() {
                   <b>Linha castanha</b>: Ligação entre tema e região (espessura = nº de ocorrências)
                 </li>
               </ul>
-              <p style={{ fontSize: "12px", color: "#555" }}>
+              <p style={{ fontSize: "14px", color: "#555" }}>
                 Clique numa flor para destacar as ligações.<br />
                 Passe o rato sobre uma flor para ver detalhes.
               </p>

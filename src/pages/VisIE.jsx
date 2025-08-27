@@ -65,23 +65,23 @@ export default function VisIE() {
                                     <span style={{
                                         display: "inline-block",
                                         width: 18, height: 18,
-                                        background: "#5193AE",
-                                        borderRadius: "50%",
-                                        marginRight: 8,
-                                        verticalAlign: "middle"
-                                    }}></span>
-                                    <b>Círculo azul</b>: Nome da música (tamanho proporcional ao número de ocorrências)
-                                </li>
-                                <li>
-                                    <span style={{
-                                        display: "inline-block",
-                                        width: 18, height: 18,
                                         background: "#82813E",
                                         borderRadius: "50%",
                                         marginRight: 8,
                                         verticalAlign: "middle"
                                     }}></span>
-                                    <b>Círculo verde</b>: Modo musical
+                                    <b>Flor verde</b>: Nome da música (tamanho proporcional ao número de ocorrências)
+                                </li>
+                                <li>
+                                    <span style={{
+                                        display: "inline-block",
+                                        width: 18, height: 18,
+                                        background: "#5193AE",
+                                        borderRadius: "50%",
+                                        marginRight: 8,
+                                        verticalAlign: "middle"
+                                    }}></span>
+                                    <b>Círculo azul</b>: Modo musical
                                 </li>
                                 <li>
                                     <span style={{
@@ -94,9 +94,9 @@ export default function VisIE() {
                                     <b>Linha castanha</b>: Ligação entre música e modo (espessura = nº de ocorrências)
                                 </li>
                             </ul>
-                            <p style={{ fontSize: "12px", color: "#555" }}>
-                                Clique num círculo azul para destacar as ligações.<br />
-                                Passe o rato sobre um círculo azul para ver detalhes.
+                            <p style={{ fontSize: "14px", color: "#555" }}>
+                                Clique numa flor para destacar as ligações.<br />
+                                Passe o rato sobre uma flor para ver detalhes.
                             </p>
 
                         </div>
@@ -230,67 +230,67 @@ export default function VisIE() {
                             {/* Conteúdo da legenda do ChordDiagramABC */}
 
                             <h3>Legenda - Strings of Connection</h3>
-            
-            {/* Explicação geral */}
-            <div className="legend-section">
-              <h4>O que é um Chord Diagram?</h4>
-              <p>
-                O Chord Diagram mostra as relações de similaridade entre 6 músicas folk irlandesas. 
-                Cada música é representada por um arco, e as ligações mostram o quão similares são entre si.
-              </p>
-            </div>
 
-            {/* Elementos visuais */}
-            <div className="legend-section">
-              <h4>Elementos Visuais</h4>
-              <div className="legend-item">
-                <div className="legend-symbol arc-symbol"></div>
-                <div className="legend-text">
-                  <strong>Arcos (nós):</strong> Cada arco representa uma música folk. 
-                  Clique num arco para ver a partitura da música.
-                </div>
-              </div>
-              
-              <div className="legend-item">
-                <div className="legend-symbol ribbon-symbol"></div>
-                <div className="legend-text">
-                  <strong>Ligações (ribbons):</strong> Mostram a similaridade entre duas músicas. 
-                  Ligações mais grossas = maior similaridade.
-                </div>
-              </div>
-            </div>
+                            {/* Explicação geral */}
+                            <div className="legend-section">
+                                <h4>O que é um Chord Diagram?</h4>
+                                <p>
+                                    O Chord Diagram mostra as relações de similaridade entre 6 músicas folk irlandesas.
+                                    Cada música é representada por um arco, e as ligações mostram o quão similares são entre si.
+                                </p>
+                            </div>
 
-            {/* Como interpretar */}
-            <div className="legend-section">
-              <h4>Como Interpretar a Similaridade</h4>
-              <p>A similaridade é calculada com base em:</p>
-              <ul>
-                <li><strong>70% Notas Musicais:</strong> Notas comuns entre as melodias</li>
-                <li><strong>30% Atributos:</strong> Modo, tipo e compasso (meter)</li>
-              </ul>
-            </div>
+                            {/* Elementos visuais */}
+                            <div className="legend-section">
+                                <h4>Elementos Visuais</h4>
+                                <div className="legend-item">
+                                    <div className="legend-symbol arc-symbol"></div>
+                                    <div className="legend-text">
+                                        <strong>Arcos (nós):</strong> Cada arco representa uma música folk.
+                                        Clique num arco para ver a partitura da música.
+                                    </div>
+                                </div>
 
-            {/* Interações */}
-            <div className="legend-section">
-              <h4>Interações</h4>
-              <ul>
-                <li><strong>Hover sobre ligações:</strong> Vê detalhes da similaridade</li>
-                <li><strong>Clique nos arcos:</strong> Abre a partitura musical</li>
-                <li><strong>Filtros de atributos:</strong> Personaliza o cálculo da similaridade</li>
-                <li><strong>Trocar músicas:</strong> Seleciona 6 novas músicas aleatórias</li>
-              </ul>
-            </div>
+                                <div className="legend-item">
+                                    <div className="legend-symbol ribbon-symbol"></div>
+                                    <div className="legend-text">
+                                        <strong>Ligações (ribbons):</strong> Mostram a similaridade entre duas músicas.
+                                        Ligações mais grossas = maior similaridade.
+                                    </div>
+                                </div>
+                            </div>
 
-            {/* Cores */}
-            <div className="legend-section">
-              <h4>Cores</h4>
-              <div className="legend-item">
-                <div className="legend-color" style={{backgroundColor: '#82813E'}}></div>
-                <span>Cor principal para arcos e ligações</span>
-              </div>
-            </div>
+                            {/* Como interpretar */}
+                            <div className="legend-section">
+                                <h4>Como Interpretar a Similaridade</h4>
+                                <p>A similaridade é calculada com base em:</p>
+                                <ul>
+                                    <li><strong>70% Notas Musicais:</strong> Notas comuns entre as melodias</li>
+                                    <li><strong>30% Atributos:</strong> Modo, tipo e compasso (meter)</li>
+                                </ul>
+                            </div>
 
-                            
+                            {/* Interações */}
+                            <div className="legend-section">
+                                <h4>Interações</h4>
+                                <ul>
+                                    <li><strong>Hover sobre ligações:</strong> Vê detalhes da similaridade</li>
+                                    <li><strong>Clique nos arcos:</strong> Abre a partitura musical</li>
+                                    <li><strong>Filtros de atributos:</strong> Personaliza o cálculo da similaridade</li>
+                                    <li><strong>Trocar músicas:</strong> Seleciona 6 novas músicas aleatórias</li>
+                                </ul>
+                            </div>
+
+                            {/* Cores */}
+                            <div className="legend-section">
+                                <h4>Cores</h4>
+                                <div className="legend-item">
+                                    <div className="legend-color" style={{ backgroundColor: '#82813E' }}></div>
+                                    <span>Cor principal para arcos e ligações</span>
+                                </div>
+                            </div>
+
+
                         </div>
                     )}
                 </div>
