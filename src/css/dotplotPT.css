@@ -131,7 +131,7 @@
     background-color: rgba(255, 255, 255, 0.8);
     text-align: left;
     width: 25%;
-  top: 20%;
+    top: 20%;
     left: -25%;
     height: fit-content;
     border-radius: 5px;
@@ -140,6 +140,26 @@
     overflow-y: auto;
     padding-top: 2%;
 }
+
+/* Estilo personalizado para scrollbar */
+#categoria-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+#categoria-info::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#categoria-info::-webkit-scrollbar-thumb {
+    background: var(--color-Blue2-PT);
+    border-radius: 3px;
+}
+
+#categoria-info::-webkit-scrollbar-thumb:hover {
+    background: var(--color-Blue1-PT);
+}
+
 
 #categoria-info .header {
     display: flex;

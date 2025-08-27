@@ -306,7 +306,7 @@ const DotPlotTypes = () => {
             cursor: isLoading ? 'not-allowed' : 'pointer'
           }}
         >
-          {filterActive ? "Mostrar todas as músicas" : "Mostrar apenas músicas com mais de um tipo"}
+          {filterActive ? "Mostrar todas as músicas" : "Mostrar  músicas com mais de um tipo"}
         </button>
         {/* Botão para navegar para cima na paginação */}
         <button

@@ -84,21 +84,36 @@
   gap: 20px;
 }
 
-/* .filter-category {
-  flex: 1;
-  min-width: 200px;
+
+
+/* Estilo personalizado para scrollbar */
+.filter-options::-webkit-scrollbar {
+    width: 6px;
 }
 
-.filter-category h4 {
-  margin: 0 0 8px 0;
-  font-family: var(--font-secondary);
-} */
+.filter-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.filter-options::-webkit-scrollbar-thumb {
+    background: var(--color-Blue2-IE);
+    border-radius: 3px;
+}
+
+.filter-options::-webkit-scrollbar-thumb:hover {
+    background: var(--color-Blue1-IE);
+}
+
+
+
 
 .filter-options {
   display: flex;
   flex-direction: column;
   max-height: 150px;
   overflow-y: scroll; /* Mudança de 'auto' para 'scroll' */
+    overflow-x: hidden;
 }
 
 .filter-option {
@@ -177,6 +192,7 @@
   font-family: var(--font-secondary);
   color: #666;
 }
+
 
 .filtering-overlay {
   position: absolute;

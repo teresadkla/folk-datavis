@@ -139,7 +139,7 @@ const NetworkDiagram = () => {
         .data(nodes)
         .join("text")
         .text(d => d.type === "regiao" ? d.id : "")
-        .attr("font-size", "10px")
+        .attr("font-size", "18px")
         .attr("dx", 10)
         .attr("dy", "0.35em")
         .style("opacity", 0);

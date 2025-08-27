@@ -59,11 +59,19 @@ const NavigationBar = () => {
           <div className="context-content">
 
             <div className="context-section">
-                <h2>Context</h2>
-              </div>
+              <h2
+                onClick={() => {
+                  navigate('/')
+                  setIsContextOpen(false)
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                Context
+              </h2>
+            </div>
 
             <div className="context-section">
-              <h2 
+              <h2
                 onClick={() => {
                   navigate('/portuguese')
                   setIsContextOpen(false)
@@ -73,7 +81,7 @@ const NavigationBar = () => {
                 Portuguese Geographical FolkData
               </h2>
               <ol>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/portuguese', search: '?vis=1' })
                     setIsContextOpen(false)
@@ -82,7 +90,7 @@ const NavigationBar = () => {
                 >
                   Portuguese Musical Roots
                 </li>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/portuguese', search: '?vis=2' })
                     setIsContextOpen(false)
@@ -91,7 +99,7 @@ const NavigationBar = () => {
                 >
                   Echoes across the Land
                 </li>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/portuguese', search: '?vis=3' })
                     setIsContextOpen(false)
@@ -100,7 +108,7 @@ const NavigationBar = () => {
                 >
                   Wandering Melodies
                 </li>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/portuguese', search: '?vis=4' })
                     setIsContextOpen(false)
@@ -113,7 +121,7 @@ const NavigationBar = () => {
 
             </div>
             <div className="context-section">
-              <h2 
+              <h2
                 onClick={() => {
                   navigate('/irish')
                   setIsContextOpen(false)
@@ -124,7 +132,7 @@ const NavigationBar = () => {
               </h2>
 
               <ol>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/irish', search: '?vis=1' })
                     setIsContextOpen(false)
@@ -133,7 +141,7 @@ const NavigationBar = () => {
                 >
                   Irish Musical Roots
                 </li>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/irish', search: '?vis=2' })
                     setIsContextOpen(false)
@@ -142,7 +150,7 @@ const NavigationBar = () => {
                 >
                   Types of Irish Folk
                 </li>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/irish', search: '?vis=3' })
                     setIsContextOpen(false)
@@ -151,7 +159,7 @@ const NavigationBar = () => {
                 >
                   Heat of the Melody
                 </li>
-                <li 
+                <li
                   onClick={() => {
                     navigate({ pathname: '/irish', search: '?vis=4' })
                     setIsContextOpen(false)

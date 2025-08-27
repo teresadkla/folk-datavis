@@ -77,7 +77,7 @@
 .shuffle-button {
   padding: 6px 14px;
   background-color: var(--color-Green3-IE);
-  color: var(--color-Green1-IE);
+  color: var(  --color-text);
   border: 1px solid var(--color-Green2-IE);
   border-radius: 25px;
   cursor: pointer;
@@ -102,7 +102,7 @@
 .filters-button {
   padding: 6px 14px;
   background-color: var(--color-Blue3-IE);
-  color: var(--color-Blue1-IE);
+  color: var( --color-text);
   border: 1px solid var(--color-Blue2-IE);
   border-radius: 25px;
   cursor: pointer;
