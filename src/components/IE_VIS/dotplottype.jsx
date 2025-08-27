@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import * as d3 from "d3";
 import "../../css/dotplottypes.css";
 
-
 const fontText = getComputedStyle(document.documentElement)
   .getPropertyValue('--font-secondary')
   .trim();
@@ -23,6 +22,13 @@ const DotPlotTypes = () => {
   // Add a new state to track the animation mode
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const [showLegend, setShowLegend] = useState(false); // Estado para mostrar/ocultar legenda
+
+  // Novos estados para o sistema de visualização
+  const [viewMode, setViewMode] = useState('songs'); // 'songs', 'mode', 'meter'
+  const [showFilters, setShowFilters] = useState(false);
+  const [showViewModeDropdown, setShowViewModeDropdown] = useState(false); // Novo estado
+  const [selectedMeters, setSelectedMeters] = useState([]);
+  const [selectedModes, setSelectedModes] = useState([]);
 
   // Carrega e processa os dados CSV ao montar o componente
   useEffect(() => {
@@ -51,22 +57,81 @@ const DotPlotTypes = () => {
       });
   }, []);
 
-  // Memoriza nomes, tipos e countMap
-  const names = useMemo(() => Array.from(new Set(data.map(d => d.name))).sort(), [data]);
-  const types = useMemo(() => Array.from(new Set(data.map(d => d.type))).sort(), [data]);
-  const countMap = useMemo(() => d3.rollup(
-    data,
-    v => v.length,
-    d => d.name,
-    d => d.type
-  ), [data]);
+  // Memoriza nomes, tipos e countMap baseado no modo de visualização
+  const processedData = useMemo(() => {
+    if (!data.length) return { names: [], types: [], countMap: new Map() };
+
+    let filteredData = [...data];
+
+    // Aplicar filtros baseados no modo de visualização
+    if (viewMode === 'songs') {
+      if (selectedMeters.length > 0) {
+        filteredData = filteredData.filter(d => selectedMeters.includes(d.meter));
+      }
+      if (selectedModes.length > 0) {
+        filteredData = filteredData.filter(d => selectedModes.includes(d.mode));
+      }
+    } else if (viewMode === 'mode') {
+      if (selectedMeters.length > 0) {
+        filteredData = filteredData.filter(d => selectedMeters.includes(d.meter));
+      }
+    } else if (viewMode === 'meter') {
+      if (selectedModes.length > 0) {
+        filteredData = filteredData.filter(d => selectedModes.includes(d.mode));
+      }
+    }
+
+    const types = Array.from(new Set(filteredData.map(d => d.type))).sort();
+    let names, countMap;
+
+    if (viewMode === 'songs') {
+      names = Array.from(new Set(filteredData.map(d => d.name))).sort();
+      countMap = d3.rollup(
+        filteredData,
+        v => v.length,
+        d => d.name,
+        d => d.type
+      );
+    } else if (viewMode === 'mode') {
+      names = Array.from(new Set(filteredData.map(d => d.mode))).sort();
+      countMap = d3.rollup(
+        filteredData,
+        v => v.length,
+        d => d.mode,
+        d => d.type
+      );
+    } else if (viewMode === 'meter') {
+      names = Array.from(new Set(filteredData.map(d => d.meter))).sort();
+      countMap = d3.rollup(
+        filteredData,
+        v => v.length,
+        d => d.meter,
+        d => d.type
+      );
+    }
+
+    return { names, types, countMap };
+  }, [data, viewMode, selectedMeters, selectedModes]);
+
+  const { names, types, countMap } = processedData;
+
+  // Opções disponíveis para filtros
+  const availableMeters = useMemo(() => 
+    Array.from(new Set(data.map(d => d.meter))).sort(), [data]);
+  const availableModes = useMemo(() => 
+    Array.from(new Set(data.map(d => d.mode))).sort(), [data]);
 
   // Re-renderiza o dotplot quando os dados ou controles mudam
   useEffect(() => {
     if (data.length && names.length && types.length && countMap.size) {
       renderDotPlotTypes();
     }
-  }, [data, names, types, countMap, startIndex, filterActive]);
+  }, [data, names, types, countMap, startIndex, filterActive, viewMode]);
+
+  // Reset pagination when view mode changes
+  useEffect(() => {
+    setStartIndex(0);
+  }, [viewMode, selectedMeters, selectedModes]);
 
   // Retorna apenas nomes que possuem mais de um tipo associado
   const getFilteredNames = () => {
@@ -76,7 +141,7 @@ const DotPlotTypes = () => {
       .sort();
   };
 
-  // Função principal de renderização do heatmap
+  // Função principal de renderização do dotplot
   const renderDotPlotTypes = () => {
     const svg = d3.select(svgRef.current);
 
@@ -125,7 +190,7 @@ const DotPlotTypes = () => {
       const sizeScale = d3
         .scaleLinear()
         .domain([1, maxCount])
-        .range([6, 24]); // Tamanho mínimo 3px, máximo 12px
+        .range([6, 24]); // Tamanho mínimo 6px, máximo 24px
 
       // Eixo Y (nomes)
       g.append("g").call(d3.axisLeft(yScale))
@@ -179,7 +244,7 @@ const DotPlotTypes = () => {
         .attr("class", "tooltip")
         .style("opacity", 0);
 
-      // Renderiza os círculos do heatmap (começam invisíveis)
+      // Renderiza os círculos do dotplot (começam invisíveis)
       const circles = [];
       for (const [name, typeMap] of countMap) {
         if (!visibleNames.includes(name)) continue;
@@ -276,6 +341,49 @@ const DotPlotTypes = () => {
     }, 200);
   };
 
+  // Funções para lidar com mudanças de filtros
+  const handleMeterChange = (meter) => {
+    setSelectedMeters(prev => 
+      prev.includes(meter) 
+        ? prev.filter(m => m !== meter)
+        : [...prev, meter]
+    );
+  };
+
+  const handleModeChange = (mode) => {
+    setSelectedModes(prev => 
+      prev.includes(mode) 
+        ? prev.filter(m => m !== mode)
+        : [...prev, mode]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedMeters([]);
+    setSelectedModes([]);
+  };
+
+  const applyFilters = () => {
+    setShowFilters(false);
+    setStartIndex(0);
+  };
+
+  const getViewModeLabel = () => {
+    switch(viewMode) {
+      case 'songs': return 'Songs';
+      case 'mode': return 'Mode';
+      case 'meter': return 'Meter';
+      default: return 'Songs';
+    }
+  };
+
+  // Função para lidar com mudança do modo de visualização
+  const handleViewModeChange = (newMode) => {
+    setViewMode(newMode);
+    setShowViewModeDropdown(false);
+    setStartIndex(0);
+  };
+
   return (
     <div className="DotPlotTypes-container" style={{ position: 'relative', minHeight: '100vh' }}>
       {/* Loading overlay */}
@@ -295,19 +403,123 @@ const DotPlotTypes = () => {
         </div>
       )}
 
+      {/* Novos controles de visualização */}
+      <div className="visualization-controls">
+        <div className="control-group">
+          <div className="dropdown-container">
+            <button 
+              className="dropdown-btn view-mode-btn"
+              onClick={() => setShowViewModeDropdown(!showViewModeDropdown)}
+            >
+              Visualizar por <span className="chevron">▼</span>
+            </button>
+            {showViewModeDropdown && (
+              <div className="dropdown-content">
+                <label className="checkbox-item">
+                  <input 
+                    type="checkbox" 
+                    checked={viewMode === 'songs'}
+                    onChange={() => handleViewModeChange('songs')}
+                  />
+                  Songs
+                </label>
+                <label className="checkbox-item">
+                  <input 
+                    type="checkbox" 
+                    checked={viewMode === 'mode'}
+                    onChange={() => handleViewModeChange('mode')}
+                  />
+                  Mode
+                </label>
+                <label className="checkbox-item">
+                  <input 
+                    type="checkbox" 
+                    checked={viewMode === 'meter'}
+                    onChange={() => handleViewModeChange('meter')}
+                  />
+                  Meter
+                </label>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="control-group">
+          <div className="dropdown-container">
+            <button 
+              className="dropdown-btn filter-btn"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <span className="filter-icon"></span> Filtrar por <span className="chevron">▼</span>
+            </button>
+            {showFilters && (
+              <div className="dropdown-content filter-panel">
+                <h3>Filtrar por atributos musicais</h3>
+                
+                <div className="filter-sections">
+                  <div className="filter-section">
+                    <h4>Meter</h4>
+                    {availableMeters.map(meter => (
+                      <label key={meter} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedMeters.includes(meter)}
+                          onChange={() => handleMeterChange(meter)}
+                          disabled={viewMode === 'meter'}
+                        />
+                        {meter}
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="filter-section">
+                    <h4>Mode</h4>
+                    {availableModes.map(mode => (
+                      <label key={mode} className="checkbox-item">
+                        <input
+                          type="checkbox"
+                          checked={selectedModes.includes(mode)}
+                          onChange={() => handleModeChange(mode)}
+                          disabled={viewMode === 'mode'}
+                        />
+                        {mode}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="filter-actions">
+                  <button className="clear-filters-btn" onClick={clearFilters}>
+                    Limpar filtros
+                  </button>
+                  <button className="apply-filters-btn" onClick={applyFilters}>
+                    Aplicar filtros
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="control-group">
+          <button
+            onClick={handleFilterToggle}
+            disabled={isLoading}
+            className="multi-type-btn"
+            style={{
+              opacity: isLoading ? 0.6 : 1,
+              cursor: isLoading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {viewMode === 'songs' 
+              ? (filterActive ? "Mostrar todas as músicas" : "Mostrar músicas com mais de um tipo")
+              : `Mostrar ${getViewModeLabel().toLowerCase()}s com mais de um tipo`
+            }
+          </button>
+        </div>
+      </div>
+
       <div className="controls">
-        {/* Botão para ativar/desativar filtro de músicas com mais de um tipo */}
-        <button
-          onClick={handleFilterToggle}
-          disabled={isLoading}
-          id="filter-multi-type"
-          style={{
-            opacity: isLoading ? 0.6 : 1,
-            cursor: isLoading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          {filterActive ? "Mostrar todas as músicas" : "Mostrar  músicas com mais de um tipo"}
-        </button>
         {/* Botão para navegar para cima na paginação */}
         <button
           id="nav-up"
@@ -334,23 +546,9 @@ const DotPlotTypes = () => {
         </button>
       </div>
 
-      {/* Botão para mostrar/ocultar legenda */}
-      {/* <button 
-        className="legend-btn-types" 
-        onClick={() => setShowLegend((prev) => !prev)}
-        disabled={isLoading}
-        style={{
-          opacity: isLoading ? 0.6 : 1,
-          cursor: isLoading ? 'not-allowed' : 'pointer'
-        }}
-      >
-        {showLegend ? "Ocultar Legenda" : "Ver Legenda"}
-      </button> */}
-
       {/* Modal da Legenda */}
       {showLegend && !isLoading && (
         <div className="legend-modal">
-
           <div className="legend-content">
             <button className="legend-close" onClick={() => setShowLegend(false)}>
               ×
@@ -363,62 +561,17 @@ const DotPlotTypes = () => {
             <div className="legend-section">
               <h4>Como Ler:</h4>
               <ul>
-                <li><strong>Eixo Vertical (Y):</strong> Nomes das músicas</li>
+                <li><strong>Eixo Vertical (Y):</strong> {getViewModeLabel()}</li>
                 <li><strong>Eixo Horizontal (X):</strong> Tipos de música</li>
-                <li><strong>Círculos:</strong> Indicam que uma música pertence a um tipo específico</li>
-                <li><strong>Tamanho dos Círculos:</strong> Círculos maiores representam mais variações da música nesse tipo</li>
+                <li><strong>Círculos:</strong> Indicam que um item pertence a um tipo específico</li>
+                <li><strong>Tamanho dos Círculos:</strong> Círculos maiores representam mais variações</li>
               </ul>
-            </div>
-            <div className="legend-section">
-              <h4>Tamanhos:</h4>
-              <div className="size-legend">
-                <div className="size-item">
-                  <div className="size-circle small" style={{ 
-                    width: '6px', 
-                    height: '6px', 
-                    backgroundColor: '#4a90e2',
-                    borderRadius: '50%',
-                    border: '1px solid #2c5aa0'
-                  }}></div>
-                  <span>Poucas variações</span>
-                </div>
-                <div className="size-item">
-                  <div className="size-circle medium" style={{ 
-                    width: '16px', 
-                    height: '16px', 
-                    backgroundColor: '#4a90e2',
-                    borderRadius: '50%',
-                    border: '1px solid #2c5aa0'
-                  }}></div>
-                  <span>Variações médias</span>
-                </div>
-                <div className="size-item">
-                  <div className="size-circle large" style={{ 
-                    width: '24px', 
-                    height: '24px', 
-                    backgroundColor: '#4a90e2',
-                    borderRadius: '50%',
-                    border: '1px solid #2c5aa0'
-                  }}></div>
-                  <span>Muitas variações</span>
-                </div>
-              </div>
-
-              <div className="legend-section">
-                <h4>Controles:</h4>
-                <ul>
-                  <li><strong>Filtro:</strong> Mostra apenas músicas com múltiplos tipos</li>
-                  <li><strong>Navegação (↑/↓):</strong> Navega entre páginas do gráfico</li>
-                  <li><strong>Hover:</strong> Passe o mouse sobre os círculos para ver detalhes</li>
-                </ul>
-              </div>
-
             </div>
           </div>
         </div>
       )}
 
-      {/* SVG onde o heatmap é desenhado */}
+      {/* SVG onde o dotplot é desenhado */}
       <svg className="DotPlotTypessvg" ref={svgRef} width={1500} height={900} />
     </div>
   );
