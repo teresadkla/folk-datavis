@@ -67,10 +67,12 @@ margin-left: 20%;
   text-align: left;
 }
 .visPT-spiral {
-  grid-column: 1 / span 2;
-  grid-row: 16 / span 2;
+    /* z-index: 0; */
+    width: fit-content;
+    height: fit-content;
+    grid-column: 1 / span 2;
+    grid-row: 16 / span 2;
 }
-
 
 .roots-title,
 .map-title,
@@ -161,7 +163,8 @@ margin-left: 20%;
   position: absolute;
   /* right: 34%;
   bottom: 50%; */
-  transition: all 0.2s ease
+  transition: all 0.2s ease;
+  z-index: 100;
 }
 .legend-modal {
   position: relative

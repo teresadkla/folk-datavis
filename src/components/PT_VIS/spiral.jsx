@@ -10,7 +10,6 @@ document.head.appendChild(script);
 
 const SpiralVis = ({ active }) => {
   const svgRef = useRef();
-  const tooltipRef = useRef();
 
   useEffect(() => {
     if (!active) return;
@@ -23,7 +22,8 @@ const SpiralVis = ({ active }) => {
       .append("g")
       .attr("transform", `translate(${width / 2}, ${height / 2}) scale(0.7)`);
 
-    const tooltip = d3.select(tooltipRef.current);
+    // Criar o tooltip dinamicamente apenas quando necessário
+    let tooltip = null;
 
     d3.csv("VIMEO_V8.csv").then((data) => {
       const filteredRaw = data.filter((d) => {
@@ -42,15 +42,31 @@ const SpiralVis = ({ active }) => {
         (d) => temaCounts.get(d.Tema) > 1
       );
 
+      // Calcula a escala para o tamanho das pétalas baseada no número de ocorrências
+      const maxOccurrences = d3.max(Array.from(temaCounts.values()));
+      const minOccurrences = d3.min(Array.from(temaCounts.values()));
+      const sizeScale = d3.scaleLinear()
+        .domain([minOccurrences, maxOccurrences])
+        .range([0.5, 1.5]); // Tamanho mínimo 0.5x e máximo 1.5x
+
       const uniqueYears = Array.from(new Set(filteredData.map(d => d.ano))).sort((a, b) => a - b);
       
-      // Nova paleta de cores dividida em grupos de três anos
-      const colors = ["#C33512", "#474E95", "#E09D2C"];  // Vermelho, Azul, Amarelo
+      // Nova paleta de cores dividida em três períodos de 6 anos cada
+      const colors = ["#E09D2C", "#C33512", "#474E95"];  // Amarelo, Vermelho, Azul
       
-      // Função para obter a cor baseada no ano
+      // Função para obter a cor baseada no período do ano
       const yearColor = (ano) => {
         const yearIndex = uniqueYears.indexOf(ano);
-        return colors[yearIndex % colors.length];
+        const totalYears = uniqueYears.length;
+        
+        // Divide os anos em 3 períodos iguais
+        if (yearIndex < Math.floor(totalYears / 3)) {
+          return colors[0]; // #E09D2C (amarelo) - primeiros 6 anos
+        } else if (yearIndex < Math.floor(2 * totalYears / 3)) {
+          return colors[1]; // #C33512 (vermelho) - 6 anos intermédios
+        } else {
+          return colors[2]; // #474E95 (azul) - últimos 6 anos
+        }
       };
 
       const a = 5;
@@ -108,9 +124,15 @@ const SpiralVis = ({ active }) => {
         .attr("class", "custom-shape")
         .attr("d", leafspath)
         .attr("fill", (d) => yearColor(d.ano))
+        // .attr("stroke", "rgba(255, 255, 255, 0)")
+        // .attr("stroke-width", "10px")
+        .style("cursor", "pointer")
         .attr("opacity", 0)
         .attr("transform", (d, i) => {
-          const scale = 0.8;
+          // Calcula a escala baseada no número de ocorrências do tema
+          const themeOccurrences = temaCounts.get(d.Tema);
+          const scale = 0.8 * sizeScale(themeOccurrences);
+          
           // Use the actual bottom point coordinates of the leaf (0.57, 30.05)
           const offsetX = 0.57;
           const offsetY = -30.05;
@@ -129,18 +151,36 @@ const SpiralVis = ({ active }) => {
         .duration(300)
         .attr("opacity", 1);
 
-      // Tooltip interativo
+      // Tooltip interativo - agora mostra também o número de ocorrências
       g.selectAll(".custom-shape")
         .on("mouseover", (event, d) => {
-          const containerRect = svgRef.current.parentNode.getBoundingClientRect();
+          // Criar tooltip se não existir
+          if (!tooltip) {
+            tooltip = d3.select("body")
+              .append("div")
+              .attr("class", "tooltip-spiral")
+              .style("opacity", 0)
+              .style("position", "absolute")
+              .style("z-index", "1000")
+              .style("background", "white")
+              .style("color", "black")
+              .style("padding", "5px 10px")
+              .style("border-radius", "5px")
+              .style("pointer-events", "none")
+              .style("font-size", "12px");
+          }
+
+          const themeOccurrences = temaCounts.get(d.Tema);
           tooltip
             .style("opacity", 1)
-            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}`)
-            .style("left", event.clientX - containerRect.left + 10 + "px")
-            .style("top", event.clientY - containerRect.top - 20 + "px");
+            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}<br>Ocorrências: ${themeOccurrences}`)
+            .style("left", event.pageX + 10 + "px")
+            .style("top", event.pageY - 20 + "px");
         })
         .on("mouseout", () => {
-          tooltip.style("opacity", 0);
+          if (tooltip) {
+            tooltip.style("opacity", 0);
+          }
         })
         .on("click", function (event, clickedDatum) {
           const selectedTheme = clickedDatum.Tema;
@@ -234,6 +274,10 @@ const SpiralVis = ({ active }) => {
 
     return () => {
       svg.selectAll("*").remove();
+      // Remover tooltip se existir
+      if (tooltip) {
+        tooltip.remove();
+      }
     };
   }, [active]);
 
@@ -271,9 +315,8 @@ const SpiralVis = ({ active }) => {
   };
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ position: "relative", display: "flex", gap: "20px" }}>
       <svg ref={svgRef} width={1500} height={1000}></svg>
-      <div ref={tooltipRef} className="tooltip-spiral" />
     </div>
   );
 };

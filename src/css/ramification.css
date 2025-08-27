@@ -15,7 +15,12 @@
   pointer-events: none;
   font-size: 12px;
 }
+.nodes path {
 
+    stroke: rgba(255, 255, 255, 0);
+    stroke-width: 20px;
+    cursor: pointer;
+}
 /*Ireland Vis*/
 .tooltipIE {
   position: absolute;

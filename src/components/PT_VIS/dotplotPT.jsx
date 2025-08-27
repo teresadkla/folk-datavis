@@ -299,7 +299,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
       return 'flower5';                                  // Alto
     };
 
-    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([30, 70]);
+    const rScale = d3.scaleSqrt().domain([1, d3.max(dadosVisualizacao, d => d.count)]).range([20, 80]);
 
     const regioesVisiveis = todasRegioes.slice(paginaRegiao * regioesPorPagina, (paginaRegiao + 1) * regioesPorPagina);
     const temasVisiveis = itensEixoY.slice(paginaTema * temasPorPagina, (paginaTema + 1) * temasPorPagina);

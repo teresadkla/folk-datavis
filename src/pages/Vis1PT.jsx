@@ -47,15 +47,15 @@ export default function VisPT() {
     return (
       <div className="legend-overlay" onClick={() => setShowLegend(false)}>
         <div className="legend-modal" onClick={(e) => e.stopPropagation()}>
-        
+
           {currentVis === 1 && (
             <div className="legend-content">
-                <button
-            className="legend-close"
-            onClick={() => setShowLegend(false)}
-          >
-            ×
-          </button>
+              <button
+                className="legend-close"
+                onClick={() => setShowLegend(false)}
+              >
+                ×
+              </button>
               {/* Conteúdo da legenda do NetworkDiagram */}
               <h3>Legenda do gráfico</h3>
               <ul style={{ listStyle: "none", padding: 0 }}>
@@ -100,12 +100,12 @@ export default function VisPT() {
           )}
           {currentVis === 2 && (
             <div className="legend-content">
-                <button
-            className="legend-close"
-            onClick={() => setShowLegend(false)}
-          >
-            ×
-          </button>
+              <button
+                className="legend-close"
+                onClick={() => setShowLegend(false)}
+              >
+                ×
+              </button>
               {/* Conteúdo da legenda do Map */}
               <h3>Legenda</h3>
               <ul>
@@ -118,12 +118,12 @@ export default function VisPT() {
           )}
           {currentVis === 3 && (
             <div className="legend-content">
-                <button
-            className="legend-close"
-            onClick={() => setShowLegend(false)}
-          >
-            ×
-          </button>
+              <button
+                className="legend-close"
+                onClick={() => setShowLegend(false)}
+              >
+                ×
+              </button>
               {/* Conteúdo da legenda do dotplot */}
               <h3 className="legenda-titulo">Legenda do Gráfico</h3>
 
@@ -161,15 +161,107 @@ export default function VisPT() {
           )}
           {currentVis === 4 && (
             <div className="legend-content">
-                <button
-            className="legend-close"
-            onClick={() => setShowLegend(false)}
-          >
-            ×
-          </button>
-              {/* Conteúdo da legenda do ChordDiagramABC */}
-              <h3>Legenda - Strings of Connection</h3>
-              <p>Descrição da legenda para o chord diagram...</p>
+              <button
+                className="legend-close"
+                onClick={() => setShowLegend(false)}
+              >
+                ×
+              </button>
+              <h3>Legenda da Espiral Temporal</h3>
+              
+              <div style={{ marginBottom: "15px" }}>
+                <h4>Pétalas</h4>
+                <p style={{ fontSize: "16px", color: "#666" }}>
+                  Cada pétala representa um tema musical. O tamanho da pétala indica
+                  a frequência do tema ao longo do tempo.
+                </p>
+
+                {/* SVGs das pétalas em diferentes tamanhos */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "8px", margin: "8px 0" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <svg width="20" height="20" viewBox="0 0 25 32">
+                      <path
+                        d="M22.31.51C10.72.94-.51,29.44.57,30.05c.38.21,1.47-3.48,6.15-7.74,8.75-7.95,16.98-5.9,20.5-12.89.24-.47,2.29-4.63.52-7.08-1.44-1.99-4.68-1.86-5.43-1.84Z"
+                        fill="#D8D4BD"
+                        transform="scale(0.6)"
+                      />
+                    </svg>
+                    <span style={{ fontSize: "16px", color: "#666" }}>Poucas frequência</span>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <svg width="25" height="25" viewBox="0 0 25 32">
+                      <path
+                        d="M22.31.51C10.72.94-.51,29.44.57,30.05c.38.21,1.47-3.48,6.15-7.74,8.75-7.95,16.98-5.9,20.5-12.89.24-.47,2.29-4.63.52-7.08-1.44-1.99-4.68-1.86-5.43-1.84Z"
+                        fill="#D8D4BD"
+                        transform="scale(0.8)"
+                      />
+                    </svg>
+                    <span style={{ fontSize: "16px", color: "#666" }}>Média frequência</span>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <svg width="30" height="30" viewBox="0 0 25 32">
+                      <path
+                        d="M22.31.51C10.72.94-.51,29.44.57,30.05c.38.21,1.47-3.48,6.15-7.74,8.75-7.95,16.98-5.9,20.5-12.89.24-.47,2.29-4.63.52-7.08-1.44-1.99-4.68-1.86-5.43-1.84Z"
+                        fill="#D8D4BD"
+                        transform="scale(1)"
+                      />
+                    </svg>
+                    <span style={{ fontSize: "16px", color: "#666" }}>Muita frequência</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "15px" }}>
+                <h4>Cores por Período</h4>
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                  <li style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                    <div style={{
+                      width: "14px",
+                      height: "14px",
+                      backgroundColor: "#E09D2C",
+                      borderRadius: "2px"
+                    }}></div>
+                    <span>Período inicial</span>
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "5px" }}>
+                    <div style={{
+                      width: "14px",
+                      height: "14px",
+                      backgroundColor: "#C33512",
+                      borderRadius: "2px"
+                    }}></div>
+                    <span>Período intermédio</span>
+                  </li>
+                  <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{
+                      width: "14px",
+                      height: "14px",
+                      backgroundColor: "#474E95",
+                      borderRadius: "2px"
+                    }}></div>
+                    <span>Período recente</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div style={{ marginBottom: "15px" }}>
+                <h4>Espiral Temporal</h4>
+                <p style={{ fontSize: "16px", color: "#555" }}>
+                  O centro representa os anos mais antigos, expandindo para
+                  o exterior com os anos mais recentes. Cada volta da espiral
+                  avança no tempo.
+                </p>
+              </div>
+
+              <div>
+                <h4>Interatividade</h4>
+                <p style={{ fontSize: "16px", color: "#555" }}>
+                  Clique numa pétala para destacar todas as ocorrências do
+                  mesmo tema e ver as linhas que conectam os diferentes anos.
+                </p>
+              </div>
             </div>
           )}
         </div>
