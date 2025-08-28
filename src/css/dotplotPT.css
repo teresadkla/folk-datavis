@@ -90,26 +90,23 @@
 }
 
 .dotplotPT-controls button {
-
-    background-color: #f0f0f0;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  background-color: var(--color-White);
+  color: var(--color-text);
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .dotplotPT-controls button:disabled {
-    background-color: #ccc;
+  background-color: var(--color-White);
     cursor: not-allowed;
     opacity: 0.5;
 }
 
 .dotplotPT-controls button:hover:not(:disabled) {
-    background-color: var(--color-Blue2-PT);
-    transform: scale(1.1);
+    background-color: var( --color-White-hover);
 }
 
 .dotplotPT-controls span {
@@ -507,7 +504,7 @@
 .filtrar-section h4 {
     margin: 0 0 15px 0;
     font-size: 16px;
-    color: var(--color-Blue1-PT);
+   color: var(--color-text);
     font-weight: 600;
     flex-shrink: 0;
 }
@@ -584,7 +581,7 @@
     border: 1px solid var(--color-Red2-PT);
     color: var(--color-Red1-PT);
     border-radius: 20px;
-    padding: 8px 16px;
+     padding: 6px 14px;
     font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
@@ -599,7 +596,7 @@
     background-color: var(--color-Red2-PT);
     border: none;
     border-radius: 20px;
-    padding: 8px 16px;
+    padding: 6px 14px;
     font-size: 13px;
     color: white;
     cursor: pointer;
@@ -632,4 +629,81 @@
 }
     
 
+.dropdown-content-PT {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  max-width: 400px;
+  z-index: 100;
+  padding: 20px;
+  max-height: 500px;
+  overflow: hidden;
+}
 
+.checkbox-item-PT {
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  cursor: pointer;
+  border-radius: 8px;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.checkbox-item-PT:hover {
+  background: var(--color-Yellow3-PT);
+}
+
+.checkbox-item-PT input[type="checkbox"] {
+  margin-right: 10px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-Yellow1-PT);
+}
+
+.checkbox-item-PT input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.checkbox-item-PT:has(input:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+
+.dropdown-btn-PT {
+  background: var(--color-Yellow3-PT);
+  border: 1px solid var(--color-Yellow2-PT);
+  border-radius: 25px;
+  padding: 6px 14px;
+  font-family: var(--font-secondary);
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.dropdown-btn-PT:hover {
+  background: var(--color-Yellow2-PT);
+
+}
+.view-mode-btn-PT {
+  background: var(--color-Yellow3-PT);
+  border-color: var(--color-Yellow2-PT);
+  color: var(--color-text);
+}
+
+.view-mode-btn-PT:hover {
+  background: var(--color-Yellow2-PT);
+}

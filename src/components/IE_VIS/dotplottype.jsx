@@ -116,9 +116,9 @@ const DotPlotTypes = () => {
   const { names, types, countMap } = processedData;
 
   // Opções disponíveis para filtros
-  const availableMeters = useMemo(() => 
+  const availableMeters = useMemo(() =>
     Array.from(new Set(data.map(d => d.meter))).sort(), [data]);
-  const availableModes = useMemo(() => 
+  const availableModes = useMemo(() =>
     Array.from(new Set(data.map(d => d.mode))).sort(), [data]);
 
   // Re-renderiza o dotplot quando os dados ou controles mudam
@@ -343,16 +343,16 @@ const DotPlotTypes = () => {
 
   // Funções para lidar com mudanças de filtros
   const handleMeterChange = (meter) => {
-    setSelectedMeters(prev => 
-      prev.includes(meter) 
+    setSelectedMeters(prev =>
+      prev.includes(meter)
         ? prev.filter(m => m !== meter)
         : [...prev, meter]
     );
   };
 
   const handleModeChange = (mode) => {
-    setSelectedModes(prev => 
-      prev.includes(mode) 
+    setSelectedModes(prev =>
+      prev.includes(mode)
         ? prev.filter(m => m !== mode)
         : [...prev, mode]
     );
@@ -369,7 +369,7 @@ const DotPlotTypes = () => {
   };
 
   const getViewModeLabel = () => {
-    switch(viewMode) {
+    switch (viewMode) {
       case 'songs': return 'Songs';
       case 'mode': return 'Mode';
       case 'meter': return 'Meter';
@@ -383,6 +383,25 @@ const DotPlotTypes = () => {
     setShowViewModeDropdown(false);
     setStartIndex(0);
   };
+
+  // Nova função para gerenciar dropdowns
+  const handleDropdownToggle = (dropdownType) => {
+    if (dropdownType === 'viewMode') {
+      setShowViewModeDropdown(!showViewModeDropdown);
+      setShowFilters(false); // Fecha o dropdown de filtros
+    } else if (dropdownType === 'filters') {
+      setShowFilters(!showFilters);
+      setShowViewModeDropdown(false); // Fecha o dropdown de view mode
+    }
+  };
+
+  // Add calculation for total pages
+  const totalPages = useMemo(() => {
+    const currentNames = filterActive ? getFilteredNames() : names;
+    return Math.ceil(currentNames.length / pageSize);
+  }, [names, filterActive, getFilteredNames]);
+
+  const currentPage = Math.floor(startIndex / pageSize) + 1;
 
   return (
     <div className="DotPlotTypes-container" style={{ position: 'relative', minHeight: '100vh' }}>
@@ -407,33 +426,33 @@ const DotPlotTypes = () => {
       <div className="visualization-controls">
         <div className="control-group">
           <div className="dropdown-container">
-            <button 
+            <button
               className="dropdown-btn view-mode-btn"
-              onClick={() => setShowViewModeDropdown(!showViewModeDropdown)}
+              onClick={() => handleDropdownToggle('viewMode')}
             >
               Visualizar por <span className="chevron">▼</span>
             </button>
             {showViewModeDropdown && (
-              <div className="dropdown-content">
+              <div className="dropdown-content1">
                 <label className="checkbox-item">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={viewMode === 'songs'}
                     onChange={() => handleViewModeChange('songs')}
                   />
                   Songs
                 </label>
                 <label className="checkbox-item">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={viewMode === 'mode'}
                     onChange={() => handleViewModeChange('mode')}
                   />
                   Mode
                 </label>
                 <label className="checkbox-item">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={viewMode === 'meter'}
                     onChange={() => handleViewModeChange('meter')}
                   />
@@ -446,16 +465,14 @@ const DotPlotTypes = () => {
 
         <div className="control-group">
           <div className="dropdown-container">
-            <button 
+            <button
               className="dropdown-btn filter-btn"
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={() => handleDropdownToggle('filters')}
             >
               <span className="filter-icon"></span> Filtrar por <span className="chevron">▼</span>
             </button>
             {showFilters && (
-              <div className="dropdown-content filter-panel">
-                <h3>Filtrar por atributos musicais</h3>
-                
+              <div className="dropdown-content2 filter-panel">
                 <div className="filter-sections">
                   <div className="filter-section">
                     <h4>Meter</h4>
@@ -489,7 +506,7 @@ const DotPlotTypes = () => {
                 </div>
 
                 <div className="filter-actions">
-                  <button className="clear-filters-btn" onClick={clearFilters}>
+                  <button className="clear-filters-btn-dp" onClick={clearFilters}>
                     Limpar filtros
                   </button>
                   <button className="apply-filters-btn" onClick={applyFilters}>
@@ -511,65 +528,47 @@ const DotPlotTypes = () => {
               cursor: isLoading ? 'not-allowed' : 'pointer'
             }}
           >
-            {viewMode === 'songs' 
+            {viewMode === 'songs'
               ? (filterActive ? "Mostrar todas as músicas" : "Mostrar músicas com mais de um tipo")
               : `Mostrar ${getViewModeLabel().toLowerCase()}s com mais de um tipo`
             }
           </button>
         </div>
-      </div>
-
-      <div className="controls">
-        {/* Botão para navegar para cima na paginação */}
-        <button
-          id="nav-up"
-          onClick={() => handleNavigation('up')}
-          disabled={isLoading || startIndex === 0}
-          style={{
-            opacity: isLoading || startIndex === 0 ? 0.6 : 1,
-            cursor: isLoading || startIndex === 0 ? 'not-allowed' : 'pointer'
-          }}
-        >
-          ↑
-        </button>
-        {/* Botão para navegar para baixo na paginação */}
-        <button
-          id="nav-down"
-          onClick={() => handleNavigation('down')}
-          disabled={isLoading}
-          style={{
-            opacity: isLoading ? 0.6 : 1,
-            cursor: isLoading ? 'not-allowed' : 'pointer'
-          }}
-        >
-          ↓
-        </button>
-      </div>
-
-      {/* Modal da Legenda */}
-      {showLegend && !isLoading && (
-        <div className="legend-modal">
-          <div className="legend-content">
-            <button className="legend-close" onClick={() => setShowLegend(false)}>
-              ×
-            </button>
-            <h3>Legenda do gráfico</h3>
-            <div className="legend-section">
-              <h4>Sobre o Gráfico:</h4>
-              <p>Este é um <strong>Dot Plot</strong> que mostra a relação entre músicas folclóricas e seus tipos musicais.</p>
-            </div>
-            <div className="legend-section">
-              <h4>Como Ler:</h4>
-              <ul>
-                <li><strong>Eixo Vertical (Y):</strong> {getViewModeLabel()}</li>
-                <li><strong>Eixo Horizontal (X):</strong> Tipos de música</li>
-                <li><strong>Círculos:</strong> Indicam que um item pertence a um tipo específico</li>
-                <li><strong>Tamanho dos Círculos:</strong> Círculos maiores representam mais variações</li>
-              </ul>
-            </div>
-          </div>
+        <div className="controls">
+          {/* Botão para navegar para cima na paginação */}
+          <button
+            id="nav-up"
+            onClick={() => handleNavigation('up')}
+            disabled={isLoading || startIndex === 0}
+            title="Página anterior"
+            style={{
+              opacity: isLoading || startIndex === 0 ? 0.6 : 1,
+              cursor: isLoading || startIndex === 0 ? 'not-allowed' : 'pointer'
+            }}
+          >
+            ↑
+          </button>
+          
+          {/* Span para mostrar progresso da paginação */}
+          <span>
+            {getViewModeLabel()} {currentPage} de {totalPages}
+          </span>
+          
+          {/* Botão para navegar para baixo na paginação */}
+          <button
+            id="nav-down"
+            onClick={() => handleNavigation('down')}
+            disabled={isLoading || startIndex + pageSize >= (filterActive ? getFilteredNames() : names).length}
+            title="Próxima página"
+            style={{
+              opacity: isLoading || startIndex + pageSize >= (filterActive ? getFilteredNames() : names).length ? 0.6 : 1,
+              cursor: isLoading || startIndex + pageSize >= (filterActive ? getFilteredNames() : names).length ? 'not-allowed' : 'pointer'
+            }}
+          >
+            ↓
+          </button>
         </div>
-      )}
+      </div>
 
       {/* SVG onde o dotplot é desenhado */}
       <svg className="DotPlotTypessvg" ref={svgRef} width={1500} height={900} />

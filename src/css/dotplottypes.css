@@ -1,41 +1,41 @@
-/* Variáveis de cor Irlanda */
-:root {
-  --color-Green1-IE: #82813E;
-  --color-Green2-IE: #B4B38B;
-  --color-Green3-IE: #DAD9C5;
-
-  --color-Blue1-IE: #5193AE;
-  --color-Blue2-IE: #97BECE;
-  --color-Blue3-IE: #CBDFE7;
-
-  --color-Orange1-IE: #CC5C25;
-  --color-Orange2-IE: #E09D7C;
-  --color-Orange3-IE: #F0CEBE;
-}
-
 .controls {
-  position: fixed;
-bottom: 50%;
-    /* right: -5%; */
+  /* position: fixed; */
+  bottom: 50%;
+  /* right: -5%; */
   display: flex;
-  gap: 10px;
-  z-index: 1000;
+  /* gap: 10px; */
+  z-index: 100;
+  margin-left: 10%;
+  align-items: center;
 }
 
 .controls button {
-  background-color: var(--color-Green3-IE);
-  color: var(--color-Green1-IE);
-  border: 1px solid var(--color-Green2-IE);
+  background-color: var(--color-White);
+  color: var(--color-text);
+  border: 1px solid #ccc;
   border-radius: 20px;
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
+
+}
+
+.controls button:disabled {
+  background-color: var(--color-White);
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .controls button:hover {
-  background-color: var(--color-Green2-IE);
-  color: var(--color-Green1-IE);
+  background-color: var(--color-White-hover);
+}
+
+.controls span {
+  font-size: 14px;
+  color: var(--color-text);
+  white-space: nowrap;
+  min-width: 120px;
+  text-align: center;
 }
 
 .tooltip {
@@ -86,7 +86,7 @@ bottom: 50%;
 
 .legend-content h3 {
   margin-top: 0;
-  color: var(--color-Green1-IE);
+  color: var(--color-text);
 }
 
 .legend-section {
@@ -95,7 +95,7 @@ bottom: 50%;
 
 .legend-section h4 {
   margin-bottom: 8px;
-  color: var(--color-Blue1-IE);
+  color: var(--color-text);
 }
 
 .legend-section ul {
@@ -105,7 +105,7 @@ bottom: 50%;
 
 .legend-section li {
   margin-bottom: 5px;
-  color: var(--color-Green1-IE);
+  color: var(--color-text);
 }
 
 .color-legend {
@@ -135,11 +135,11 @@ bottom: 50%;
   border: none;
   font-size: 18px;
   cursor: pointer;
-  color: var(--color-Orange1-IE);
+  color: var(--color-text);
 }
 
 .legend-close:hover {
-  color: var(--color-Orange2-IE);
+  color: var(--color-text);
 }
 
 /* Loading overlay styles */
@@ -190,15 +190,15 @@ bottom: 50%;
 }
 
 .visualization-controls {
-  /* position: fixed; */
   top: 20px;
   left: 20px;
-  z-index: 1000;
+  z-index: 100;
   display: flex;
   gap: 15px;
   align-items: center;
-  margin-left: 20%;
+  margin-left: 25%;
   justify-content: flex-start;
+  flex-direction: row;
 }
 
 .control-group {
@@ -211,29 +211,28 @@ bottom: 50%;
 
 .dropdown-btn {
   background: var(--color-Green3-IE);
-  border: 2px solid var(--color-Green2-IE);
+  border: 1px solid var(--color-Green2-IE);
   border-radius: 25px;
   padding: 6px 14px;
   font-family: var(--font-secondary);
   font-size: 14px;
-  color: var(--color-Green1-IE);
+  color: var(--color-text);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
   min-width: 200px;
-  transition: all 0.3s ease;
 }
 
 .dropdown-btn:hover {
   background: var(--color-Green2-IE);
-  transform: translateY(-1px);
+
 }
 
 .view-mode-btn {
   background: var(--color-Blue3-IE);
   border-color: var(--color-Blue2-IE);
-  color: var(--color-Blue1-IE);
+  color: var(--color-text);
 }
 
 .view-mode-btn:hover {
@@ -243,26 +242,24 @@ bottom: 50%;
 .filter-btn {
   background: var(--color-Green3-IE);
   border-color: var(--color-Green2-IE);
-  color: var(--color-Green1-IE);
+  color: var(--color-text);
 }
 
 .multi-type-btn {
-  background: var(--color-Orange3-IE);
-  border: 2px solid var(--color-Orange2-IE);
+  background: var(--color-Green3-IE);
+  border: 1px solid var(--color-Green2-IE);
   border-radius: 25px;
   padding: 6px 14px;
   font-family: var(--font-secondary);
   font-size: 14px;
-  color: var(--color-Orange1-IE);
+  color: var(--color-text);
   cursor: pointer;
-  transition: all 0.3s ease;
   min-width: 300px;
 }
 
 .multi-type-btn:hover {
-  background: var(--color-Orange2-IE);
-  transform: translateY(-1px);
-  color: white;
+  background: var(--color-Green2-IE);
+
 }
 
 .chevron {
@@ -274,19 +271,39 @@ bottom: 50%;
   font-size: 16px;
 }
 
-.dropdown-content {
+.dropdown-content1 {
   position: absolute;
-  top: 100%;
+  top: 50px;
   left: 0;
-  background: white;
-  border: 2px solid var(--color-Green2-IE);
-  border-radius: 15px;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  min-width: 300px;
-  z-index: 2000;
+  min-width: 200px;
+  max-width: 400px;
+  z-index: 100;
   padding: 20px;
-  margin-top: 5px;
+  max-height: 500px;
+  overflow: hidden;
 }
+
+.dropdown-content2 {
+  position: absolute;
+  top: 50px;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  z-index: 100;
+  padding: 20px;
+  max-height: 500px;
+  overflow: hidden;
+}
+
+
 
 .checkbox-item {
   display: flex;
@@ -294,10 +311,9 @@ bottom: 50%;
   padding: 6px 14px;
   cursor: pointer;
   border-radius: 8px;
-  transition: background 0.2s ease;
   font-family: var(--font-secondary);
   font-size: 14px;
-  color: var(--color-Green1-IE);
+  color: var(--color-text);
 }
 
 .checkbox-item:hover {
@@ -321,17 +337,17 @@ bottom: 50%;
   cursor: not-allowed;
 }
 
-.filter-panel {
+/* .filter-panel {
   min-width: 400px;
   max-height: 500px;
   overflow-y: auto;
-}
+} */
 
 .filter-panel h3 {
   margin: 0 0 20px 0;
   font-family: var(--font-secondary);
   font-size: 16px;
-  color: var(--color-Green1-IE);
+  color: var(--color-text);
   text-align: center;
   padding-bottom: 15px;
   border-bottom: 1px solid var(--color-Green2-IE);
@@ -339,49 +355,82 @@ bottom: 50%;
 
 .filter-sections {
   display: flex;
-  gap: 30px;
+  gap: 40px;
   margin-bottom: 20px;
+  max-height: 350px;
+  overflow: visible;
+  /* Mudança aqui */
 }
 
 .filter-section {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 350px;
+  /* Adicionar altura máxima */
+  overflow-y: auto;
+  /* Adicionar scroll vertical */
 }
+
+
+/* Estilo personalizado para scrollbar */
+.filter-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.filter-section::-webkit-scrollbar-thumb {
+  background: var(--color-Blue2-IE);
+  border-radius: 3px;
+}
+
+.filter-section::-webkit-scrollbar-thumb:hover {
+  background: var(--color-Blue1-IE);
+}
+
 
 .filter-section h4 {
   margin: 0 0 15px 0;
-  font-family: var(--font-secondary);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  color: var(--color-Blue1-IE);
+  color: var(--color-text);
 }
 
 .filter-actions {
   display: flex;
-  gap: 15px;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 10px;
   padding-top: 15px;
-  border-top: 1px solid var(--color-Green2-IE);
+  border-top: 1px solid #eee;
+
 }
 
-.clear-filters-btn,
 .apply-filters-btn {
-  flex: 1;
-  padding: 10px 20px;
+  /* flex: 1; */
+  padding: 6px 14px;
   border-radius: 20px;
-  font-family: var(--font-secondary);
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid;
+  border: 1px solid;
 }
 
-.clear-filters-btn {
-  background: transparent;
+.clear-filters-btn-dp {
+  background-color: transparent;
+  border: 1px solid var(--color-Orange2-IE);
   color: var(--color-Orange1-IE);
-  border-color: var(--color-Orange1-IE);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.clear-filters-btn:hover {
+.clear-filters-btn-dp:hover {
   background: var(--color-Orange1-IE);
   color: white;
 }
@@ -395,5 +444,5 @@ bottom: 50%;
 .apply-filters-btn:hover {
   background: var(--color-Orange1-IE);
   border-color: var(--color-Orange1-IE);
-  transform: translateY(-1px);
+
 }
