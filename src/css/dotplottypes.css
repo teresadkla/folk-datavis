@@ -446,3 +446,9 @@
   border-color: var(--color-Orange1-IE);
 
 }
+
+.flowerIE {
+  stroke: rgba(255, 255, 255, 0);
+  stroke-width: 20px;
+  cursor: pointer;
+}

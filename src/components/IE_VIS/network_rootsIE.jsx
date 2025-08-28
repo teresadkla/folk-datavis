@@ -12,6 +12,17 @@ const NetworkDiagramIE = () => {
   const tooltipRef = useRef();
   const [showLegend, setShowLegend] = useState(false);
 
+  // Função para reformatar nomes com vírgulas
+  const formatSongName = (name) => {
+    if (name.includes(',')) {
+      const parts = name.split(',').map(part => part.trim());
+      if (parts.length === 2) {
+        return `${parts[1]} ${parts[0]}`;
+      }
+    }
+    return name;
+  };
+
   useEffect(() => {
     const width = 1000;
     const height = 800;
@@ -55,11 +66,17 @@ const NetworkDiagramIE = () => {
       for (const temaKey in temasFiltrados) {
         const tema = temasFiltrados[temaKey];
         const nomeMusica = tema.nomeMusica;
+        const nomeMusicaFormatado = formatSongName(nomeMusica);
         const count = tema.totalOcorrencias;
 
         // Node da música
         if (!nodeById[nomeMusica]) {
-          const musicaNode = { id: nomeMusica, type: "name", count };
+          const musicaNode = { 
+            id: nomeMusica, 
+            displayName: nomeMusicaFormatado,
+            type: "name", 
+            count 
+          };
           nodes.push(musicaNode);
           nodeById[nomeMusica] = musicaNode;
         }
@@ -130,7 +147,7 @@ const NetworkDiagramIE = () => {
         .on("mouseover", (event, d) => {
           if (d.type === "name") {
             tooltip.style("display", "block")
-              .html(`<strong>${d.id}</strong><br/>Ocorrências: ${d.count}`);
+              .html(`<strong>${d.displayName || d.id}</strong><br/>Ocorrências: ${d.count}`);
           }
         })
         .on("mousemove", (event) => {

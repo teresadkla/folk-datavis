@@ -319,9 +319,18 @@ const PortugalMap = ({ active }) => {
           <p><strong>{selectedDistrictData.totalTemas}</strong> temas {selectedDistrictData.ano ? `em ${selectedDistrictData.ano}` : "no total"}</p>
           <h4>Temas:</h4>
           <ul>
-            {selectedDistrictData.temas.map((tema, i) => (
-              <li key={i}>{tema}</li>
-            ))}
+            {Object.entries(
+              selectedDistrictData.temas.reduce((acc, tema) => {
+                acc[tema] = (acc[tema] || 0) + 1;
+                return acc;
+              }, {})
+            )
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([tema, count], i) => (
+                <li key={i}>
+                  {tema} {count > 1 && <span>({count})</span>}
+                </li>
+              ))}
           </ul>
         </div>
       )}
