@@ -25,7 +25,7 @@ const SpiralVis = ({ active }) => {
     // Criar o tooltip dinamicamente apenas quando necessário
     let tooltip = null;
 
-    d3.csv("VIMEO_V8.csv").then((data) => {
+    d3.csv("VIMEO_V9.csv").then((data) => {
       const filteredRaw = data.filter((d) => {
         const year = parseInt(d.Ano);
         return !isNaN(year) && d.Tema && d.Tema !== "#VALUE!";

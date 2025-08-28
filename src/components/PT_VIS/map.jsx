@@ -50,7 +50,7 @@ const PortugalMap = ({ active }) => {
     // Carrega dados GeoJSON e CSV em paralelo
     Promise.all([
       d3.json("/Portugal.json"),
-      d3.csv("VIMEO_V8.csv")
+      d3.csv("VIMEO_V9.csv")
     ]).then(([geojsonData, csvData]) => {
       setGeojson(geojsonData);
       setData(csvData);

@@ -165,7 +165,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
   };
 
   useEffect(() => {
-    d3.csv("VIMEO_V8.csv").then((data) => {
+    d3.csv("VIMEO_V9.csv").then((data) => {
       const temaCount = d3.rollup(data, v => v.length, d => d.Tema);
       const temasRepetidos = new Set([...temaCount.entries()].filter(([_, c]) => c > 1).map(([t]) => t));
       const filtrados = data.filter(d => temasRepetidos.has(d.Tema));
