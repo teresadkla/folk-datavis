@@ -105,7 +105,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
         const instrumentos = expandedData
           .filter(item => item.CategoriaPrincipal === categoria && item.Região === regiao)
           .map(item => item.Instrumento)
-          .flatMap(instr => (instr ? instr.split(",").map(i => i.trim()) : []))
+          .flatMap(instr => (instr ? instr.split(",").map(i => i.trim().charAt(0).toUpperCase() + i.trim().slice(1).toLowerCase()) : []))
           .filter((v, i, a) => v && a.indexOf(v) === i);
 
         processed.push({
@@ -125,7 +125,10 @@ const GraficoTemasPorRegiao = ({ active }) => {
     const expandedData = [];
     dados.forEach(item => {
       if (item.Instrumento) {
-        const instrumentos = item.Instrumento.split(",").map(i => i.trim());
+        const instrumentos = item.Instrumento.split(",").map(i => {
+          const instrumento = i.trim();
+          return instrumento.charAt(0).toUpperCase() + instrumento.slice(1).toLowerCase();
+        });
         instrumentos.forEach(instrumento => {
           if (instrumento) {
             expandedData.push({
@@ -172,7 +175,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
 
       const allInstruments = filtrados
         .map(item => item.Instrumento)
-        .flatMap(instr => (instr ? instr.split(",").map(i => i.trim()) : []))
+        .flatMap(instr => (instr ? instr.split(",").map(i => i.trim().charAt(0).toUpperCase() + i.trim().slice(1).toLowerCase()) : []))
         .filter((v, i, a) => v && a.indexOf(v) === i)
         .sort();
 
@@ -204,7 +207,7 @@ const GraficoTemasPorRegiao = ({ active }) => {
           const instrumentos = filtrados
             .filter(item => item.Tema === tema && item.Região === regiao)
             .map(item => item.Instrumento)
-            .flatMap(instr => (instr ? instr.split(",").map(i => i.trim()) : []))
+            .flatMap(instr => (instr ? instr.split(",").map(i => i.trim().charAt(0).toUpperCase() + i.trim().slice(1).toLowerCase()) : []))
             .filter((v, i, a) => v && a.indexOf(v) === i);
 
           processed.push({ tema, regiao, count, categoria, instrumentos });
