@@ -6,6 +6,7 @@
     flex: 1;
     gap: 6rem;
     text-align: center;
+    height: 100vh;
     /* background-color: aquamarine; */
 
 }
@@ -127,6 +128,7 @@
     position: relative;
     display: flex;
     justify-content: center;
+    width: 100%;
 }
 
 .dots-container {
