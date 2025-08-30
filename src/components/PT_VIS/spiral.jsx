@@ -173,7 +173,7 @@ const SpiralVis = ({ active }) => {
           const themeOccurrences = temaCounts.get(d.Tema);
           tooltip
             .style("opacity", 1)
-            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}<br>Ocorrências: ${themeOccurrences}`)
+            .html(`<strong>${d.Tema}</strong><br>Ano: ${d.Ano}<br>Total de ocorrências: ${themeOccurrences}`)
             .style("left", event.pageX + 10 + "px")
             .style("top", event.pageY - 20 + "px");
         })
