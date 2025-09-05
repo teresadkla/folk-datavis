@@ -140,8 +140,8 @@ const ChordDiagramABC = () => {
       .join("div")
       .attr("class", "chord-tooltip")
       .style("position", "absolute")
-      .style("background", "rgba(0, 0, 0, 0.8)")
-      .style("color", "white")
+      .style("background", "rgba(240, 240, 240, 1)")
+      .style("color", "black")
       .style("padding", "10px")
       .style("border-radius", "5px")
       .style("pointer-events", "none")
@@ -326,7 +326,7 @@ ${simData.shared.join(', ') || 'Nenhuma'}<br/>
           disabled={isLoading}
           className={`shuffle-button ${isLoading ? 'disabled' : ''}`}
         >
-          🔀 {isLoading ? 'Carregando...' : 'Trocar Músicas'}
+           {isLoading ? 'Carregando...' : 'Trocar Músicas'}
         </button>
 
         <div className="filters-wrapper">
